@@ -1,0 +1,4 @@
+"Feature Id","Feature Name","Mapper Class"
+1,Building 1,URBANopt::Scenario::BaselineMapper
+2,Building 2,URBANopt::Scenario::BaselineMapper
+3,Building 3,URBANopt::Scenario::BaselineMapper

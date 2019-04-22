@@ -1,0 +1,45 @@
+{
+	"type": "FeatureCollection",
+	"features": [{
+		"type": "Feature",
+		"geometry": {
+			"type": "Point",
+			"coordinates": [0, 0]
+		},
+		"properties": {
+			"source_id": "1",
+			"building_type": "SmallOffice",
+			"cooling_source": "Electricity",
+			"heating_source": "NaturalGas",
+			"area": 1000
+		}
+	},
+	{
+		"type": "Feature",
+		"geometry": {
+			"type": "Point",
+			"coordinates": [0, 1]
+		},
+		"properties": {
+			"source_id": "2",
+			"building_type": "MediumOffice",
+			"cooling_source": "Electricity",
+			"heating_source": "NaturalGas",
+			"area": 2000
+		}
+	},
+	{
+		"type": "Feature",
+		"geometry": {
+			"type": "Point",
+			"coordinates": [1, 0]
+		},
+		"properties": {
+			"source_id": "3",
+			"building_type": "SmallHotel",
+			"cooling_source": "Electricity",
+			"heating_source": "NaturalGas",
+			"area": 3000
+		}
+	}]
+}
