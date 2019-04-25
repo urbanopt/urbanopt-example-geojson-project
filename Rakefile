@@ -34,8 +34,8 @@ require 'urbanopt/scenario'
 require 'urbanopt/geojson'
 
 module URBANopt
-  module ExampleProject
-    class ExampleProject < OpenStudio::Extension::Extension
+  module ExampleGeoJSONProject
+    class ExampleGeoJSONProject < OpenStudio::Extension::Extension
 
       def initialize
         super
@@ -66,7 +66,7 @@ end
 
 # Load in the rake tasks from the base extension gem
 rake_task = OpenStudio::Extension::RakeTask.new
-rake_task.set_extension_class(URBANopt::ExampleProject::ExampleProject)
+rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONProject)
 
 desc 'Run Baseline Scenario'
 task :run_baseline_scenario do
@@ -74,7 +74,7 @@ task :run_baseline_scenario do
 
   name = 'Baseline Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/baseline_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_geometry.geojson')
+  feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
   csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
@@ -92,7 +92,7 @@ task :run_high_efficiency_scenario do
 
   name = 'High Efficiency Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_geometry.geojson')
+  feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
   csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
@@ -110,7 +110,7 @@ task :run_mixed_scenario do
 
   name = 'Mixed Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_geometry.geojson')
+  feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
   csv_file = File.join(File.dirname(__FILE__), 'mixed_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
