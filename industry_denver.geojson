@@ -8,7 +8,11 @@
                 "name": "Industry Denver Phase 1",
                 "cooling_source": "Electricity",
                 "heating_source": "NaturalGas",
-                "outdoor_area": true
+                "outdoor_area": true,
+                "type": "Building",
+                "floor_area": 10000,
+                "building_type": "Office",
+                "number_stories": 5
             },
             "geometry": {
                 "type": "Polygon",
@@ -61,7 +65,11 @@
                 "name": "Industry Denver Phase 3",
                 "cooling_source": "Electricity",
                 "heating_source": "NaturalGas",
-                "outdoor_area": false
+                "outdoor_area": false,
+                "type": "Building",
+                "floor_area": 10000,
+                "building_type": "Office",
+                "number_stories": 5
             },
             "geometry": {
                 "type": "Polygon",
