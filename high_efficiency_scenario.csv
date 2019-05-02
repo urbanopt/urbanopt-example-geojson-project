@@ -1,4 +1,3 @@
-"Feature Id","Feature Name","Mapper Class"
+Feature Id,Feature Name,Mapper Class
 1,Building 1,URBANopt::Scenario::HighEfficiencyMapper
 2,Building 2,URBANopt::Scenario::HighEfficiencyMapper
-3,Building 3,URBANopt::Scenario::HighEfficiencyMapper

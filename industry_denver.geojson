@@ -4,7 +4,7 @@
         {
             "type": "Feature",
             "properties": {
-                "source_id": 1,
+                "source_id": "1",
                 "name": "Industry Denver Phase 1",
                 "cooling_source": "Electricity",
                 "heating_source": "NaturalGas",
@@ -12,7 +12,8 @@
                 "type": "Building",
                 "floor_area": 10000,
                 "building_type": "Office",
-                "number_stories": 5
+                "number_stories": 5,
+                "surface_elevation": 0
             },
             "geometry": {
                 "type": "Polygon",
@@ -61,7 +62,7 @@
         {
             "type": "Feature",
             "properties": {
-                "source_id": 2,
+                "source_id": "2",
                 "name": "Industry Denver Phase 3",
                 "cooling_source": "Electricity",
                 "heating_source": "NaturalGas",
@@ -69,7 +70,8 @@
                 "type": "Building",
                 "floor_area": 10000,
                 "building_type": "Office",
-                "number_stories": 5
+                "number_stories": 5,
+                "surface_elevation": 0
             },
             "geometry": {
                 "type": "Polygon",
@@ -102,9 +104,10 @@
         {
             "type": "Feature",
             "properties": {
-                "source_id": 3,
+                "source_id": "3",
                 "name": "Parking Lot",
-                "outdoor_area": true
+                "outdoor_area": true,
+                "surface_elevation": 0
             },
             "geometry": {
                 "type": "Polygon",
@@ -177,9 +180,10 @@
         {
             "type": "Feature",
             "properties": {
-                "source_id": 4,
+                "source_id": "4",
                 "name": "Dog Run",
-                "outdoor_area": true
+                "outdoor_area": true,
+                "surface_elevation": 0
             },
             "geometry": {
                 "type": "Polygon",

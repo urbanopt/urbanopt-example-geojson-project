@@ -1,6 +1,6 @@
 source "http://rubygems.org"
 
-allow_local = false
+allow_local = true
 
 if allow_local && File.exists?('../OpenStudio-extension-gem')
   # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
@@ -44,7 +44,7 @@ else
   gem 'urbanopt-geojson', github: 'urbanopt/urbanopt-geojson-gem', branch: 'method-extractions'
 end
 
-gem 'openstudio-standards', '0.2.7' # doesn't work in 0.2.8?
+gem 'openstudio-standards', '0.2.9' # doesn't work in 0.2.8?
 
 # simplecov has an unneccesary dependency on native json gem, use fork that does not require this
 gem 'simplecov', github: 'NREL/simplecov'

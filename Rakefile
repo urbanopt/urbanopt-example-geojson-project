@@ -41,89 +41,170 @@ module URBANopt
         super
         @root_dir = File.absolute_path(File.dirname(__FILE__))
       end
-
+      
       # Return the absolute path of the measures or nil if there is none, can be used when configuring OSWs
       def measures_dir
         nil
       end
-
+      
       # Relevant files such as weather data, design days, etc.
       # Return the absolute path of the files or nil if there is none, used when configuring OSWs
       def files_dir
         return File.absolute_path(File.join(@root_dir, 'weather'))
       end
-
+      
       # Doc templates are common files like copyright files which are used to update measures and other code
       # Doc templates will only be applied to measures in the current repository
       # Return the absolute path of the doc templates dir or nil if there is none
       def doc_templates_dir
-        nil
+        return File.absolute_path(File.join(@root_dir, 'doc_templates'))
       end
-
+      
     end
   end
 end
 
-# Load in the rake tasks from the base extension gem
-rake_task = OpenStudio::Extension::RakeTask.new
-rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONProject)
+def root_dir
+  return File.dirname(__FILE__)
+end
 
-desc 'Run Baseline Scenario'
-task :run_baseline_scenario do
-  puts 'Running Baseline Scenario...'
-
+def baseline_scenario
   name = 'Baseline Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/baseline_scenario/')
   feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
   csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
-  root_dir = File.dirname(__FILE__)
-
-  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path)
-  scenario = URBANopt::Scenario::ScenarioCSV.new(name, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-  scenario_runner = URBANopt::Scenario::ScenarioRunner.new(root_dir)
-  scenario_runner.run_osws(scenario)
+  
+  runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
+  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path, runner)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
 end
 
-desc 'Run High Efficiency Scenario'
-task :run_high_efficiency_scenario do
-  puts 'Running High Efficiency Scenario...'
-
+def high_efficiency_scenario
   name = 'High Efficiency Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
   feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
   csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
-  root_dir = File.dirname(__FILE__)
-
-  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path)
-  scenario = URBANopt::Scenario::ScenarioCSV.new(name, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-  scenario_runner = URBANopt::Scenario::ScenarioRunner.new(root_dir)
-  scenario_runner.run_osws(scenario)
+  
+  runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
+  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path, runner)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
 end
 
-desc 'Run Mixed Scenario'
-task :run_mixed_scenario do
-  puts 'Running Mixed Scenario...'
-
+def mixed_scenario
   name = 'Mixed Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
   feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
   csv_file = File.join(File.dirname(__FILE__), 'mixed_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
-  root_dir = File.dirname(__FILE__)
-
-  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path)
-  scenario = URBANopt::Scenario::ScenarioCSV.new(name, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-  scenario_runner = URBANopt::Scenario::ScenarioRunner.new(root_dir)
-  scenario_runner.run_osws(scenario)
+  
+  runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
+  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path, runner)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
 end
 
-task :run_all => [:run_baseline_scenario, :run_high_efficiency_scenario, :run_mixed_scenario] do
+# Load in the rake tasks from the base extension gem
+rake_task = OpenStudio::Extension::RakeTask.new
+rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONProject)
+
+### Baseline 
+
+desc 'Clear Baseline Scenario'
+task :clear_baseline do
+  puts 'Clearing Baseline Scenario...'
+  baseline_scenario.clear
+end
+
+desc 'Run Baseline Scenario'
+task :run_baseline do
+  puts 'Running Baseline Scenario...'
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(baseline_scenario)
+end
+
+desc 'Post Process Baseline Scenario'
+task :post_process_baseline do
+  puts 'Post Processing Baseline Scenario...'
+  
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario)
+  scenario_result = default_post_processor.run
+  scenario_result.save
+end
+
+### High Efficiency 
+
+desc 'Clear High Efficiency Scenario'
+task :clear_high_efficiency do
+  puts 'Clearing High Efficiency Scenario...'
+  high_efficiency_scenario.clear
+end
+
+desc 'Run High Efficiency Scenario'
+task :run_high_efficiency do
+  puts 'Running High Efficiency Scenario...'
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(high_efficiency_scenario)
+end
+
+desc 'Post Process High Efficiency Scenario'
+task :post_process_high_efficiency do
+  puts 'Post Processing High Efficiency Scenario...'
+  
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario)
+  scenario_result = default_post_processor.run
+  scenario_result.save
+end
+
+### Mixed
+
+desc 'Clear Mixed Scenario'
+task :clear_mixed do
+  puts 'Clearing Mixed Scenario...'
+  mixed_scenario.clear
+end
+
+desc 'Run Mixed Scenario'
+task :run_mixed do
+  puts 'Running Mixed Scenario...'
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(mixed_scenario)
+end
+
+desc 'Post Process Mixed Scenario'
+task :post_process_mixed do
+  puts 'Post Processing Mixed Scenario...'
+  
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario)
+  scenario_result = default_post_processor.run
+  scenario_result.save
+end
+
+### All
+
+task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_mixed] do
+  # clear all the scenarios
+end
+
+task :run_all => [:run_baseline, :run_high_efficiency, :run_mixed] do
   # run all the scenarios
 end
 
-task :default => :run_all
+task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_mixed] do
+  # post_process all the scenarios
+end
+
+task :update_all => [:run_all, :post_process_all] do
+  # run and post_process all the scenarios
+end
+              
+task :default => :update_all

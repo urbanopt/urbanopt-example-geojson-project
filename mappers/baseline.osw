@@ -30,14 +30,21 @@
 			"arguments": {
         "__SKIP__": true,
         "elecequip_power_reduction_percent": 20
-      }
+      }	
     },{
 			"measure_dir_name": "ReduceLightingLoadsByPercentage",
 			"arguments": {
         "__SKIP__": true,
         "lighting_power_reduction_percent": 30
+      }	
+    },{
+      "measure_dir_name": "default_feature_reports",
+      "arguments": {
+        "feature_id": null,
+        "feature_name": null,
+        "feature_type": null
       }
-    }
+		}
 	],
 	"name": null,
 	"description": null

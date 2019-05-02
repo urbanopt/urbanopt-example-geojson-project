@@ -1,0 +1,4 @@
+/* @preserve
+ * URBANopt, Copyright (c) 2019, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
+ * Use of this source code is governed by the BSD 3-Clause license.
+*/
