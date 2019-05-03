@@ -107,7 +107,10 @@
                 "source_id": "3",
                 "name": "Parking Lot",
                 "outdoor_area": true,
-                "surface_elevation": 0
+                "surface_elevation": 0,
+                "floor_area": 20000,
+                "building_type": "Vacant",
+                "number_stories": 1
             },
             "geometry": {
                 "type": "Polygon",
@@ -183,6 +186,9 @@
                 "source_id": "4",
                 "name": "Dog Run",
                 "outdoor_area": true,
+                "floor_area": 1000,
+                "building_type": "Mixed use",
+                "number_stories": 5,
                 "surface_elevation": 0
             },
             "geometry": {
