@@ -1,0 +1,51 @@
+{
+	"seed_file": null,
+	"weather_file": null,
+	"measure_paths": [],
+	"file_paths": [],
+	"run_directory": null,
+	"steps": [
+    {
+      "measure_dir_name": "ChangeBuildingLocation",
+			"arguments": {
+        "weather_file_name": "urbanopt_scenario_tests.epw",
+        "climate_zone": "5B"
+      }
+    },{
+      "measure_dir_name": "set_run_period",
+			"arguments": {
+        "timesteps_per_hour": 1,
+        "begin_date": "2012-06-01",
+        "end_date": "2012-06-02"
+      }
+    },{
+      "measure_dir_name": "urban_geometry_creation",
+      "arguments": {
+        "geojson_file": "industry_denver.geojson",
+        "feature_id": "1",
+        "surrounding_buildings": "None"
+      }
+    },{
+			"measure_dir_name": "ReduceElectricEquipmentLoadsByPercentage",
+			"arguments": {
+        "__SKIP__": true,
+        "elecequip_power_reduction_percent": 20
+      }	
+    },{
+			"measure_dir_name": "ReduceLightingLoadsByPercentage",
+			"arguments": {
+        "__SKIP__": true,
+        "lighting_power_reduction_percent": 30
+      }	
+    },{
+      "measure_dir_name": "default_feature_reports",
+      "arguments": {
+        "feature_id": null,
+        "feature_name": null,
+        "feature_type": null
+      }
+		}
+	],
+	"name": null,
+	"description": null
+}
