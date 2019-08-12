@@ -73,7 +73,8 @@ module URBANopt
         feature = features[0]
         feature_id = feature.id
         feature_type = feature.feature_type
-        
+        puts "12HELLO is #{feature_id}"
+
         feature_name = feature.name
         if feature_names.size == 1
           feature_name = feature_names[0]

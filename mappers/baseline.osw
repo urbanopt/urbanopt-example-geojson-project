@@ -21,8 +21,8 @@
     },{
       "measure_dir_name": "urban_geometry_creation",
       "arguments": {
-        "geojson_file": "industry_denver.geojson",
-        "feature_id": "1",
+        "geojson_file": "exportGeo.json",
+        "feature_id": "5",
         "surrounding_buildings": "None"
       }
     },{

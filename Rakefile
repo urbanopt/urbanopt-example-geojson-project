@@ -71,13 +71,13 @@ end
 def baseline_scenario
   name = 'Baseline Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/baseline_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
+  feature_file_path = File.join(File.dirname(__FILE__), 'exportGeo.json')
   csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
   
   runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
-  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path, runner)
+  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
 end
@@ -85,7 +85,7 @@ end
 def high_efficiency_scenario
   name = 'High Efficiency Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
+  feature_file_path = File.join(File.dirname(__FILE__), 'exportGeo.json')
   csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
@@ -99,7 +99,7 @@ end
 def mixed_scenario
   name = 'Mixed Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'industry_denver.geojson')
+  feature_file_path = File.join(File.dirname(__FILE__), 'exportGeo.json')
   csv_file = File.join(File.dirname(__FILE__), 'mixed_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
