@@ -32,6 +32,7 @@ require 'openstudio/extension'
 require 'openstudio/extension/rake_task'
 require 'urbanopt/scenario'
 require 'urbanopt/geojson'
+require "json"
 
 module URBANopt
   module ExampleGeoJSONProject
@@ -76,8 +77,19 @@ def baseline_scenario
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
   
+  puts caller
+  
+  #puts "22HELLO"
+  #puts feature_file_path.methods
+  #geofile = JSON.parse(
+  #  File.open(feature_file_path, 'r', &:read),
+  #  symbolize_names: true
+  #)
+  #puts "23HELLO #{geofile}"
+  #building = URBANopt::GeoJSON::Building.new(geofile[:features][0])
+  #puts "24HELLO"
   runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
-  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path)
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
 end
@@ -91,7 +103,7 @@ def high_efficiency_scenario
   num_header_rows = 1
   
   runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
-  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path, runner)
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
 end
@@ -105,7 +117,7 @@ def mixed_scenario
   num_header_rows = 1
   
   runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
-  feature_file = URBANopt::GeoJSON::GeoFile.new(feature_file_path, runner)
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
 end

@@ -73,13 +73,15 @@ module URBANopt
         feature = features[0]
         feature_id = feature.id
         feature_type = feature.feature_type
-        puts "12HELLO is #{feature_id}"
 
         feature_name = feature.name
         if feature_names.size == 1
           feature_name = feature_names[0]
         end
         
+        heating_vac = feature.heating_vac
+        cooling_vac = feature.cooling_vac
+
         # deep clone of @@osw before we configure it
         osw = Marshal.load(Marshal.dump(@@osw))
         
@@ -92,6 +94,11 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_name', feature_name)
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_type', feature_type)
         
+        
+        OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'htg_src', heating_vac)
+        OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'clg_src', cooling_vac)
+
+
         osw[:name] = feature_name
         osw[:description] = feature_name
         
