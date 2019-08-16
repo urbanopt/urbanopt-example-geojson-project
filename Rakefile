@@ -76,18 +76,7 @@ def baseline_scenario
   csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
-  
-  puts caller
-  
-  #puts "22HELLO"
-  #puts feature_file_path.methods
-  #geofile = JSON.parse(
-  #  File.open(feature_file_path, 'r', &:read),
-  #  symbolize_names: true
-  #)
-  #puts "23HELLO #{geofile}"
-  #building = URBANopt::GeoJSON::Building.new(geofile[:features][0])
-  #puts "24HELLO"
+    
   runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new)
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)

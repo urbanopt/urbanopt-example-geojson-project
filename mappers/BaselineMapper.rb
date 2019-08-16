@@ -65,6 +65,7 @@ module URBANopt
         end
       end
       
+      
       def create_osw(scenario, features, feature_names)
         
         if features.size != 1
@@ -72,13 +73,49 @@ module URBANopt
         end
         feature = features[0]
         feature_id = feature.id
-        feature_type = feature.feature_type
+        feature_type = feature.type 
 
         feature_name = feature.name
         if feature_names.size == 1
           feature_name = feature_names[0]
         end
         
+        if feature_type == 'Building'
+          
+          building_type_1 = feature.building_type
+
+          case building_type_1
+          when 'Multifamily (5 or more units)'
+            building_type_1 = 'MidriseApartment'
+          when 'Multifamily (2 to 4 units)'
+            building_type_1 = 'MidriseApartment'
+          when 'Single-Family'
+            building_type_1 = 'MidriseApartment'
+          when 'Office'
+            building_type_1 = 'MediumOffice'
+          when 'Mixed use'
+            mixed_type_1 = feature.mixed_type_1
+            mixed_type_2 = feature.mixed_type_2
+            mixed_type_2_percentage = feature.mixed_type_2_percentage
+            mixed_type_2_fract_bldg_area = mixed_type_2_percentage/100
+    
+            mixed_type_3 = feature.mixed_type_3
+            mixed_type_3_percentage = feature.mixed_type_3_percentage
+            mixed_type_3_fract_bldg_area = mixed_type_2_percentage/100
+    
+            mixed_type_4 = feature.mixed_type_4
+            mixed_type_4_percentage = feature.mixed_type_4_percentage
+            mixed_type_4_fract_bldg_area = mixed_type_4_percentage/100
+          end
+          
+          footprint_area = feature.footprint_area
+          height = feature.height
+          number_of_stories_above_ground = feature.number_of_stories_above_ground
+          number_of_stories = feature.number_of_stories 
+          number_of_stories_below_ground = number_of_stories - number_of_stories_above_ground 
+         #template = feature.template
+        end
+
         heating_vac = feature.heating_vac
         cooling_vac = feature.cooling_vac
 
@@ -87,6 +124,7 @@ module URBANopt
         
         # now we have the feature, we can look up its properties and set arguments in the OSW
         OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'geojson_file', scenario.feature_file.path)
+        puts "2HELLO = #{scenario.feature_file.path}"
         OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'feature_id', feature_id)
         OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'surrounding_buildings', 'None')
         
@@ -94,10 +132,31 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_name', feature_name)
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_type', feature_type)
         
+        OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'single_floor_area', footprint_area)
+        OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'floor_height', height)
+        OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'num_stories_above_grade', number_of_stories_above_ground)
+        OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'num_stories_below_grade', number_of_stories_below_ground)
+        #OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'template', template)
+
+        OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_a', building_type_1)
+        
+        if building_type_1 == 'Mixed use'
+
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_a', mixed_type_1)
+          
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_b', mixed_type_2)
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_b_fract_bldg_area', mixed_type_2_fract_bldg_area)
+          
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_c', mixed_type_3)
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_c_fract_bldg_area', mixed_type_3_fract_bldg_area)
+
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_d', mixed_type_4)
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_d_fract_bldg_area', mixed_type_4_fract_bldg_area)      
+        
+        end
         
         OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'htg_src', heating_vac)
         OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'clg_src', cooling_vac)
-
 
         osw[:name] = feature_name
         osw[:description] = feature_name
