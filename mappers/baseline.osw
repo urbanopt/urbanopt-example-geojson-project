@@ -49,7 +49,8 @@
 			"measure_dir_name": "create_typical_building_from_model",
 			"arguments": {
         "htg_src": null,
-        "clg_src": null
+        "clg_src": null,
+        "add_hvac": false
       }	
     },{
       "measure_dir_name": "blended_space_type_from_model",
@@ -78,7 +79,9 @@
         "clg_src": "Electricity",
         "htg_src": "NaturalGas",
         "hvac_delivery_type": "Forced Air",
-        "system_type": "Inferred"
+        "system_type": "Inferred",
+        "add_hvac": true,
+        "use_upstream_args": false
       }
     },{
 			"measure_dir_name": "ReduceElectricEquipmentLoadsByPercentage",

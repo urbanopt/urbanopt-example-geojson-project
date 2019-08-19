@@ -38,11 +38,11 @@ else
 end
 
 
-if File.exists?(File.join("C:","Gitrepos","urbanopt-geojson-gem"))
+if allow_local && File.exists?('../urbanopt-geojson-gem')
   # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
-  gem 'urbanopt-geojson', path: File.join("C:","Gitrepos","urbanopt-geojson-gem")
-#else
-#  gem 'urbanopt-geojson', github: 'urbanopt/urbanopt-geojson-gem', branch: 'example_project_fixes'
+  gem 'urbanopt-geojson', path: '../urbanopt-scenario-gem'
+else
+  gem 'urbanopt-geojson', github: 'urbanopt/urbanopt-geojson-gem', branch: 'example_project_fixes'
 end
 
 gem 'openstudio-standards', '0.2.9' # doesn't work in 0.2.8?
