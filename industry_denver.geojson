@@ -4,6 +4,7 @@
         {
             "type": "Feature",
             "properties": {
+                "id": "1",
                 "source_id": "1",
                 "name": "Industry Denver Phase 1",
                 "cooling_source": "Electricity",
@@ -11,9 +12,10 @@
                 "outdoor_area": true,
                 "type": "Building",
                 "floor_area": 10000,
+                "footprint_area": 2000,
                 "building_type": "Office",
-                "number_stories": 5,
-                "surface_elevation": 0
+                "number_of_stories": 5,
+                "surface_elevation": 5280
             },
             "geometry": {
                 "type": "Polygon",
@@ -62,6 +64,7 @@
         {
             "type": "Feature",
             "properties": {
+                "id": "2",
                 "source_id": "2",
                 "name": "Industry Denver Phase 3",
                 "cooling_source": "Electricity",
@@ -69,9 +72,10 @@
                 "outdoor_area": false,
                 "type": "Building",
                 "floor_area": 10000,
+                "footprint_area": 2000,
                 "building_type": "Office",
-                "number_stories": 5,
-                "surface_elevation": 0
+                "number_of_stories": 5,
+                "surface_elevation": 5280
             },
             "geometry": {
                 "type": "Polygon",
@@ -104,13 +108,16 @@
         {
             "type": "Feature",
             "properties": {
+                "id": "3",
                 "source_id": "3",
                 "name": "Parking Lot",
                 "outdoor_area": true,
                 "surface_elevation": 0,
                 "floor_area": 20000,
+                "footprint_area": 20000,
                 "building_type": "Vacant",
-                "number_stories": 1
+                "number_of_stories": 1,
+                "surface_elevation": 5280
             },
             "geometry": {
                 "type": "Polygon",
@@ -183,13 +190,15 @@
         {
             "type": "Feature",
             "properties": {
+                "id": "4",
                 "source_id": "4",
                 "name": "Dog Run",
                 "outdoor_area": true,
                 "floor_area": 1000,
+                "footprint_area": 200,
                 "building_type": "Mixed use",
-                "number_stories": 5,
-                "surface_elevation": 0
+                "number_of_stories": 5,
+                "surface_elevation": 5280
             },
             "geometry": {
                 "type": "Polygon",
