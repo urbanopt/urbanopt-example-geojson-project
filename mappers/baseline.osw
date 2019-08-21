@@ -49,8 +49,6 @@
       "name": "create_typical_building_from_model 1",
       "measure_dir_name": "create_typical_building_from_model",
       "arguments": {
-        "htg_src": null,
-        "clg_src": null,
         "add_hvac": false
       } 
     },{
@@ -77,9 +75,6 @@
         "add_exhaust": false,
         "add_swh": false,
         "remove_objects": false,
-        "clg_src": "Electricity",
-        "htg_src": "NaturalGas",
-        "hvac_delivery_type": "Forced Air",
         "system_type": "Inferred",
         "add_hvac": true,
         "use_upstream_args": false
