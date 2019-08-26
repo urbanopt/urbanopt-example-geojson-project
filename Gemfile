@@ -34,7 +34,7 @@ if allow_local && File.exist?('../urbanopt-scenario-gem')
   # gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 else
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'post_process'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 end
 
 if allow_local && File.exists?('../urbanopt-geojson-gem')
