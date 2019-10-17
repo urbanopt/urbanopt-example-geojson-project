@@ -36,6 +36,13 @@ require 'urbanopt/geojson'
 module URBANopt
   module ExampleGeoJSONProject
     class ExampleGeoJSONProject < OpenStudio::Extension::Extension
+     
+      # number of datapoints(features) you want to run in parallel 
+      # based on the number of available processors on your local machine.
+      OpenStudio::Extension::Extension::NUM_PARALLEL = 7
+
+      # set MAX_DATAPOINTS
+      OpenStudio::Extension::Extension::MAX_DATAPOINTS = 1000
 
       def initialize
         super
