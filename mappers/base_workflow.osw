@@ -10,14 +10,14 @@
       "measure_dir_name": "set_run_period",
       "arguments": {
         "timesteps_per_hour": 1,
-        "begin_date": "2012-06-01",
-        "end_date": "2012-06-02"
+        "begin_date": "2019-06-01",
+        "end_date": "2019-08-01"
       }
     },{
       "measure_dir_name": "ChangeBuildingLocation",
       "arguments": {
-        "weather_file_name": "urbanopt_scenario_tests.epw",
-        "climate_zone": "5B"
+        "weather_file_name": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
+        "climate_zone": "6A"
       }
     },{
       "measure_dir_name": "create_bar_from_building_type_ratios",
@@ -79,6 +79,12 @@
         "add_hvac": true,
         "use_upstream_args": false
       }
+    },{
+      "measure_dir_name": "IncreaseInsulationRValueForExteriorWalls",
+      "arguments": {
+        "__SKIP__": true,
+        "r_value": 10
+      } 
     },{
       "measure_dir_name": "ReduceElectricEquipmentLoadsByPercentage",
       "arguments": {

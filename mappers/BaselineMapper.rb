@@ -50,7 +50,7 @@ module URBANopt
           if @@osw.nil? 
             
             # load the OSW for this class
-            osw_path = File.join(File.dirname(__FILE__), 'baseline.osw')
+            osw_path = File.join(File.dirname(__FILE__), 'base_workflow.osw')
             File.open(osw_path, 'r') do |file|
               @@osw = JSON.parse(file.read, symbolize_names: true)
             end
@@ -73,7 +73,6 @@ module URBANopt
         feature = features[0]
         feature_id = feature.id
         feature_type = feature.type 
-
         feature_name = feature.name
         if feature_names.size == 1
           feature_name = feature_names[0]
@@ -110,19 +109,66 @@ module URBANopt
             building_type_1 = 'MidriseApartment'  
           when 'Mixed use'
             mixed_type_1 = feature.mixed_type_1
+            
             mixed_type_2 = feature.mixed_type_2
             mixed_type_2_percentage = feature.mixed_type_2_percentage
-            mixed_type_2_fract_bldg_area = mixed_type_2_percentage/100
-    
+            mixed_type_2_fract_bldg_area = mixed_type_2_percentage*0.01
+                       
             mixed_type_3 = feature.mixed_type_3
             mixed_type_3_percentage = feature.mixed_type_3_percentage
-            mixed_type_3_fract_bldg_area = mixed_type_2_percentage/100
-    
+            mixed_type_3_fract_bldg_area = mixed_type_3_percentage*0.01
+
             mixed_type_4 = feature.mixed_type_4
             mixed_type_4_percentage = feature.mixed_type_4_percentage
-            mixed_type_4_fract_bldg_area = mixed_type_4_percentage/100
+            mixed_type_4_fract_bldg_area = mixed_type_4_percentage*0.01
+
+            mixed_use_types = []
+            mixed_use_types << mixed_type_1
+            mixed_use_types << mixed_type_2
+            mixed_use_types << mixed_type_3
+            mixed_use_types << mixed_type_4
+
+            openstudio_mixed_use_types = []
+
+            mixed_use_types.each do |mixed_use_type|
+
+              case mixed_use_type
+              when 'Multifamily (5 or more units)'
+                mixed_use_type = 'MidriseApartment'
+              when 'Multifamily (2 to 4 units)'
+                mixed_use_type = 'MidriseApartment'
+              when 'Single-Family'
+                mixed_use_type = 'MidriseApartment'
+              when 'Office'
+                mixed_use_type = 'MediumOffice'
+              when 'Outpatient health care'
+                mixed_use_type = 'Outpatient'
+              when 'Inpatient health care'
+                mixed_use_type = 'Hospital'
+              when 'Lodging'
+                mixed_use_type = 'LargeHotel'
+              when 'Food service'
+                mixed_use_type = 'FullServiceRestaurant'
+              when 'Strip shopping mall'
+                mixed_use_type = 'RetailStripmall'
+              when 'Retail other than mall'
+                mixed_use_type = 'RetailStandalone' 
+              when 'Education'
+                mixed_use_type = 'SecondarySchool'
+              when 'Nursing'
+                mixed_use_type = 'MidriseApartment' 
+              end
+
+              openstudio_mixed_use_types << mixed_use_type
+            end
+
+            openstudio_mixed_type_1 = openstudio_mixed_use_types[0]  
+            openstudio_mixed_type_2 = openstudio_mixed_use_types[1]
+            openstudio_mixed_type_3 = openstudio_mixed_use_types[2]
+            openstudio_mixed_type_4 = openstudio_mixed_use_types[3]
+
           end
-          
+
           footprint_area = feature.footprint_area
           floor_height = 10
           number_of_stories = feature.number_of_stories 
@@ -157,22 +203,25 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'floor_height', floor_height)
         OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'num_stories_above_grade', number_of_stories_above_ground)
         OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'num_stories_below_grade', number_of_stories_below_ground)
-        #OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'template', template)
 
         OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_a', building_type_1)
         
         if building_type_1 == 'Mixed use'
 
-          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_a', mixed_type_1)
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_a', openstudio_mixed_type_1)
           
-          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_b', mixed_type_2)
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_b', openstudio_mixed_type_2)
+          
           OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_b_fract_bldg_area', mixed_type_2_fract_bldg_area)
+                    
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_c', openstudio_mixed_type_3)
           
-          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_c', mixed_type_3)
           OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_c_fract_bldg_area', mixed_type_3_fract_bldg_area)
-
-          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_d', mixed_type_4)
+          
+          OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_d', openstudio_mixed_type_4)
+          
           OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_d_fract_bldg_area', mixed_type_4_fract_bldg_area)      
+        
         end
         
         # calling create typical building the first time will create space types
@@ -185,7 +234,12 @@ module URBANopt
         # create geometry for the desired feature, this will reuse blended space types in the model for each story and remove the bar geometry
         OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'geojson_file', scenario.feature_file.path)
         OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'feature_id', feature_id)
-        OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'surrounding_buildings', 'None')
+        OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'surrounding_buildings', 'ShadingOnly')
+        
+        if building_type_1 == 'MidriseApartment'
+          OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', '__SKIP__', true)
+          OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', 'r_value', 10)
+        end
         
         # call create typical building a second time, do not touch space types, only add hvac
         OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'system_type', system_type, 'create_typical_building_from_model 2')
