@@ -8,10 +8,12 @@ workflow. Each of these modules is developed and managed in separate source code
 repositories. The different modules used in the URBANopt Example GeoJSON Project workflow
 include:
 
-- [URBANopt GeoJSON Gem](https://github.com/urbanopt/urbanopt-geojson-gem) module has
+- [URBANopt Core Gem](https://github.com/urbanopt/urbanopt-core-gem) defines the FeatureFile class. 
+
+- [URBANopt GeoJSON Gem](https://github.com/urbanopt/urbanopt-geojson-gem) has
   functionality to translate the GeoJSON Features to OpenStudio Models for simulation.
 
-- [URBANopt Scenario Gem](https://github.com/urbanopt/urbanopt-scenario-gem) module
+- [URBANopt Scenario Gem](https://github.com/urbanopt/urbanopt-scenario-gem)
   allows the user to specify, run and compare multiple district-scale energy scenarios. 
 
 - [OpenStudio Common Measures Gem](https://github.com/NREL/openstudio-common-measures-gem) , [OpenStudio Model Articulation Gem](https://github.com/NREL/openstudio-model-articulation-gem) and
