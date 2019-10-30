@@ -8,7 +8,7 @@ source 'http://rubygems.org'
 # checkout the latest version (develop) from github.
 allow_local = ENV['FAVOR_LOCAL_GEMS']
 
-# Uncomment the extension, common measures, and core gems if you need to test local development versions. Otherwise
+# Uncomment the extension, common measures, core gems if you need to test local development versions. Otherwise
 # these are included in the model articulation and urbanopt gems
 #
 # if allow_local && File.exist?('../OpenStudio-extension-gem')
@@ -28,7 +28,7 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # elsif allow_local
 #   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
-
+#
 # if allow_local && File.exist?('../openstudio-model-articulation-gem')
 #   # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
 #   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
