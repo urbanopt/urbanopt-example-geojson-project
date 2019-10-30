@@ -23,3 +23,6 @@ out.txt
 
 # Ignore IDE files
 /.idea
+
+# running config
+runner.conf
