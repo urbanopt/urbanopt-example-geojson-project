@@ -29,14 +29,14 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
 
-if allow_local && File.exist?('../openstudio-model-articulation-gem')
-  # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
-  gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
-elsif allow_local
-  gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
-else
-  gem 'openstudio-model-articulation', '0.1.0'
-end
+# if allow_local && File.exist?('../openstudio-model-articulation-gem')
+#   # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
+#   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
+# elsif allow_local
+#   gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
+# else
+#   gem 'openstudio-model-articulation', '0.1.0'
+# end
 
 if allow_local && File.exist?('../urbanopt-scenario-gem')
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
