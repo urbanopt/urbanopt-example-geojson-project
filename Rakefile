@@ -32,7 +32,6 @@ require 'openstudio/extension'
 require 'openstudio/extension/rake_task'
 require 'urbanopt/scenario'
 require 'urbanopt/geojson'
-require 'optparse'
 
 module URBANopt
   module ExampleGeoJSONProject
@@ -76,65 +75,37 @@ def root_dir
   return File.dirname(__FILE__)
 end
 
-# def baseline_scenario
-#   name = 'Baseline Scenario'
-#   run_dir = File.join(File.dirname(__FILE__), 'run/baseline_scenario/')
-#   feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-#   csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
-#   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
-#   num_header_rows = 1
-
-#   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
-#   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-#   return scenario
-# end
-
-# def high_efficiency_scenario
-#   name = 'High Efficiency Scenario'
-#   run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
-#   feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-#   csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
-#   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
-#   num_header_rows = 1
-
-#   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
-#   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-#   return scenario
-# end
-
-# def mixed_scenario
-#   name = 'Mixed Scenario'
-#   run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
-#   feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-#   csv_file = File.join(File.dirname(__FILE__), 'mixed_scenario.csv')
-#   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
-#   num_header_rows = 1
-
-#   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
-#   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-#   return scenario
-# end
-
-
-@options = {}
-
-OptionParser.new do |opts|
-  opts.on("-b", "--baseline", "Use Baseline Scenario") do
-    @options[:scenario_type] = 'Baseline'
-  end
-  opts.on("-m", "--mixed", "Use Mixed Scenario") do
-    @options[:scenario_type] = 'Mixed'
-  end
-  opts.on("-e", "--efficient", "Use High-efficiency Scenario") do
-    @options[:scenario_type] = 'Efficient'
-  end
-end.parse!
-
-def scenario(scenario_type)
-  name = '{#scenario_type} Scenario'
-  run_dir = File.join(File.dirname(__FILE__), 'run/{#scenario_type.downcase}_scenario/')
+def baseline_scenario
+  name = 'Baseline Scenario'
+  run_dir = File.join(File.dirname(__FILE__), 'run/baseline_scenario/')
   feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), '{#scenario_type.downcase}_scenario.csv')
+  csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
+  mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
+  num_header_rows = 1
+
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def high_efficiency_scenario
+  name = 'High Efficiency Scenario'
+  run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
+  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
+  csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
+  mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
+  num_header_rows = 1
+
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def mixed_scenario
+  name = 'Mixed Scenario'
+  run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
+  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
+  csv_file = File.join(File.dirname(__FILE__), 'mixed_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
 
@@ -147,104 +118,82 @@ end
 rake_task = OpenStudio::Extension::RakeTask.new
 rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONProject)
 
-desc 'Clear previous calculations for {#scenario_type} scenario'
-task :clear do
-  puts "Clearing {#scenario_type} Scenario..."
-  scenario(scenario_type).clear  # TODO: Right way to select which scenario to operate on. Trying to use optparse, open to suggestions
+### Baseline 
+
+desc 'Clear Baseline Scenario'
+task :clear_baseline do
+  puts 'Clearing Baseline Scenario...'
+  baseline_scenario.clear
 end
 
-desc 'Run {#scenario_type} scenario'
-task :run do
-  puts "Running {#scenario_type} Scenario..."
+desc 'Run Baseline Scenario'
+task :run_baseline do
+  puts 'Running Baseline Scenario...'
+
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-  scenario_runner.run(scenario(scenario_type))
+  scenario_runner.run(baseline_scenario)
 end
 
-desc 'Post Process {#scenario_type} Scenario'
-task :post_process do
-  puts 'Post Processing {#scenario_type} Scenario...'
+desc 'Post Process Baseline Scenario'
+task :post_process_baseline do
+  puts 'Post Processing Baseline Scenario...'
   
-  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(scenario(scenario_type))
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario)
   scenario_result = default_post_processor.run
   scenario_result.save
 end
 
-# ### Baseline 
+### High Efficiency 
 
-# desc 'Clear Baseline Scenario'
-# task :clear_baseline do
-#   puts 'Clearing Baseline Scenario...'
-#   baseline_scenario.clear
-# end
+desc 'Clear High Efficiency Scenario'
+task :clear_high_efficiency do
+  puts 'Clearing High Efficiency Scenario...'
+  high_efficiency_scenario.clear
+end
 
-# desc 'Run Baseline Scenario'
-# task :run_baseline do
-#   puts 'Running Baseline Scenario...'
+desc 'Run High Efficiency Scenario'
+task :run_high_efficiency do
+  puts 'Running High Efficiency Scenario...'
 
-#   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-#   scenario_runner.run(baseline_scenario)
-# end
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(high_efficiency_scenario)
+end
 
-# desc 'Post Process Baseline Scenario'
-# task :post_process_baseline do
-#   puts 'Post Processing Baseline Scenario...'
+desc 'Post Process High Efficiency Scenario'
+task :post_process_high_efficiency do
+  puts 'Post Processing High Efficiency Scenario...'
   
-#   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario)
-#   scenario_result = default_post_processor.run
-#   scenario_result.save
-# end
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario)
+  scenario_result = default_post_processor.run
+  scenario_result.save
+end
 
-# ### High Efficiency 
+### Mixed
 
-# desc 'Clear High Efficiency Scenario'
-# task :clear_high_efficiency do
-#   puts 'Clearing High Efficiency Scenario...'
-#   high_efficiency_scenario.clear
-# end
+desc 'Clear Mixed Scenario'
+task :clear_mixed do
+  puts 'Clearing Mixed Scenario...'
+  mixed_scenario.clear
+end
 
-# desc 'Run High Efficiency Scenario'
-# task :run_high_efficiency do
-#   puts 'Running High Efficiency Scenario...'
+desc 'Run Mixed Scenario'
+task :run_mixed do
+  puts 'Running Mixed Scenario...'
 
-#   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-#   scenario_runner.run(high_efficiency_scenario)
-# end
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(mixed_scenario)
+end
 
-# desc 'Post Process High Efficiency Scenario'
-# task :post_process_high_efficiency do
-#   puts 'Post Processing High Efficiency Scenario...'
+desc 'Post Process Mixed Scenario'
+task :post_process_mixed do
+  puts 'Post Processing Mixed Scenario...'
   
-#   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario)
-#   scenario_result = default_post_processor.run
-#   scenario_result.save
-# end
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario)
+  scenario_result = default_post_processor.run
+  scenario_result.save
+end
 
-# ### Mixed
-
-# desc 'Clear Mixed Scenario'
-# task :clear_mixed do
-#   puts 'Clearing Mixed Scenario...'
-#   mixed_scenario.clear
-# end
-
-# desc 'Run Mixed Scenario'
-# task :run_mixed do
-#   puts 'Running Mixed Scenario...'
-
-#   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-#   scenario_runner.run(mixed_scenario)
-# end
-
-# desc 'Post Process Mixed Scenario'
-# task :post_process_mixed do
-#   puts 'Post Processing Mixed Scenario...'
-  
-#   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario)
-#   scenario_result = default_post_processor.run
-#   scenario_result.save
-# end
-
-### All  # TODO: Generalize these to work with optparse like the individual scenarios above
+### All
 
 desc 'Clear all scenarios'
 task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_mixed] do
