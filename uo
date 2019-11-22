@@ -41,14 +41,15 @@ require 'optparse'
 # Set up cli
 @options = {}
 OptionParser.new do |opts|
-  opts.banner = "Usage: ./uo [flag] [ScenarioFile] optional: [FeatureFile]"
+  opts.banner = "Usage: ./uo [flag] [ScenarioFile] optional: [FeatureFile]\n" +
+  "If no FeatureFile specified, will use example_project.json as default"
   opts.on("-r", "--run", "Run simulation for the named scenario") do
     @options[:action_type] = "Run"
   end
   opts.on("-p", "--postprocess", "Aggregate results for the named scenario") do
     @options[:action_type] = "PostProcess"
   end
-  opts.on("-c", "--clear", "Delete results from the named scenario") do
+  opts.on("-c", "--clear", "Delete previous results from the named scenario") do
     @options[:action_type] = "Clear"
   end
 end.parse!
@@ -58,16 +59,17 @@ if ARGV[1]
   actual_feature_file = ARGV[1]
 end
 
-# Gather the defining files of the district to be simulated
-# params
-# +scenario_name+:: _string_ Name of csv file that defines the scenario
-def scenario(scenario_name, featureFile=nil)
+# Gather the defining files of the district to be simulated\
+# params\
+# +scenario+:: _string_ Name of csv file that defines the scenario\
+# +featureFile+:: _string_ Name of Feature File used to describe set of features in the district. If not passed, uses example project.
+def scenario(scenario, featureFile=nil)
   featureFile = "example_project.json" if featureFile.nil?  # TODO: Put this back to normal default parameter?
-  name = "#{scenario_name.capitalize} Scenario"
+  name = "#{scenario.capitalize} Scenario"
   root_dir = File.dirname(__FILE__)
-  run_dir = File.join(File.dirname(__FILE__), "run/#{scenario_name.downcase}/")
+  run_dir = File.join(File.dirname(__FILE__), "run/#{scenario.downcase}")
   feature_file_path = File.join(File.dirname(__FILE__), "#{featureFile}")
-  csv_file = File.join(File.dirname(__FILE__), "#{scenario_name}.csv")
+  csv_file = File.join(File.dirname(__FILE__), "#{scenario}.csv")
   mapper_files_dir = File.join(File.dirname(__FILE__), "mappers/")
   num_header_rows = 1
 
@@ -79,19 +81,20 @@ end
 
 # Perform CLI actions
 if @options[:action_type] == "Clear"
-  puts "Deleting previous results from '#{scenario_file}' Scenario..."
+  puts "Deleting previous results from '#{scenario_file}'..."
   # TODO: this isn't the right way to call scenario with an optional argument
+  # Edit: Maybe it is after all?
   scenario(scenario_file, actual_feature_file).clear
 end
 
 if @options[:action_type] == "Run"
-  puts "Simulating all features in '#{scenario_file}' Scenario..."
+  puts "Simulating all features in '#{scenario_file}'..."
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
   scenario_runner.run(scenario(scenario_file, actual_feature_file))
 end
 
 if @options[:action_type] == "PostProcess"
-  puts "Aggregating results across all of '#{scenario_file}' Scenario..."
+  puts "Aggregating results across all of '#{scenario_file}'..."
   scenario_result = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(scenario(scenario_file, actual_feature_file)).run
   scenario_result.save
 end
