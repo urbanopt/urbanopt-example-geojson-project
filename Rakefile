@@ -86,6 +86,7 @@ def baseline_scenario
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
+  
 end
 
 def high_efficiency_scenario

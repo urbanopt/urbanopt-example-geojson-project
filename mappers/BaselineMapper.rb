@@ -90,8 +90,8 @@ module URBANopt
         if feature_type == 'Building'
           if feature.detailed_model_filename
             detailed_model_name = feature.detailed_model_filename
-            @@osw[:file_paths] << File.join(File.dirname(__FILE__), '../osm_building/')
-            @@osw[:seed_file] = detailed_model_name
+            osw[:file_paths] << File.join(File.dirname(__FILE__), '../osm_building/')
+            osw[:seed_file] = detailed_model_name
           end
         
           # call create typical building a second time, add hvac
