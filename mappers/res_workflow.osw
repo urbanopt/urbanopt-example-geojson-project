@@ -12,7 +12,8 @@
       "arguments": {
         "building_type": null,
         "footprint_area": null,
-        "number_of_stories": null
+        "number_of_stories": null,
+        "number_of_residential_units": null
       }
     },{
       "measure_dir_name": "default_feature_reports",

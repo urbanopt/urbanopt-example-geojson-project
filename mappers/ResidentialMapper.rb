@@ -81,14 +81,25 @@ module URBANopt
         if feature_type == 'Building'
           
           building_type_1 = feature.building_type
+          number_of_residential_units = 1
 
           case building_type_1
           when 'Multifamily (5 or more units)'
-            building_type_1 = 'Multifamily'
+            building_type_1 = 'multifamily'
+            number_of_residential_units = 9
+            begin
+              number_of_residential_units = feature.number_of_residential_units
+            rescue
+            end
           when 'Multifamily (2 to 4 units)'
-            building_type_1 = 'SingleFamilyAttached'
+            building_type_1 = 'single-family attached'
+            number_of_residential_units = 2
+            begin
+              number_of_residential_units = feature.number_of_residential_units
+            rescue
+            end
           when 'Single-Family'
-            building_type_1 = 'SingleFamilyDetached'
+            building_type_1 = 'single-family detached'
           when 'Office'
             building_type_1 = 'MediumOffice'
           when 'Outpatient health care'
@@ -112,10 +123,8 @@ module URBANopt
           end
 
           footprint_area = feature.footprint_area
-
           number_of_stories = feature.number_of_stories 
-          
-          # default values
+
           number_of_stories_above_ground = number_of_stories
           number_of_stories_below_ground = 0
           begin
@@ -135,7 +144,7 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'building_type', building_type_1)
         OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'footprint_area', footprint_area)
         OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'number_of_stories', number_of_stories)
-        # TODO: number of residential units?
+        OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'number_of_residential_units', number_of_residential_units)
         # TODO: foundation type other than slab if number_of_stories_below_ground is greater than zero?
 
         # call the default feature reporting measure
