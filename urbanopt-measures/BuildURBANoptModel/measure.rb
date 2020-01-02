@@ -53,7 +53,11 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
     footprint_area = runner.getDoubleArgumentValue("footprint_area", user_arguments)
     number_of_stories = runner.getIntegerArgumentValue("number_of_stories", user_arguments)
 
-    puts "HERE0", building_type, footprint_area, number_of_stories, "HERE1"
+    # TODO
+    # call one of the whole building create geometry measures
+    # loop thru resulting building units
+    # call BuildResidentialHPXML, HPXMLtoOpenStudio
+    # merge resulting models into one model
 
     return true
   end
