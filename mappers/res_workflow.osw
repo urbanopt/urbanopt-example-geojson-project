@@ -1,0 +1,28 @@
+{
+  "seed_file": null,
+  "weather_file": null,
+  "measure_paths": [
+    "C:/urbanopt/urbanopt-example-geojson-project/urbanopt-measures"
+  ],
+  "file_paths": [],
+  "run_directory": null,
+  "steps": [
+    {
+      "measure_dir_name": "BuildURBANoptModel",
+      "arguments": {
+        "building_type": null,
+        "footprint_area": null,
+        "number_of_stories": null
+      }
+    },{
+      "measure_dir_name": "default_feature_reports",
+      "arguments": {
+        "feature_id": null,
+        "feature_name": null,
+        "feature_type": null
+      }
+    }
+  ],
+  "name": null,
+  "description": null
+}
