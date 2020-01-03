@@ -69,8 +69,8 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
     meta_measure_file = File.join(resources_dir, "meta_measure.rb")
     require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
 
-    # Apply BuildResidentialHPXML geometry method
-    measures_dir = "C:/OpenStudio/OpenStudio-BuildStock-master/resources/measures"
+    # Apply whole building create geometry measures
+    measures_dir = "C:/OpenStudio/OpenStudio-BuildStock-master/resources/measures" # FIXME: remove hard-coded path
 
     # Check file/dir paths exist
     check_dir_exists(measures_dir, runner)
@@ -100,7 +100,7 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
       measure_args["total_ffa"] = args[:unit_ffa]
       measure_args["num_floors"] = args[:number_of_stories]
     elsif ["single-family attached", "multifamily"].include? args[:building_type]
-      measure_args["total_ffa"] = args[:unit_ffa]
+      measure_args["unit_ffa"] = args[:unit_ffa]
       measure_args["num_floors"] = args[:number_of_stories]
       measure_args["num_units"] = args[:number_of_residential_units]
     end
@@ -110,8 +110,8 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
       return false
     end
 
-    # Apply BuildResidentialHPXML geometry method
-    measures_dir = "C:/urbanopt/urbanopt-example-geojson-project/model-measures"
+    # Apply HPXML measures
+    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), "../../model-measures"))
 
     # Check file/dir paths exist
     check_dir_exists(measures_dir, runner)
@@ -165,10 +165,10 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
       unit_models << unit_model
     end
 
-    # TODO: Merge all the individual unit models into one model
-    # unit_model.getallmodelobjects.each do |obj|
-      # model.add(obj)
-    # end
+    # TODO: merge all unit models into a single model
+    unit_models.each do |unit_model|
+      model.insertObjects(unit_model.objects)
+    end
 
     return true
   end
