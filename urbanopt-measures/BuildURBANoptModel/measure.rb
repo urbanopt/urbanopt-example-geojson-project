@@ -61,14 +61,54 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
              :number_of_stories => runner.getIntegerArgumentValue("number_of_stories", user_arguments),
              :number_of_residential_units => runner.getIntegerArgumentValue("number_of_residential_units", user_arguments) }
 
-    # Get file/dir paths
-    resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), "../../model-measures/BuildResidentialHPXML/resources"))
-    geometry_file = File.join(resources_dir, "geometry.rb")
-    require File.join(File.dirname(geometry_file), File.basename(geometry_file, File.extname(geometry_file)))
+    # Override some defaults with geojson feature file values
+    args[:unit_ffa] = args[:footprint_area] * args[:number_of_stories] / args[:number_of_residential_units]
 
+    # Get file/dir paths
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), "../../model-measures/HPXMLtoOpenStudio/resources"))
     meta_measure_file = File.join(resources_dir, "meta_measure.rb")
     require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
+
+    # Apply BuildResidentialHPXML geometry method
+    measures_dir = "C:/OpenStudio/OpenStudio-BuildStock-master/resources/measures"
+
+    # Check file/dir paths exist
+    check_dir_exists(measures_dir, runner)
+
+    # Choose which whole building create geometry measure to call
+    if args[:building_type] == "single-family detached"
+      measure_subdir = "ResidentialGeometryCreateSingleFamilyDetached"
+    elsif args[:building_type] == "single-family attached"
+      measure_subdir = "ResidentialGeometryCreateSingleFamilyAttached"
+    elsif args[:building_type] == "multifamily"
+      measure_subdir = "ResidentialGeometryCreateMultifamily"
+    end
+
+    full_measure_path = File.join(measures_dir, measure_subdir, "measure.rb")
+    check_file_exists(full_measure_path, runner)
+    measure = get_measure_instance(full_measure_path)
+
+    # Fill the measure args hash with default values
+    measure_args = {}
+    whole_building_model = OpenStudio::Model::Model.new
+    get_measure_args_default_values(whole_building_model, measure_args, measure)
+
+    # Override some defaults with geojson feature file values
+    measures = {}
+    measures[measure_subdir] = []
+    if args[:building_type] == "single-family detached"
+      measure_args["total_ffa"] = args[:unit_ffa]
+      measure_args["num_floors"] = args[:number_of_stories]
+    elsif ["single-family attached", "multifamily"].include? args[:building_type]
+      measure_args["total_ffa"] = args[:unit_ffa]
+      measure_args["num_floors"] = args[:number_of_stories]
+      measure_args["num_units"] = args[:number_of_residential_units]
+    end
+    measures[measure_subdir] << measure_args
+
+    if not apply_measures(measures_dir, measures, runner, whole_building_model, true)
+      return false
+    end
 
     # Apply BuildResidentialHPXML geometry method
     measures_dir = "C:/urbanopt/urbanopt-example-geojson-project/model-measures"
@@ -76,32 +116,8 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
     # Check file/dir paths exist
     check_dir_exists(measures_dir, runner)
 
-    # BuildResidentialHPXML
-    measure_subdir = "BuildResidentialHPXML"
-    full_measure_path = File.join(measures_dir, measure_subdir, "measure.rb")
-    check_file_exists(full_measure_path, runner)
-    measure = get_measure_instance(full_measure_path)
-
-    # Fill the measure args hash with default values
-    get_measure_args_default_values(model, args, measure)
-
-    # Override some defaults with geojson feature file values
-    args[:cfa] = args[:footprint_area] * args[:number_of_stories] / args[:number_of_residential_units]
-    args[:num_floors] = args[:number_of_stories]
-    args[:num_units] = args[:number_of_residential_units]
-
-    if args[:building_type] == "single-family detached"
-      args[:roof_pitch] = { "1:12" => 1.0 / 12.0, "2:12" => 2.0 / 12.0, "3:12" => 3.0 / 12.0, "4:12" => 4.0 / 12.0, "5:12" => 5.0 / 12.0, "6:12" => 6.0 / 12.0, "7:12" => 7.0 / 12.0, "8:12" => 8.0 / 12.0, "9:12" => 9.0 / 12.0, "10:12" => 10.0 / 12.0, "11:12" => 11.0 / 12.0, "12:12" => 12.0 / 12.0 }[args[:roof_pitch]]
-      success = Geometry2.create_single_family_detached(runner: runner, model: model, **args)
-    elsif args[:building_type] == "single-family attached"
-      success = Geometry2.create_single_family_attached(runner: runner, model: model, **args)
-    elsif args[:building_type] == "multifamily"
-      success = Geometry2.create_multifamily(runner: runner, model: model, **args)
-    end
-    return false if not success
-
     unit_models = []
-    model.getBuildingUnits.each do |unit|
+    whole_building_model.getBuildingUnits.each do |unit|
       unit_model = OpenStudio::Model::Model.new
 
       # BuildResidentialHPXML
@@ -111,16 +127,17 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
       measure = get_measure_instance(full_measure_path)
 
       # Fill the measure args hash with default values
-      args = get_measure_args_default_values(model, measure)
+      measure_args = {}
+      get_measure_args_default_values(unit_model, measure_args, measure)
 
       measures = {}
-      measures[measure_subdir] = [args]
-      measures[measure_subdir][0]["weather_station_epw_filename"] = "USA_CO_Denver.Intl.AP.725650_TMY3.epw"
-      measures[measure_subdir][0]["hpxml_output_path"] = "../in.xml"
-      measures[measure_subdir][0]["schedules_output_path"] = "../schedules.csv"
-      measures[measure_subdir][0]["unit_type"] = building_type
-      measures[measure_subdir][0]["cfa"] = unit_ffa
-      # TODO: pass in attributes of the unit
+      measures[measure_subdir] = []
+      measure_args["weather_station_epw_filename"] = "USA_CO_Denver.Intl.AP.725650_TMY3.epw"
+      measure_args["hpxml_output_path"] = File.expand_path("../in.xml")
+      measure_args["schedules_output_path"] = "../schedules.csv"
+      measure_args["unit_type"] = args[:building_type]
+      measure_args["cfa"] = args[:unit_ffa]
+      measures[measure_subdir] << measure_args
 
       if not apply_measures(measures_dir, measures, runner, unit_model, true)
         return false
@@ -133,11 +150,13 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
       measure = get_measure_instance(full_measure_path)
 
       # Fill the measure args hash with default values
-      args = get_measure_args_default_values(model, measure)
+      measure_args = {}
+      get_measure_args_default_values(unit_model, measure_args, measure)
 
       measures = {}
-      measures[measure_subdir] = [args]
-      measures[measure_subdir][0]["hpxml_path"] = "../in.xml"
+      measures[measure_subdir] = []
+      measure_args["hpxml_path"] = File.expand_path("../in.xml")
+      measures[measure_subdir] << measure_args
 
       if not apply_measures(measures_dir, measures, runner, unit_model, true)
         return false
@@ -147,27 +166,28 @@ class BuildURBANoptModel < OpenStudio::Measure::ModelMeasure
     end
 
     # TODO: Merge all the individual unit models into one model
-    model = unit_models[0]
-  
+    # unit_model.getallmodelobjects.each do |obj|
+      # model.add(obj)
+    # end
+
     return true
   end
 
   def get_measure_args_default_values(model, args, measure)
-    measure_args = measure.arguments(model)
-    measure_args.each do |arg|
+    measure.arguments(model).each do |arg|
       next unless arg.hasDefaultValue
 
       case arg.type.valueName.downcase
       when "boolean"
-        args[arg.name.to_sym] = arg.defaultValueAsBool
+        args[arg.name] = arg.defaultValueAsBool
       when "double"
-        args[arg.name.to_sym] = arg.defaultValueAsDouble
+        args[arg.name] = arg.defaultValueAsDouble
       when "integer"
-        args[arg.name.to_sym] = arg.defaultValueAsInteger
+        args[arg.name] = arg.defaultValueAsInteger
       when "string"
-        args[arg.name.to_sym] = arg.defaultValueAsString
+        args[arg.name] = arg.defaultValueAsString
       when "choice"
-        args[arg.name.to_sym] = arg.defaultValueAsString
+        args[arg.name] = arg.defaultValueAsString
       end
     end
   end
