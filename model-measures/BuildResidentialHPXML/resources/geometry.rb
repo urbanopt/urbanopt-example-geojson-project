@@ -142,12 +142,12 @@ class Geometry2
         garage_space = garage_space.get
         garage_space_name = "garage space"
         garage_space.setName(garage_space_name)
-        if space_types_hash.keys.include? Constants.SpaceTypeGarage
-          garage_space_type = space_types_hash[Constants.SpaceTypeGarage]
+        if space_types_hash.keys.include? "garage"
+          garage_space_type = space_types_hash["garage"]
         else
           garage_space_type = OpenStudio::Model::SpaceType.new(model)
-          garage_space_type.setStandardsSpaceType(Constants.SpaceTypeGarage)
-          space_types_hash[Constants.SpaceTypeGarage] = garage_space_type
+          garage_space_type.setStandardsSpaceType("garage")
+          space_types_hash["garage"] = garage_space_type
         end
         garage_space.setSpaceType(garage_space_type)
         runner.registerInfo("Set #{garage_space_name}.")
@@ -245,12 +245,12 @@ class Geometry2
         living_space_name = "living space"
       end
       living_space.setName(living_space_name)
-      if space_types_hash.keys.include? Constants.SpaceTypeLiving
-        living_space_type = space_types_hash[Constants.SpaceTypeLiving]
+      if space_types_hash.keys.include? "living"
+        living_space_type = space_types_hash["living"]
       else
         living_space_type = OpenStudio::Model::SpaceType.new(model)
-        living_space_type.setStandardsSpaceType(Constants.SpaceTypeLiving)
-        space_types_hash[Constants.SpaceTypeLiving] = living_space_type
+        living_space_type.setStandardsSpaceType("living")
+        space_types_hash["living"] = living_space_type
       end
       living_space.setSpaceType(living_space_type)
       runner.registerInfo("Set #{living_space_name}.")
@@ -355,13 +355,13 @@ class Geometry2
         attic_zone.setName("#{attic_type} zone")
         attic_space.setThermalZone(attic_zone)
         if attic_type == "attic - vented"
-          attic_space_type_name = Constants.SpaceTypeVentedAttic
+          attic_space_type_name = "vented attic"
         else
-          attic_space_type_name = Constants.SpaceTypeUnventedAttic
+          attic_space_type_name = "unvented attic"
         end
       elsif attic_type == "attic - conditioned"
         attic_space.setThermalZone(living_zone)
-        attic_space_type_name = Constants.SpaceTypeLiving
+        attic_space_type_name = "living"
       end
       attic_space_name = "#{attic_type} space"
       attic_space.setName(attic_space_name)
@@ -404,13 +404,13 @@ class Geometry2
       foundation_space = OpenStudio::Model::Space::fromFloorPrint(foundation_polygon, foundation_height, model)
       foundation_space = foundation_space.get
       if foundation_type == "crawlspace - vented"
-        foundation_space_type_name = Constants.SpaceTypeVentedCrawl
+        foundation_space_type_name = "vented crawlspace"
       elsif foundation_type == "crawlspace - unvented"
-        foundation_space_type_name = Constants.SpaceTypeUnventedCrawl
+        foundation_space_type_name = "unvented crawlspace"
       elsif foundation_type == "basement - unconditioned"
-        foundation_space_type_name = Constants.SpaceTypeUnconditionedBasement
+        foundation_space_type_name = "unconditioned basement"
       elsif foundation_type == "basement - conditioned"
-        foundation_space_type_name = Constants.SpaceTypeLiving
+        foundation_space_type_name = "living"
       elsif foundation_type == "ambient"
         foundation_space_type_name = foundation_type
       end
@@ -559,14 +559,14 @@ class Geometry2
           wall_s.setSpace(garage_attic_space)
 
           if attic_type == "attic - conditioned"
-            garage_attic_space_type_name = Constants.SpaceTypeLiving
+            garage_attic_space_type_name = "living"
             garage_attic_space.setThermalZone(living_zone)
           else
             if num_floors > 1
-              garage_attic_space_type_name = Constants.SpaceTypeVentedAttic
+              garage_attic_space_type_name = "vented attic"
               garage_attic_space.setThermalZone(attic_zone)
             else
-              garage_attic_space_type_name = Constants.SpaceTypeGarage
+              garage_attic_space_type_name = "garage"
               garage_attic_space.setThermalZone(garage_zone)
             end
           end
@@ -646,7 +646,7 @@ class Geometry2
       garage_space.surfaces.each do |surface|
         next if surface.surfaceType.downcase != "floor"
 
-        adjacent_wall_surfaces = Geometry.get_walls_connected_to_floor(foundation_walls, surface, false)
+        adjacent_wall_surfaces = get_walls_connected_to_floor(foundation_walls, surface, false)
         adjacent_wall_surfaces.each do |adjacent_wall_surface|
           adjacent_wall_surface.setOutsideBoundaryCondition("Adiabatic")
         end
@@ -1486,6 +1486,9 @@ class Geometry2
     num_units = 2 # FIXME
     num_floors = 1 # FIXME
     corridor_position = "None" # FIXME
+    if foundation_type == "basement - conditioned"
+      foundation_type = "basement - unconditioned" # FIXME
+    end
 
     if foundation_type == "slab"
       foundation_height = 0.0
@@ -1623,12 +1626,12 @@ class Geometry2
     living_space = OpenStudio::Model::Space::fromFloorPrint(living_polygon, wall_height, model)
     living_space = living_space.get
     living_space.setName("living space")
-    if space_types_hash.keys.include? Constants.SpaceTypeLiving
-      living_space_type = space_types_hash[Constants.SpaceTypeLiving]
+    if space_types_hash.keys.include? "living"
+      living_space_type = space_types_hash["living"]
     else
       living_space_type = OpenStudio::Model::SpaceType.new(model)
-      living_space_type.setStandardsSpaceType(Constants.SpaceTypeLiving)
-      space_types_hash[Constants.SpaceTypeLiving] = living_space_type
+      living_space_type.setStandardsSpaceType("living")
+      space_types_hash["living"] = living_space_type
     end
     living_space.setSpaceType(living_space_type)
     living_space.setThermalZone(living_zone)
@@ -1789,16 +1792,16 @@ class Geometry2
           foundation_zone.setName("#{foundation_type} zone")
           foundation_space.setThermalZone(foundation_zone)
           if foundation_type == "crawlspace - vented"
-            foundation_space_type_name = Constants.SpaceTypeVentedCrawl
+            foundation_space_type_name = "vented crawlspace"
           else
-            foundation_space_type_name = Constants.SpaceTypeUnventedCrawl
+            foundation_space_type_name = "unvented crawlspace"
           end
         elsif foundation_type == "basement - unconditioned"
           foundation_space.setName("#{foundation_type} space")
           foundation_zone = OpenStudio::Model::ThermalZone.new(model)
           foundation_zone.setName("#{foundation_type} zone")
           foundation_space.setThermalZone(foundation_zone)
-          foundation_space_type_name = Constants.SpaceTypeUnconditionedBasement
+          foundation_space_type_name = "unconditioned basement"
         end
         if space_types_hash.keys.include? foundation_space_type_name
           foundation_space_type = space_types_hash[foundation_space_type_name]
@@ -1866,5 +1869,157 @@ class Geometry2
       end
     end
     return false
+  end
+
+  def self.is_point_between(p, v1, v2)
+    # Checks if point p is between points v1 and v2
+    is_between = false
+    tol = 0.001
+    if (p[2] - v1[2]).abs <= tol and (p[2] - v2[2]).abs <= tol # equal z
+      if (p[0] - v1[0]).abs <= tol and (p[0] - v2[0]).abs <= tol # equal x; vertical
+        if p[1] >= v1[1] - tol and p[1] <= v2[1] + tol
+          is_between = true
+        elsif p[1] <= v1[1] + tol and p[1] >= v2[1] - tol
+          is_between = true
+        end
+      elsif (p[1] - v1[1]).abs <= tol and (p[1] - v2[1]).abs <= tol # equal y; horizontal
+        if p[0] >= v1[0] - tol and p[0] <= v2[0] + tol
+          is_between = true
+        elsif p[0] <= v1[0] + tol and p[0] >= v2[0] - tol
+          is_between = true
+        end
+      end
+    end
+    return is_between
+  end
+
+  def self.get_walls_connected_to_floor(wall_surfaces, floor_surface, same_space = true)
+    adjacent_wall_surfaces = []
+
+    wall_surfaces.each do |wall_surface|
+      if same_space
+        next if wall_surface.space.get != floor_surface.space.get
+      else
+        next if wall_surface.space.get == floor_surface.space.get
+      end
+
+      wall_vertices = wall_surface.vertices
+      wall_vertices.each_with_index do |wv1, widx|
+        wv2 = wall_vertices[widx - 1]
+        floor_vertices = floor_surface.vertices
+        floor_vertices.each_with_index do |fv1, fidx|
+          fv2 = floor_vertices[fidx - 1]
+          # Wall within floor edge?
+          if is_point_between([wv1.x, wv1.y, wv1.z], [fv1.x, fv1.y, fv1.z], [fv2.x, fv2.y, fv2.z]) and is_point_between([wv2.x, wv2.y, wv2.z], [fv1.x, fv1.y, fv1.z], [fv2.x, fv2.y, fv2.z])
+            if not adjacent_wall_surfaces.include? wall_surface
+              adjacent_wall_surfaces << wall_surface
+            end
+          end
+        end
+      end
+    end
+
+    return adjacent_wall_surfaces
+  end
+
+  # Takes in a list of floor surfaces for which to calculate the exposed perimeter.
+  # Returns the total exposed perimeter.
+  # NOTE: Does not work for buildings with non-orthogonal walls.
+  def self.calculate_exposed_perimeter(model, ground_floor_surfaces, has_foundation_walls = false)
+    perimeter = 0
+
+    # Get ground edges
+    if not has_foundation_walls
+      # Use edges from floor surface
+      ground_edges = self.get_edges_for_surfaces(ground_floor_surfaces, false)
+    else
+      # Use top edges from foundation walls instead
+      surfaces = []
+      ground_floor_surfaces.each do |ground_floor_surface|
+        next if not ground_floor_surface.space.is_initialized
+
+        foundation_space = ground_floor_surface.space.get
+        wall_surfaces = []
+        foundation_space.surfaces.each do |surface|
+          next if not surface.surfaceType.downcase == "wall"
+          next if surface.adjacentSurface.is_initialized
+
+          wall_surfaces << surface
+        end
+        get_walls_connected_to_floor(wall_surfaces, ground_floor_surface).each do |surface|
+          next if surfaces.include? surface
+
+          surfaces << surface
+        end
+      end
+      ground_edges = get_edges_for_surfaces(surfaces, true)
+    end
+    # Get bottom edges of exterior walls (building footprint)
+    surfaces = []
+    model.getSurfaces.each do |surface|
+      next if not surface.surfaceType.downcase == "wall"
+      next if surface.outsideBoundaryCondition.downcase != "outdoors"
+
+      surfaces << surface
+    end
+    model_edges = get_edges_for_surfaces(surfaces, false)
+
+    # compare edges for overlap
+    ground_edges.each do |e1|
+      model_edges.each do |e2|
+        next if not self.is_point_between(e2[0], e1[0], e1[1])
+        next if not self.is_point_between(e2[1], e1[0], e1[1])
+
+        point_one = OpenStudio::Point3d.new(e2[0][0], e2[0][1], e2[0][2])
+        point_two = OpenStudio::Point3d.new(e2[1][0], e2[1][1], e2[1][2])
+        length = OpenStudio::Vector3d.new(point_one - point_two).length
+        perimeter += length
+      end
+    end
+
+    return UnitConversions.convert(perimeter, "m", "ft")
+  end
+
+  def self.get_edges_for_surfaces(surfaces, use_top_edge)
+    top_z = -99999
+    bottom_z = 99999
+    surfaces.each do |surface|
+      top_z = [Geometry.getSurfaceZValues([surface]).max, top_z].max
+      bottom_z = [Geometry.getSurfaceZValues([surface]).min, bottom_z].min
+    end
+    edges = []
+    edge_counter = 0
+    surfaces.each do |surface|
+      if use_top_edge
+        matchz = top_z
+      else
+        matchz = bottom_z
+      end
+
+      # get vertices
+      vertex_hash = {}
+      vertex_counter = 0
+      surface.vertices.each do |vertex|
+        next if (UnitConversions.convert(vertex.z, "m", "ft") - matchz).abs > 0.0001 # ensure we only process bottom/top edge of wall surfaces
+
+        vertex_counter += 1
+        vertex_hash[vertex_counter] = [vertex.x + surface.space.get.xOrigin,
+                                       vertex.y + surface.space.get.yOrigin,
+                                       vertex.z + surface.space.get.zOrigin]
+      end
+      # make edges
+      counter = 0
+      vertex_hash.each do |k, v|
+        edge_counter += 1
+        counter += 1
+        if vertex_hash.size != counter
+          edges << [v, vertex_hash[counter + 1], Geometry.get_facade_for_surface(surface)]
+        elsif vertex_hash.size > 2 # different code for wrap around vertex (if > 2 vertices)
+          edges << [v, vertex_hash[1], Geometry.get_facade_for_surface(surface)]
+        end
+      end
+    end
+
+    return edges
   end
 end
