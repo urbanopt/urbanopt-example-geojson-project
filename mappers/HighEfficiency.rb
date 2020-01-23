@@ -32,7 +32,7 @@ require 'urbanopt/scenario'
 require 'openstudio/common_measures'
 require 'openstudio/model_articulation'
 
-require_relative 'BaselineMapper'
+require_relative 'Baseline'
 
 require 'json'
 
