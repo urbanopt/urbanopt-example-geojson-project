@@ -32,13 +32,13 @@ require 'urbanopt/scenario'
 require 'openstudio/common_measures'
 require 'openstudio/model_articulation'
 
-require_relative 'Baseline'
+require_relative 'CommercialBaseline'
 
 require 'json'
 
 module URBANopt
   module Scenario
-    class HighEfficiencyMapper < BaselineMapper
+    class CommercialHighEfficiencyMapper < CommercialBaselineMapper
       
       def create_osw(scenario, features, feature_names)
       

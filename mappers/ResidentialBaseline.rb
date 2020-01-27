@@ -29,14 +29,12 @@
 #*********************************************************************************
 
 require 'urbanopt/scenario'
-require 'openstudio/common_measures'
-require 'openstudio/model_articulation'
 
 require 'json'
 
 module URBANopt
   module Scenario
-    class ResidentialMapper < SimulationMapperBase
+    class ResidentialBaselineMapper < SimulationMapperBase
     
       # class level variables
       @@instance_lock = Mutex.new
@@ -50,13 +48,13 @@ module URBANopt
           if @@osw.nil? 
             
             # load the OSW for this class
-            osw_path = File.join(File.dirname(__FILE__), 'res_workflow.osw')
+            osw_path = File.join(File.dirname(__FILE__), 'residential_base_workflow.osw')
             File.open(osw_path, 'r') do |file|
               @@osw = JSON.parse(file.read, symbolize_names: true)
             end
         
             # add any paths local to the project
-            @@osw[:file_paths] << File.join(File.dirname(__FILE__), '../weather/')
+            @@osw[:measure_paths] << File.join(File.dirname(__FILE__), '../measures/')
             
             # configures OSW with extension gem paths for measures and files, all extension gems must be 
             # required before this
@@ -141,10 +139,10 @@ module URBANopt
         osw[:name] = feature_name
         osw[:description] = feature_name
 
-        OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'building_type', building_type_1)
-        OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'footprint_area', footprint_area)
-        OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'number_of_stories', number_of_stories)
-        OpenStudio::Extension.set_measure_argument(osw, 'BuildURBANoptModel', 'number_of_residential_units', number_of_residential_units)
+        OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'building_type', building_type_1)
+        OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'footprint_area', footprint_area)
+        OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'number_of_stories', number_of_stories)
+        OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'number_of_residential_units', number_of_residential_units)
         # TODO: foundation type other than slab if number_of_stories_below_ground is greater than zero?
 
         # call the default feature reporting measure
