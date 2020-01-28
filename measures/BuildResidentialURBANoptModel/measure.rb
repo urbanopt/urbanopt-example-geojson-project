@@ -162,16 +162,16 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
         return false
       end
 
+      unit_model.getBuilding.remove
+      unit_model.getShadowCalculation.remove
+      unit_model.getSimulationControl.remove
+      unit_model.getSite.remove
+      unit_model.getTimestep.remove
+
       unit_models << unit_model
     end
 
     # TODO: merge all unit models into a single model
-    model.getBuilding.remove
-    model.getShadowCalculation.remove
-    model.getSimulationControl.remove
-    model.getSite.remove
-    model.getTimestep.remove
-
     unit_models.each do |unit_model|
       model.addObjects(unit_model.objects, true)
     end
