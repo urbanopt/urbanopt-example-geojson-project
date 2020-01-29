@@ -91,7 +91,7 @@ module URBANopt
             end
           when 'Multifamily (2 to 4 units)'
             building_type_1 = 'single-family attached'
-            number_of_residential_units = 2
+            number_of_residential_units = 3
             begin
               number_of_residential_units = feature.number_of_residential_units
             rescue

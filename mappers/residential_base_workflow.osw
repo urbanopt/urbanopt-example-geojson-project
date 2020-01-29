@@ -11,7 +11,8 @@
         "building_type": null,
         "footprint_area": null,
         "number_of_stories": null,
-        "number_of_residential_units": null
+        "number_of_residential_units": null,
+        "minimal_collapsed": false
       }
     },{
       "measure_dir_name": "default_feature_reports",
