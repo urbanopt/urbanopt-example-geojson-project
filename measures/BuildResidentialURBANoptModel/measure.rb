@@ -44,6 +44,12 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
     arg.setDescription("The number of residential units in the residential building.")
     args << arg
 
+    arg = OpenStudio::Measure::OSArgument::makeBoolArgument("minimal_collapsed", true)
+    arg.setDisplayName("Minimal Collapsed Building")
+    arg.setDescription("Collapse the building down into only corner, end, and/or middle units.")
+    arg.setDefaultValue(false)
+    args << arg
+
     return args
   end
 
@@ -59,15 +65,17 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
     args = { :building_type => runner.getStringArgumentValue("building_type", user_arguments),
              :footprint_area => runner.getDoubleArgumentValue("footprint_area", user_arguments),
              :number_of_stories => runner.getIntegerArgumentValue("number_of_stories", user_arguments),
-             :number_of_residential_units => runner.getIntegerArgumentValue("number_of_residential_units", user_arguments) }
+             :number_of_residential_units => runner.getIntegerArgumentValue("number_of_residential_units", user_arguments),
+             :minimal_collapsed => runner.getBoolArgumentValue("minimal_collapsed", user_arguments) }
 
     # Override some defaults with geojson feature file values
     args[:unit_ffa] = args[:footprint_area] * args[:number_of_stories] / args[:number_of_residential_units]
 
     # Get file/dir paths
-    resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), "../../resources/residential-hpxml-measures/HPXMLtoOpenStudio/resources"))
+    resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), "resources"))
     meta_measure_file = File.join(resources_dir, "meta_measure.rb")
     require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
+    workflow_json = File.join(resources_dir, "measure-info.json")
 
     # Apply whole building create geometry measures
     measures_dir = File.expand_path(File.join(File.dirname(__FILE__), ".."))
@@ -103,10 +111,11 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
       measure_args["unit_ffa"] = args[:unit_ffa]
       measure_args["num_floors"] = args[:number_of_stories]
       measure_args["num_units"] = args[:number_of_residential_units]
+      measure_args["minimal_collapsed"] = args[:minimal_collapsed]
     end
     measures[measure_subdir] << measure_args
 
-    if not apply_measures(measures_dir, measures, runner, whole_building_model, true)
+    if not apply_measures(measures_dir, measures, runner, whole_building_model, nil, nil, true)
       return false
     end
 
@@ -119,6 +128,12 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
     unit_models = []
     whole_building_model.getBuildingUnits.each do |unit|
       unit_model = OpenStudio::Model::Model.new
+
+      # Get unit multiplier
+      units_represented = 1
+      if unit.additionalProperties.getFeatureAsInteger("Units Represented").is_initialized
+        units_represented = unit.additionalProperties.getFeatureAsInteger("Units Represented").get
+      end
 
       # BuildResidentialHPXML
       measure_subdir = "BuildResidentialHPXML"
@@ -137,11 +152,8 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
       measure_args["schedules_output_path"] = "../schedules.csv"
       measure_args["unit_type"] = args[:building_type]
       measure_args["cfa"] = args[:unit_ffa]
+      measure_args["unit_multiplier"] = units_represented
       measures[measure_subdir] << measure_args
-
-      if not apply_measures(measures_dir, measures, runner, unit_model, true)
-        return false
-      end
 
       # HPXMLtoOpenStudio
       measure_subdir = "HPXMLtoOpenStudio"
@@ -153,12 +165,11 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
       measure_args = {}
       get_measure_args_default_values(unit_model, measure_args, measure)
 
-      measures = {}
       measures[measure_subdir] = []
       measure_args["hpxml_path"] = File.expand_path("../in.xml")
       measures[measure_subdir] << measure_args
 
-      if not apply_measures(measures_dir, measures, runner, unit_model, true)
+      if not apply_measures(measures_dir, measures, runner, unit_model, workflow_json, "#{unit.name}.osw", true)
         return false
       end
 
