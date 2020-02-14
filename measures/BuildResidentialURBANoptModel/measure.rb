@@ -148,7 +148,7 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
       measures = {}
       measures[measure_subdir] = []
       measure_args["weather_station_epw_filename"] = "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw" # FIXME
-      measure_args["hpxml_output_path"] = File.expand_path("../in.xml")
+      measure_args["hpxml_path"] = File.expand_path("../in.xml")
       measure_args["schedules_output_path"] = "../schedules.csv"
       measure_args["unit_type"] = args[:building_type]
       measure_args["cfa"] = args[:unit_ffa]
