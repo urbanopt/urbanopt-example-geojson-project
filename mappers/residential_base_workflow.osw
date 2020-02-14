@@ -15,6 +15,16 @@
         "minimal_collapsed": false
       }
     },{
+      "measure_dir_name": "SimulationOutputReport",
+      "arguments": {
+        "timeseries_frequency": "hourly",
+        "include_timeseries_zone_temperatures": false,
+        "include_timeseries_fuel_consumptions": false,
+        "include_timeseries_end_use_consumptions": false,
+        "include_timeseries_total_loads": false,
+        "include_timeseries_component_loads": false
+      }
+    },{
       "measure_dir_name": "default_feature_reports",
       "arguments": {
         "feature_id": null,
