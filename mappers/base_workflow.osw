@@ -79,6 +79,15 @@
         "add_hvac": true,
         "use_upstream_args": false
       }
+    },{  
+      "measure_dir_name":"PredictedMeanVote",
+      "arguments":{  
+        "__SKIP__":false,
+        "comfortWarnings":true,
+        "workEfficiencySchedule":"Work Efficiency Schedule",
+        "clothingSchedule":"Clothing Schedule",
+        "airVelocitySchedule":"Air Velocity Schedule"
+      }
     },{
       "measure_dir_name": "IncreaseInsulationRValueForExteriorWalls",
       "arguments": {
