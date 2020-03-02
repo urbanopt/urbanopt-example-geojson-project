@@ -5,7 +5,6 @@
   "file_paths": [],
   "run_directory": null,
   "steps": [
-    
     {
       "measure_dir_name": "set_run_period",
       "arguments": {
@@ -17,7 +16,7 @@
       "measure_dir_name": "ChangeBuildingLocation",
       "arguments": {
         "weather_file_name": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
-        "climate_zone": "6A"
+        "climate_zone": "ASHRAE 169-2013-6A"
       }
     },{
       "measure_dir_name": "IncreaseInsulationRValueForExteriorWalls",
