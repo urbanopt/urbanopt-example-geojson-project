@@ -88,19 +88,19 @@ module URBANopt
         osw[:description] = feature_name
         
         if feature_type == 'Building'
-          if feature.detailed_model_filename
-            detailed_model_name = feature.detailed_model_filename
-            osw[:file_paths] << File.join(File.dirname(__FILE__), '../osm_building/')
-            osw[:seed_file] = detailed_model_name
+          begin
+            if feature.detailed_model_filename
+              detailed_model_name = feature.detailed_model_filename
+              osw[:file_paths] << File.join(File.dirname(__FILE__), '../osm_building/')
+              osw[:seed_file] = detailed_model_name
+            end
+              
+            # call the default feature reporting measure
+            OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_id', feature_id)
+            OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_name', feature_name)
+            OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_type', feature_type)
+          rescue             
           end
-        
-          # call create typical building a second time, add hvac
-          #OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'system_type', system_type)
-            
-          # call the default feature reporting measure
-          OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_id', feature_id)
-          OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_name', feature_name)
-          OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_type', feature_type)
         end        
 
         return osw
