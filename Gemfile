@@ -53,7 +53,7 @@ elsif allow_local
 else
   # gem 'urbanopt-scenario', '0.1.1'
   # Temporary: to get jenkins tests to pass 
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'postprocess'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 end
 
 if allow_local && File.exists?('../urbanopt-geojson-gem')
