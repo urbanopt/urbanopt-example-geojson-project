@@ -29,6 +29,13 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
 #
+
+# if allow_local && File.exist?('../openstudio-common-measures-gem')
+#   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
+# elsif allow_local
+#   gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
+# end
+
 # if allow_local && File.exist?('../openstudio-model-articulation-gem')
 #   # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
 #   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
@@ -38,12 +45,15 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'openstudio-model-articulation', '0.1.0'
 # end
 
+
 if allow_local && File.exist?('../urbanopt-scenario-gem')
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 elsif allow_local
   gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'postprocess'
 else
-  gem 'urbanopt-scenario', '0.1.1'
+  # gem 'urbanopt-scenario', '0.1.1'
+  # Temporary: to get jenkins tests to pass 
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 end
 
 if allow_local && File.exists?('../urbanopt-geojson-gem')
@@ -52,10 +62,10 @@ if allow_local && File.exists?('../urbanopt-geojson-gem')
 elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
-  gem 'urbanopt-geojson', '0.1.0'
+  # gem 'urbanopt-geojson', '0.1.0'
+  # Temporary: teo get jenkins tests to pass
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'fix-for-nonbuildings'
 end
-
-gem 'openstudio-standards', '0.2.10' # doesn't work in 0.2.8?
 
 # simplecov has an unneccesary dependency on native json gem, use fork that does not require this
 gem 'simplecov', github: 'NREL/simplecov'
