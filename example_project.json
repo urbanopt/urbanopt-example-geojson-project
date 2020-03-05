@@ -9,19 +9,19 @@
                 "type": "Point"
             },
             "properties": {
-                "begin_date": null,
+                "begin_date": "2017-01-01",
                 "cec_climate_zone": null,
                 "climate_zone": "6A",
-                "default_template": null,
-                "end_date": null,
+                "default_template": "90.1-2013",
+                "end_date": "2017-12-31",
                 "id": "53340c2c-ab20-40db-aba1-11ac607c52a7",
                 "import_surrounding_buildings_as_shading": null,
                 "name": "Site Origin",
                 "surface_elevation": null,
                 "tariff_filename": null,
-                "timesteps_per_hour": null,
+                "timesteps_per_hour": 1,
                 "type": "Site Origin",
-                "weather_filename": null
+                "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw"
             },
             "type": "Feature"
         },
@@ -400,18 +400,18 @@
     ],
     "mappers": [],
     "project": {
-        "begin_date": null,
+        "begin_date": "2017-01-01T07:00:00.000Z",
         "cec_climate_zone": null,
         "climate_zone": "6A",
-        "default_template": null,
-        "end_date": null,
+        "default_template": "90.1-2013",
+        "end_date": "2017-12-31T07:00:00.000Z",
         "id": "7c33a001-bccb-413e-ac87-67558b5d4b07",
         "import_surrounding_buildings_as_shading": null,
         "name": "New Project",
         "surface_elevation": null,
         "tariff_filename": null,
-        "timesteps_per_hour": null,
-        "weather_filename": null
+        "timesteps_per_hour": 1,
+        "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw"
     },
     "scenarios": [
         {

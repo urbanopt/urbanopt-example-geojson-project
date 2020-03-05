@@ -197,6 +197,74 @@ module URBANopt
         # now we have the feature, we can look up its properties and set arguments in the OSW
         osw[:name] = feature_name
         osw[:description] = feature_name
+
+        # set_run_period
+        begin
+          timesteps_per_hour = feature.timesteps_per_hour 
+          if !timesteps_per_hour.empty?
+            OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'timesteps_per_hour', timesteps_per_hour)
+          end
+        rescue
+        end
+        begin
+          begin_date = feature.begin_date
+          if !feature.begin_date.empty?
+            OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'begin_date', begin_date)
+          end
+        rescue
+        end
+        begin
+          end_date = feature.end_date
+          if !feature.end_date.empty?
+            OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'end_date', end_date)
+          end
+        rescue
+        end
+
+        # ChangeBuildingLocation
+        # cec climate zone takes precedence
+        cec_found = false
+        begin
+          cec_climate_zone = feature.cec_climate_zone
+          if !cec_climate_zone.empty?
+            cec_climate_zone = "T24-CEC" + cec_climate_zone
+            OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'climate_zone', cec_climate_zone)
+            cec_found = true
+          end
+        rescue
+        end
+        if !cec_found
+          begin
+            climate_zone = feature.climate_zone
+            if !climate_zone.empty?
+              climate_zone = "ASHRAE 169-2013-" + climate_zone
+              OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'climate_zone', climate_zone)
+            end
+          rescue
+          end
+        end
+
+        begin
+          weather_filename = feature.weather_filename
+          if !feature.weather_filename.empty?
+            OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', weather_filename)
+          end
+        rescue
+        end
+
+        # template
+        begin
+          template = feature.template
+          if !feature.template.empty?
+            OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'template', template)
+            OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', feature.template, 'create_typical_building_from_model 1')
+            OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', feature.template, 'create_typical_building_from_model 2')
+          end
+        rescue
+        end
+
+        # TODO: surface_elevation has no current mapping
+        # TODO: tariff_filename has no current mapping
         
         # create a bar building, will have spaces tagged with individual space types given the input building types
         OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'single_floor_area', footprint_area)
@@ -249,7 +317,6 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_name', feature_name)
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_type', feature_type)
 
-        return osw
       end
       
     end
