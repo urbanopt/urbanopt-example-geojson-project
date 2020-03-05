@@ -47,10 +47,9 @@ else
 end
 
 #if allow_local && File.exists?('../urbanopt-geojson-gem')
-#  gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 #elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'fix_geojson_gem'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 #else
 #  gem 'urbanopt-geojson', '0.1.0'
 #end
