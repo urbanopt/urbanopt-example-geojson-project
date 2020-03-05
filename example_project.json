@@ -7,7 +7,9 @@
 			"id": "1",
 			"name": "Mixed_use 1",
 			"type": "Building",
-			"detailed_model_filename": "1.osm",
+			"footprint_area": 188046,
+			"floor_area": 752184,
+			"number_of_stories": 4,
 			"building_type": "Mixed use",
 			"mixed_type_1_percentage": 50,
 			"mixed_type_2_percentage": 50,
@@ -64,7 +66,9 @@
 			"id": "2",
 			"name": "Restaurant 1",
 			"type": "Building",
-			"detailed_model_filename": "2.osm",
+			"footprint_area": 22313,
+			"floor_area": 22313,
+			"number_of_stories": 1,
 			"building_type": "Food service"
 		  },
 		  "geometry": {
@@ -101,7 +105,9 @@
 			"id": "3",
 			"name": "Residential 1",
 			"type": "Building",
-			"detailed_model_filename": "3.osm",
+			"footprint_area": 41877,
+			"floor_area": 125631,
+			"number_of_stories": 3,
 			"building_type": "Multifamily (5 or more units)"
 		  },
 		  "geometry": {
