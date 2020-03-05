@@ -1,5 +1,7 @@
 source 'http://rubygems.org'
 
+ruby '2.2.4'
+
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
 #   Mac: export FAVOR_LOCAL_GEMS=1
@@ -49,7 +51,7 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 if allow_local && File.exist?('../urbanopt-scenario-gem')
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 elsif allow_local
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'postprocess'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 else
   # gem 'urbanopt-scenario', '0.1.1'
   # Temporary: to get jenkins tests to pass 
@@ -60,7 +62,7 @@ if allow_local && File.exists?('../urbanopt-geojson-gem')
   # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
   gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'fix-for-nonbuildings'
 else
   # gem 'urbanopt-geojson', '0.1.0'
   # Temporary: teo get jenkins tests to pass
