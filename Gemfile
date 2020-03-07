@@ -62,11 +62,11 @@ if allow_local && File.exists?('../urbanopt-geojson-gem')
   # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
   gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'fix-for-nonbuildings'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
   # gem 'urbanopt-geojson', '0.1.0'
   # Temporary: teo get jenkins tests to pass
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'fix-for-nonbuildings'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 end
 
 # simplecov has an unneccesary dependency on native json gem, use fork that does not require this
