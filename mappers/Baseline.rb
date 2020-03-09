@@ -1,5 +1,5 @@
 #*********************************************************************************
-# URBANopt, Copyright (c) 2019, Alliance for Sustainable Energy, LLC, and other 
+# URBANopt, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other 
 # contributors. All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without modification, 
@@ -86,11 +86,14 @@ module URBANopt
         osw[:description] = feature_name
         
         if feature_type == 'Building'
+          # convert to hash
           building_hash = feature.to_hash
+          # check for detailed model filename
           if building_hash.key?(:detailed_model_filename)
             detailed_model_filename = building_hash[:detailed_model_filename]
             osw[:file_paths] << File.join(File.dirname(__FILE__), '../osm_building/')
             osw[:seed_file] = detailed_model_filename
+          # in case detailed model filename is not present
           else
             building_type_1 = building_hash[:building_type]
             case building_type_1
@@ -193,6 +196,74 @@ module URBANopt
             else
               system_type = "Inferred"
             end
+
+            # set_run_period
+            begin
+              timesteps_per_hour = feature.timesteps_per_hour 
+              if !timesteps_per_hour.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'timesteps_per_hour', timesteps_per_hour)
+              end
+            rescue
+            end
+            begin
+              begin_date = feature.begin_date
+              if !feature.begin_date.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'begin_date', begin_date)
+              end
+            rescue
+            end
+            begin
+              end_date = feature.end_date
+              if !feature.end_date.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'end_date', end_date)
+              end
+            rescue
+            end
+
+            # ChangeBuildingLocation
+            # cec climate zone takes precedence
+            cec_found = false
+            begin
+              cec_climate_zone = feature.cec_climate_zone
+              if !cec_climate_zone.empty?
+                cec_climate_zone = "T24-CEC" + cec_climate_zone
+                OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'climate_zone', cec_climate_zone)
+                cec_found = true
+              end
+            rescue
+            end
+            if !cec_found
+              begin
+                climate_zone = feature.climate_zone
+                if !climate_zone.empty?
+                  climate_zone = "ASHRAE 169-2013-" + climate_zone
+                  OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'climate_zone', climate_zone)
+                end
+              rescue
+              end
+            end
+
+            begin
+              weather_filename = feature.weather_filename
+              if !feature.weather_filename.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', weather_filename)
+              end
+            rescue
+            end
+
+            # template
+            begin
+              template = feature.template
+              if !feature.template.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'template', template)
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', feature.template, 'create_typical_building_from_model 1')
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', feature.template, 'create_typical_building_from_model 2')
+              end
+            rescue
+            end
+            
+            # TODO: surface_elevation has no current mapping
+            # TODO: tariff_filename has no current mapping
             
             # create a bar building, will have spaces tagged with individual space types given the input building types
             OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', '__SKIP__', false)
@@ -243,8 +314,7 @@ module URBANopt
           end
 
 
-          # call the default feature reporting measure. Do this if detailed_model_filename is
-          # present or not
+          # call the default feature reporting measure
           OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_id', feature_id)
           OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_name', feature_name)
           OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_type', feature_type)
