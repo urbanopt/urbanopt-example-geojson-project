@@ -9,7 +9,7 @@
     {
       "measure_dir_name": "set_run_period",
       "arguments": {
-        "timesteps_per_hour": 1,
+        "timesteps_per_hour": 4,
         "begin_date": "2019-06-01",
         "end_date": "2019-08-01"
       }
@@ -51,7 +51,8 @@
       "measure_dir_name": "create_typical_building_from_model",
       "arguments": {
         "__SKIP__": true,
-        "add_hvac": false
+        "add_hvac": false,
+        "add_refrigeration": false
       } 
     },{
       "measure_dir_name": "blended_space_type_from_model",
@@ -79,6 +80,7 @@
         "add_exterior_lights": false,
         "add_exhaust": false,
         "add_swh": false,
+        "add_refrigeration": false,
         "remove_objects": false,
         "system_type": "Inferred",
         "add_hvac": true,
