@@ -153,11 +153,9 @@
             },
             "properties": {
                 "building_type": "Office",
-                "floor_area": 325704,
-                "footprint_area": 54284,
                 "id": "7",
+                "detailed_model_filename": "7.osm",
                 "name": "Office 1",
-                "number_of_stories": 6,
                 "type": "Building"
             },
             "type": "Feature"
@@ -200,11 +198,9 @@
             },
             "properties": {
                 "building_type": "Outpatient health care",
-                "floor_area": 403200,
-                "footprint_area": 40320,
                 "id": "8",
                 "name": "Hospital 1",
-                "number_of_stories": 10,
+                "detailed_model_filename": "8.osm",
                 "type": "Building"
             },
             "type": "Feature"
@@ -255,11 +251,9 @@
             },
             "properties": {
                 "building_type": "Inpatient health care",
-                "floor_area": 286971,
-                "footprint_area": 95657,
                 "id": "9",
+                "detailed_model_filename": "9.osm",
                 "name": "Hospital 2",
-                "number_of_stories": 3,
                 "type": "Building"
             },
             "type": "Feature"
