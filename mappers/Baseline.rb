@@ -148,6 +148,9 @@ module URBANopt
             osw[:file_paths] << File.join(File.dirname(__FILE__), '../osm_building/')
             osw[:seed_file] = detailed_model_filename
 
+            # skip PMV measure with detailed models:
+            OpenStudio::Extension.set_measure_argument(osw, 'PredictedMeanVote', '__SKIP__', true)
+
           # in case detailed model filename is not present
           else
             building_type_1 = building_hash[:building_type]
