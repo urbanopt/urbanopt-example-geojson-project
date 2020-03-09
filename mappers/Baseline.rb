@@ -87,7 +87,7 @@ module URBANopt
         
         if feature_type == 'Building'
 
-        # set_run_period
+          # set_run_period
           begin
             timesteps_per_hour = feature.timesteps_per_hour 
             if !timesteps_per_hour.empty?
@@ -98,6 +98,10 @@ module URBANopt
           begin
             begin_date = feature.begin_date
             if !feature.begin_date.empty?
+               # check date-only YYYY-MM-DD
+              if feature.begin_date.length > 10
+                feature.begin_date = feature.begin_date[0, 10]
+              end
               OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'begin_date', begin_date)
             end
           rescue
@@ -105,6 +109,10 @@ module URBANopt
           begin
             end_date = feature.end_date
             if !feature.end_date.empty?
+              # check date-only YYYY-MM-DD
+              if feature.end_date.length > 10
+                feature.end_date = feature.end_date[0, 10]
+              end
               OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'end_date', end_date)
             end
           rescue
