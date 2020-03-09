@@ -22,6 +22,7 @@
     },{
       "measure_dir_name": "create_bar_from_building_type_ratios",
       "arguments": {
+        "__SKIP__": true,
         "bldg_type_a": null,
         "bldg_type_a_num_units": 0,
         "bldg_type_b": "SmallOffice",
@@ -49,19 +50,20 @@
       "name": "create_typical_building_from_model 1",
       "measure_dir_name": "create_typical_building_from_model",
       "arguments": {
+        "__SKIP__": true,
         "add_hvac": false,
         "add_refrigeration": false
       } 
     },{
       "measure_dir_name": "blended_space_type_from_model",
       "arguments": {
-        "__SKIP__": false,
+        "__SKIP__": true,
         "blend_method": "Building Story"
       }
     },{
       "measure_dir_name": "urban_geometry_creation",
       "arguments": {
-        "__SKIP__": false,
+        "__SKIP__": true,
         "geojson_file": "exportGeo.json",
         "feature_id": "5",
         "surrounding_buildings": "None"
@@ -70,7 +72,7 @@
       "name": "create_typical_building_from_model 2",
       "measure_dir_name": "create_typical_building_from_model",
       "arguments": {
-        "__SKIP__": false,
+        "__SKIP__": true,
         "template": "90.1-2004",
         "add_constructions": false,
         "add_space_type_loads": false,
