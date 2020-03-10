@@ -476,12 +476,12 @@
             "type": "Feature",
             "properties": {
               "id": "11",
-              "name": "Residential 3",
+              "name": "Restaurant 13",
               "type": "Building",
               "footprint_area": 10837,
               "floor_area": 32511,
               "number_of_stories": 3,
-              "building_type": "Multifamily (5 or more units)"
+              "building_type": "Food service"
             },
             "geometry": {
               "type": "Polygon",
