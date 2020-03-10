@@ -263,6 +263,56 @@ module URBANopt
               system_type = "Inferred"
             end
 
+            def time_mapping(time)
+              hour = time.split(':')[0]
+              minute = time.split(':')[1]
+              fraction = minute.to_f/60
+              fraction_roundup = fraction.round(2)
+              minute_fraction = fraction_roundup.to_s.split('.')[1]
+              new_time = [hour, minute_fraction].join('.')
+              return new_time
+            end
+
+            #set weekday start time
+            begin
+              weekday_start_time = feature.weekday_start_time
+              if !feature.weekday_start_time.empty?
+                new_weekday_start_time = time_mapping(weekday_start_time)
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wkdy_op_hrs_start_time', new_weekday_start_time, 'create_typical_building_from_model 1')
+              end
+            rescue
+            end
+
+            # set weekday duration
+            begin
+              weekday_duration = feature.weekday_duration
+              if !feature.weekday_duration.empty?
+                new_weekday_duration = time_mapping(weekday_duration)
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wkdy_op_hrs_duration', new_weekday_duration, 'create_typical_building_from_model 1')
+              end
+            rescue
+            end
+            
+            # set weekend start time
+            begin
+              weekend_start_time = feature.weekend_start_time
+              if !feature.weekend_start_time.empty?
+                new_weekend_start_time = time_mapping(weekend_start_time)
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wknd_op_hrs_start_time', new_weekend_start_time, 'create_typical_building_from_model 1')
+              end
+            rescue
+            end
+            
+            # set weekend duration
+            begin
+              weekend_duration = feature.weekend_duration
+              if !feature.weekend_duration.empty?
+                new_weekend_duration = time_mapping(weekend_duration)
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wknd_op_hrs_duration', new_weekend_duration, 'create_typical_building_from_model 1')
+              end
+            rescue
+            end
+
             # template
             begin
               template = feature.template

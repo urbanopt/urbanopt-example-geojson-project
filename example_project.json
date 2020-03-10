@@ -155,6 +155,7 @@
                 "building_type": "Office",
                 "id": "7",
                 "detailed_model_filename": "7.osm",
+                "number_of_stories": 6,
                 "name": "Office 1",
                 "type": "Building"
             },
@@ -201,6 +202,7 @@
                 "id": "8",
                 "name": "Hospital 1",
                 "detailed_model_filename": "8.osm",
+                "number_of_stories": 10,
                 "type": "Building"
             },
             "type": "Feature"
@@ -254,6 +256,7 @@
                 "id": "9",
                 "detailed_model_filename": "9.osm",
                 "name": "Hospital 2",
+                "number_of_stories": 3,
                 "type": "Building"
             },
             "type": "Feature"
