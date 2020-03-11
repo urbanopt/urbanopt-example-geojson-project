@@ -53,9 +53,8 @@ if allow_local && File.exist?('../urbanopt-scenario-gem')
 elsif allow_local
   gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 else
-  # gem 'urbanopt-scenario', '0.1.1'
-  # Temporary: to get jenkins tests to pass 
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
+  gem 'urbanopt-scenario', '0.2.0.pre1'
+  # gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 end
 
 if allow_local && File.exists?('../urbanopt-geojson-gem')
@@ -64,9 +63,8 @@ if allow_local && File.exists?('../urbanopt-geojson-gem')
 elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
-  # gem 'urbanopt-geojson', '0.1.0'
-  # Temporary: teo get jenkins tests to pass
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+  gem 'urbanopt-geojson', '0.2.0.pre1'
+  # gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 end
 
 # simplecov has an unneccesary dependency on native json gem, use fork that does not require this
