@@ -141,7 +141,12 @@ task :post_process_baseline do
   
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario)
   scenario_result = default_post_processor.run
+  # save scenario reports
   scenario_result.save
+  # save feature reports 
+  scenario_result.feature_reports.each do |feature_report|
+    feature_report.save_feature_report()
+  end
 end
 
 ### High Efficiency 
@@ -166,7 +171,12 @@ task :post_process_high_efficiency do
   
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario)
   scenario_result = default_post_processor.run
+  # save scenario reports
   scenario_result.save
+  # save feature reports 
+  scenario_result.feature_reports.each do |feature_report|
+    feature_report.save_feature_report()
+  end
 end
 
 ### Mixed
@@ -191,7 +201,12 @@ task :post_process_mixed do
   
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario)
   scenario_result = default_post_processor.run
+  # save scenario reports
   scenario_result.save
+  # save feature reports 
+  scenario_result.feature_reports.each do |feature_report|
+    feature_report.save_feature_report()
+  end
 end
 
 ### All
