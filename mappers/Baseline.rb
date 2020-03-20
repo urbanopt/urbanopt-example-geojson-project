@@ -273,7 +273,6 @@ module URBANopt
             # set weather file
             begin
               weather_filename = feature.weather_filename
-              puts "1HELLO = #{weather_filename}"
               if !feature.weather_filename.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', weather_filename)
                 puts "Setting weather_file_name to #{weather_filename} as specified in the FeatureFile"
