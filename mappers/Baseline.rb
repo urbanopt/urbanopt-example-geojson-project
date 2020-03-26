@@ -288,17 +288,6 @@ module URBANopt
                 puts "NO WEATHER FILES SPECIFIED...SIMULATIONS MAY FAIL"
               end
             end
-            
-            # begin
-            #   weather_filename = feature.weather_filename
-            # rescue NoMethodError
-            #   epw_file_path = Dir.glob(File.join(File.dirname(__FILE__), '../weather/*.epw'))[0]
-            #   if !epw_file_path.empty?
-            #     epw_file_name = File.basename(epw_file_path)
-            #     OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', epw_file_name)
-            #     puts "Setting weather_file_name to first epw file found in the weather folder: #{epw_file_name}"
-            #   end
-            # end
 
             #set weekday start time
             begin
