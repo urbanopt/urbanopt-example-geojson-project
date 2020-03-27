@@ -389,7 +389,7 @@ module URBANopt
             end
 
             # ChangeBuildingLocation
-            # set skip measure to false change building location
+            # set skip to false for change building location
             OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', '__SKIP__', false)
 
             # cec climate zone takes precedence
@@ -414,13 +414,24 @@ module URBANopt
               end
             end
 
-          begin
-            weather_filename = feature.weather_filename
-            if !feature.weather_filename.empty?
-              OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', weather_filename)
+            # set weather file
+            begin
+              weather_filename = feature.weather_filename
+              if !feature.weather_filename.nil? && !feature.weather_filename.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', weather_filename)
+                puts "Setting weather_file_name to #{weather_filename} as specified in the FeatureFile"
+              end
+            rescue
+              puts "No weather_file specified on feature"
+              epw_file_path = Dir.glob(File.join(File.dirname(__FILE__), '../weather/*.epw'))[0]
+              if !epw_file_path.nil? && !epw_file_path.empty?
+                epw_file_name = File.basename(epw_file_path)
+                OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', epw_file_name)
+                puts "Setting weather_file_name to first epw file found in the weather folder: #{epw_file_name}"
+              else
+                puts "NO WEATHER FILES SPECIFIED...SIMULATIONS MAY FAIL"
+              end
             end
-          rescue
-          end 
 
             #set weekday start time
             begin
