@@ -266,33 +266,33 @@ module URBANopt
 
           # set_run_period
           begin
-            timesteps_per_hour = feature.timesteps_per_hour 
-            if !timesteps_per_hour.empty?
+            timesteps_per_hour = feature.timesteps_per_hour
+            if timesteps_per_hour
               OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'timesteps_per_hour', timesteps_per_hour)
             end
-          rescue
+          rescue StandardError
           end
           begin
             begin_date = feature.begin_date
-            if !feature.begin_date.empty?
-               # check date-only YYYY-MM-DD
-              if feature.begin_date.length > 10
-                feature.begin_date = feature.begin_date[0, 10]
+            if begin_date
+              # check date-only YYYY-MM-DD
+              if begin_date.length > 10
+                begin_date = begin_date[0, 10]
               end
               OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'begin_date', begin_date)
             end
-          rescue
+          rescue StandardError
           end
           begin
             end_date = feature.end_date
-            if !feature.end_date.empty?
+            if end_date
               # check date-only YYYY-MM-DD
-              if feature.end_date.length > 10
-                feature.end_date = feature.end_date[0, 10]
+              if end_date.length > 10
+                end_date = end_date[0, 10]
               end
               OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'end_date', end_date)
             end
-          rescue
+          rescue StandardError
           end
  
           # convert to hash
@@ -400,6 +400,12 @@ module URBANopt
                 cec_climate_zone = "T24-CEC" + cec_climate_zone
                 OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'climate_zone', cec_climate_zone)
                 cec_found = true
+                # Temporary fix for CEC climate zone:
+                cec_modified_zone = "CEC " + cec_climate_zone
+                OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'climate_zone', cec_modified_zone)
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'climate_zone', cec_modified_zone, 'create_typical_building_from_model 1')
+                OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'climate_zone', cec_modified_zone, 'create_typical_building_from_model 2')
+
               end
             rescue
             end
