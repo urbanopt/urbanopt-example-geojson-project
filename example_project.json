@@ -205,12 +205,17 @@
             "type": "Feature",
             "properties": {
               "id": "5",
-              "name": "Restaurant 14",
+              "name": "Residential 3",
               "type": "Building",
               "footprint_area": 8804,
               "floor_area": 8804,
               "number_of_stories": 1,
-              "building_type": "Food service"
+              "building_type": "Single-Family Detached",
+              "number_of_bedrooms": 4,
+              "foundation_type": "crawlspace - vented",
+              "attic_type": "attic - vented",
+              "system_type": "Residential - boiler and room air conditioner",
+              "heating_system_fuel_type": "fuel oil"
             },
             "geometry": {
               "type": "Polygon",
