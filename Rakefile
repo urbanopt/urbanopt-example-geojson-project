@@ -91,9 +91,9 @@ end
 
 def high_efficiency_scenario
   name = 'High Efficiency Scenario'
-  run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
+  run_dir = File.join(File.dirname(__FILE__), 'run/highefficiency_scenario/')
   feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
+  csv_file = File.join(File.dirname(__FILE__), 'highefficiency_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
 
