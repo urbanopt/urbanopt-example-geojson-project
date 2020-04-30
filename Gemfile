@@ -16,59 +16,56 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # if allow_local && File.exist?('../OpenStudio-extension-gem')
 #   gem 'openstudio-extension', path: '../OpenStudio-extension-gem'
 # elsif allow_local
-#   gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
+   gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
 # end
-#
-# if allow_local && File.exist?('../openstudio-common-measures-gem')
-#   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
-# elsif allow_local
-#   gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
-# end
-#
+
+
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #   gem 'urbanopt-core', path: '../urbanopt-core-gem'
 # elsif allow_local
-#   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
+   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'openstudio-3.x'
 # end
 #
 
 # if allow_local && File.exist?('../openstudio-common-measures-gem')
 #   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
 # elsif allow_local
-#   gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
+   gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'feature/13-openstudio-3.x'
 # end
 
 # if allow_local && File.exist?('../openstudio-model-articulation-gem')
 #   # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
-#   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
+   #gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
 # elsif allow_local
-#   gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
+   gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'feature/openstudio-3.x'
 # else
 #   gem 'openstudio-model-articulation', '0.1.0'
 # end
 
 
-if allow_local && File.exist?('../urbanopt-scenario-gem')
-  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
-elsif allow_local
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
-else
-  gem 'urbanopt-scenario', '0.2.0.pre2'
+#if allow_local && File.exist?('../urbanopt-scenario-gem')
+#  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+#elsif allow_local
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'openstudio-3.x'
+#else
+#  gem 'urbanopt-scenario', '0.2.0.pre2'
   # gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
-end
+#end
 
-if allow_local && File.exists?('../urbanopt-geojson-gem')
+#if allow_local && File.exists?('../urbanopt-geojson-gem')
   # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
-  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-else
-  gem 'urbanopt-geojson', '0.2.0.pre2'
+#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+#elsif allow_local
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'openstudio-3.x'
+#else
+#  gem 'urbanopt-geojson', '0.2.0.pre2'
   # gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-end
+#end
 
 # simplecov has an unneccesary dependency on native json gem, use fork that does not require this
-gem 'simplecov', github: 'NREL/simplecov'
+#gem 'simplecov', github: 'NREL/simplecov'
+
+gem 'simplecov', '0.18.2'
 
 # Fix rack version temporarily to work with Ruby 2.2.4
 gem 'rack', '2.1.2'
