@@ -49,9 +49,9 @@ module URBANopt
         @root_dir = File.absolute_path(File.dirname(__FILE__))
       end
       
-      # Return the absolute path of the measures or nil if there is none, can be used when configuring OSWs
+      # Return the absolute path of the measures or empty string if there is none, can be used when configuring OSWs
       def measures_dir
-        nil
+        ""
       end
       
       # Relevant files such as weather data, design days, etc.
