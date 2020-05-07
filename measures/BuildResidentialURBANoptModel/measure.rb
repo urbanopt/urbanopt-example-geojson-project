@@ -111,13 +111,11 @@ class BuildResidentialURBANoptModel < OpenStudio::Measure::ModelMeasure
     arg = OpenStudio::Measure::OSArgument::makeStringArgument("cooling_system_type", true)
     arg.setDisplayName("Cooling System: Type")
     arg.setDescription("The type of the cooling system.")
-    arg.setDefaultValue("central air conditioner")
     args << arg
 
     arg = OpenStudio::Measure::OSArgument::makeStringArgument("heat_pump_type", true)
     arg.setDisplayName("Heat Pump: Type")
     arg.setDescription("The type of the heat pump.")
-    arg.setDefaultValue("none")
     args << arg
 
     return args
