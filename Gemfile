@@ -30,16 +30,18 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # if allow_local && File.exist?('../openstudio-common-measures-gem')
 #   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
 # elsif allow_local
-   gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'feature/13-openstudio-3.x'
+#   gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'feature/13-openstudio-3.x'
+# else
+  gem 'openstudio-common-measures', '0.2.0'
 # end
 
 # if allow_local && File.exist?('../openstudio-model-articulation-gem')
 #   # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
    #gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
 # elsif allow_local
-   gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'feature/openstudio-3.x'
+#   gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'feature/openstudio-3.x'
 # else
-#   gem 'openstudio-model-articulation', '0.1.0'
+  gem 'openstudio-model-articulation', '0.2.0'
 # end
 
 
@@ -53,10 +55,10 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #end
 
 #if allow_local && File.exists?('../urbanopt-geojson-gem')
-  # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'develop'
-#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+  # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'openstudio-3.x'
+  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 #elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'openstudio-3.x'
+#  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'openstudio-3.x'
 #else
 #  gem 'urbanopt-geojson', '0.2.0.pre2'
   # gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'

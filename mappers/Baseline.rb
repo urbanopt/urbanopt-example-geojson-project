@@ -301,88 +301,87 @@ module URBANopt
 
           if residential_building_types.include? building_type
 
-            timesteps_per_hour = 1
+            args = {}
+
+            args[:simulation_control_timestep] = 60
             begin
-              timesteps_per_hour = feature.timesteps_per_hour
+              args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
             rescue
             end
 
-            begin_month = 1
-            begin_day_of_month = 1
-            end_month = 12
-            end_day_of_month = 31
+            args[:simulation_control_begin_month] = 1
+            args[:simulation_control_begin_day_of_month] = 1
+            args[:simulation_control_end_month] = 12
+            args[:simulation_control_end_day_of_month] = 31
             begin
-              begin_month = feature.begin_date[5, 2].to_i
-              begin_day_of_month = feature.begin_date[8, 2].to_i
-              end_month = feature.end_date[5, 2].to_i
-              end_day_of_month = feature.end_date[8, 2].to_i
+              args[:simulation_control_begin_month] = feature.begin_date[5, 2].to_i
+              args[:simulation_control_begin_day_of_month] = feature.begin_date[8, 2].to_i
+              args[:simulation_control_end_month] = feature.end_date[5, 2].to_i
+              args[:simulation_control_end_day_of_month] = feature.end_date[8, 2].to_i
             rescue
             end
 
-            begin
-              weather_station_epw_filepath = feature.weather_filename
-            rescue
-            end
+            args[:weather_station_epw_filepath] = feature.weather_filename
 
-            num_units = 1
+            args[:geometry_num_units] = 1
             case building_type
             when 'Single-Family Detached'
-              unit_type = "single-family detached"
+              args[:geometry_unit_type] = "single-family detached"
             when 'Single-Family Attached'
-              num_units = feature.number_of_residential_units
-              unit_type = "single-family attached"
+              args[:geometry_num_units] = feature.number_of_residential_units
+              args[:geometry_unit_type] = "single-family attached"
             when 'Multifamily'
-              num_units = feature.number_of_residential_units
-              if num_units < 5
-                unit_type = "2-4 unit building"
-              else
-                unit_type = "5+ unit building"
-              end
+              args[:geometry_num_units] = feature.number_of_residential_units
+              args[:geometry_unit_type] = "multi-family - uncategorized"
             end
 
-            num_floors = feature.number_of_stories
+            args[:geometry_num_floors_above_grade] = feature.number_of_stories
 
             begin
-              cfa = feature.floor_area / num_units
+              args[:geometry_cfa] = feature.floor_area / args[:geometry_num_units]
             rescue
-              cfa = feature.footprint_area * num_floors / num_units
+              args[:geometry_cfa] = feature.footprint_area * args[:geometry_num_floors_above_grade] / args[:geometry_num_units]
             end
 
-            wall_height = 8.0
+            args[:geometry_wall_height] = 8.0
             begin
-              wall_height = feature.maximum_roof_height / num_floors
+              args[:geometry_wall_height] = feature.maximum_roof_height / args[:geometry_num_floors_above_grade]
             rescue
             end
 
-            foundation_type = "SlabOnGrade"
+            args[:geometry_foundation_type] = "SlabOnGrade"
             case feature.foundation_type
             when 'crawlspace - vented'
-              foundation_type = "VentedCrawlspace"
+              args[:geometry_foundation_type] = "VentedCrawlspace"
             when 'crawlspace - unvented'
-              foundation_type = "UnventedCrawlspace"
+              args[:geometry_foundation_type] = "UnventedCrawlspace"
             when 'basement - unconditioned'
-              foundation_type = "UnconditionedBasement"
+              args[:geometry_foundation_type] = "UnconditionedBasement"
             when 'basement - conditioned'
-              foundation_type = "ConditionedBasement"
+              args[:geometry_foundation_type] = "ConditionedBasement"
             when 'ambient'
-              foundation_type = "Ambient"
+              args[:geometry_foundation_type] = "Ambient"
             end
 
-            attic_type = "flat roof"
+            args[:geometry_attic_type] = "VentedAttic"
+            args[:geometry_roof_type] = "flat"
             begin
               case feature.attic_type
               when 'attic - vented'
-                attic_type = "VentedAttic"
+                args[:geometry_attic_type] = "VentedAttic"
+                args[:geometry_roof_type] = "gable"
               when 'attic - unvented'
-                attic_type = "UnventedAttic"
+                args[:geometry_attic_type] = "UnventedAttic"
+                args[:geometry_roof_type] = "gable"
               when 'attic - conditioned'
-                attic_type = "ConditionedAttic"
+                args[:geometry_attic_type] = "ConditionedAttic"
+                args[:geometry_roof_type] = "gable"
               end
             rescue
             end
 
-            num_bedrooms = feature.number_of_bedrooms
-            num_bedrooms /= num_units
+            args[:geometry_num_bedrooms] = feature.number_of_bedrooms
+            args[:geometry_num_bedrooms] /= args[:geometry_num_units]
 
             system_type = "Residential - furnace and central air conditioner"
             begin
@@ -392,92 +391,108 @@ module URBANopt
 
             case system_type
             when 'Residential - electric resistance and no cooling'
-              heating_system_type = "ElectricResistance"
-              cooling_system_type = "none"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "ElectricResistance"
+              args[:cooling_system_type] = "none"
+              args[:heat_pump_type] = "none"
             when 'Residential - electric resistance and central air conditioner'
-              heating_system_type = "ElectricResistance"
-              cooling_system_type = "central air conditioner"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "ElectricResistance"
+              args[:cooling_system_type] = "central air conditioner"
+              args[:heat_pump_type] = "none"
             when 'Residential - electric resistance and room air conditioner'
-              heating_system_type = "ElectricResistance"
-              cooling_system_type = "room air conditioner"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "ElectricResistance"
+              args[:cooling_system_type] = "room air conditioner"
+              args[:heat_pump_type] = "none"
             when 'Residential - electric resistance and evaporative cooler'
-              heating_system_type = "ElectricResistance"
-              cooling_system_type = "evaporative cooler"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "ElectricResistance"
+              args[:cooling_system_type] = "evaporative cooler"
+              args[:heat_pump_type] = "none"
             when 'Residential - furnace and no cooling'
-              heating_system_type = "Furnace"
-              cooling_system_type = "none"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Furnace"
+              args[:cooling_system_type] = "none"
+              args[:heat_pump_type] = "none"
             when 'Residential - furnace and central air conditioner'
-              heating_system_type = "Furnace"
-              cooling_system_type = "central air conditioner"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Furnace"
+              args[:cooling_system_type] = "central air conditioner"
+              args[:heat_pump_type] = "none"
             when 'Residential - furnace and room air conditioner'
-              heating_system_type = "Furnace"
-              cooling_system_type = "room air conditioner"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Furnace"
+              args[:cooling_system_type] = "room air conditioner"
+              args[:heat_pump_type] = "none"
             when 'Residential - furnace and evaporative cooler'
-              heating_system_type = "Furnace"
-              cooling_system_type = "evaporative cooler"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Furnace"
+              args[:cooling_system_type] = "evaporative cooler"
+              args[:heat_pump_type] = "none"
             when 'Residential - boiler and no cooling'
-              heating_system_type = "Boiler"
-              cooling_system_type = "none"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Boiler"
+              args[:cooling_system_type] = "none"
+              args[:heat_pump_type] = "none"
             when 'Residential - boiler and central air conditioner'
-              heating_system_type = "Boiler"
-              cooling_system_type = "central air conditioner"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Boiler"
+              args[:cooling_system_type] = "central air conditioner"
+              args[:heat_pump_type] = "none"
             when 'Residential - boiler and room air conditioner'
-              heating_system_type = "Boiler"
-              cooling_system_type = "room air conditioner"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Boiler"
+              args[:cooling_system_type] = "room air conditioner"
+              args[:heat_pump_type] = "none"
             when 'Residential - boiler and evaporative cooler'
-              heating_system_type = "Boiler"
-              cooling_system_type = "evaporative cooler"
-              heat_pump_type = "none"
+              args[:heating_system_type] = "Boiler"
+              args[:cooling_system_type] = "evaporative cooler"
+              args[:heat_pump_type] = "none"
             when 'Residential - air-to-air heat pump'
-              heating_system_type = "none"
-              cooling_system_type = "none"
-              heat_pump_type = "air-to-air"
+              args[:heating_system_type] = "none"
+              args[:cooling_system_type] = "none"
+              args[:heat_pump_type] = "air-to-air"
             when 'Residential - mini-split heat pump'
-              heating_system_type = "none"
-              cooling_system_type = "none"
-              heat_pump_type = "mini-split"
+              args[:heating_system_type] = "none"
+              args[:cooling_system_type] = "none"
+              args[:heat_pump_type] = "mini-split"
             when 'Residential - ground-to-air heat pump'
-              heating_system_type = "none"
-              cooling_system_type = "none"
-              heat_pump_type = "ground-to-air"
+              args[:heating_system_type] = "none"
+              args[:cooling_system_type] = "none"
+              args[:heat_pump_type] = "ground-to-air"
             end
 
-            heating_system_fuel = "natural gas"
+            args[:heating_system_fuel] = "natural gas"
             begin
-              heating_system_fuel = feature.heating_system_fuel_type
+              args[:heating_system_fuel] = feature.heating_system_fuel_type
             rescue
             end
 
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', '__SKIP__', false)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'timesteps_per_hour', timesteps_per_hour)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'begin_month', begin_month)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'begin_day_of_month', begin_day_of_month)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'end_month', end_month)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'end_day_of_month', end_day_of_month)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'weather_station_epw_filepath', weather_station_epw_filepath)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'unit_type', unit_type)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'cfa', cfa)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'wall_height', wall_height)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'num_units', num_units)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'num_floors', num_floors)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'foundation_type', foundation_type)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'attic_type', attic_type)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'num_bedrooms', num_bedrooms)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'heating_system_type', heating_system_type)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'heating_system_fuel', heating_system_fuel)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'cooling_system_type', cooling_system_type)
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialURBANoptModel', 'heat_pump_type', heat_pump_type)
+            args[:site_type] = 'suburban'
+            args[:air_leakage_units] = 'ACH50'
+            args[:air_leakage_value] = 3
+
+            resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../measures/BuildResidentialModel/resources'))
+            meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
+            require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
+            measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/hpxml-measures'))
+            measure_subdir = 'BuildResidentialHPXML'
+            full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+            measure = get_measure_instance(full_measure_path)
+
+            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', '__SKIP__', false)  
+            measure.arguments(OpenStudio::Model::Model.new).each do |arg|
+              next if [:hpxml_path, :weather_dir, :schedules_output_path].include? arg.name.to_sym
+
+              unless args.keys.include? arg.name.to_sym # argument has not been set and so gets the default value
+                next unless arg.hasDefaultValue
+
+                case arg.type.valueName.downcase
+                when 'boolean'
+                  args[arg.name.to_sym] = arg.defaultValueAsBool
+                when 'double'
+                  args[arg.name.to_sym] = arg.defaultValueAsDouble
+                when 'integer'
+                  args[arg.name.to_sym] = arg.defaultValueAsInteger
+                when 'string'
+                  args[arg.name.to_sym] = arg.defaultValueAsString
+                when 'choice'
+                  args[arg.name.to_sym] = arg.defaultValueAsString
+                end
+              end
+
+              OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg.name, args[arg.name.to_sym])
+            end
 
           elsif commercial_building_types.include? building_type
 

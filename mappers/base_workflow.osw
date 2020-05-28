@@ -6,27 +6,9 @@
   "run_directory": null,
   "steps": [
     {
-      "measure_dir_name": "BuildResidentialURBANoptModel",
+      "measure_dir_name": "BuildResidentialModel",
       "arguments": {
-        "__SKIP__": true,
-        "timesteps_per_hour": null,
-        "begin_month": null,
-        "begin_day_of_month": null,
-        "end_month": null,
-        "end_day_of_month": null,
-        "weather_station_epw_filepath": null,
-        "unit_type": null,
-        "cfa": null,
-        "wall_height": null,
-        "num_units": null,
-        "num_floors": null,
-        "foundation_type": null,
-        "attic_type": null,
-        "num_bedrooms": null,
-        "heating_system_type": null,
-        "heating_system_fuel": null,
-        "cooling_system_type": null,
-        "heat_pump_type": null
+        "__SKIP__": true
       }
     },{
       "measure_dir_name": "set_run_period",
