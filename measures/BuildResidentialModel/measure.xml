@@ -1,12 +1,12 @@
 <measure>
   <schema_version>3.0</schema_version>
-  <name>build_residential_urbanopt_model</name>
+  <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
   <version_id>22176a3d-cb26-48b7-85d0-ba9c5e7fdd77</version_id>
   <version_modified>20200102T175052Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
-  <class_name>BuildResidentialURBANoptModel</class_name>
-  <display_name>Build Residential URBANopt Model</display_name>
+  <class_name>BuildResidentialModel</class_name>
+  <display_name>Build Residential Model</display_name>
   <description>Builds the OpenStudio Model for an existing residential building.</description>
   <modeler_description>Builds the residential OpenStudio Model using the geojson feature file, which contains the specified parameters for each existing building.</modeler_description>
   <arguments>
