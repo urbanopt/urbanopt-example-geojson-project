@@ -55,10 +55,9 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #end
 
 #if allow_local && File.exists?('../urbanopt-geojson-gem')
-  # gem 'openstudio-extension', github: 'NREL/OpenStudio-extension-gem', branch: 'openstudio-3.x'
-  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 #elsif allow_local
-#  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'openstudio-3.x'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'openstudio-3.x'
 #else
 #  gem 'urbanopt-geojson', '0.2.0.pre2'
   # gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
