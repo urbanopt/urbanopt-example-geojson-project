@@ -1,0 +1,30 @@
+{
+  "90.1-2004": {
+  },
+  "90.1-2007": {
+  },
+  "90.1-2010": {
+    "floor_assembly_r": 31,
+    "foundation_wall_assembly_r": 2,
+    "slab_perimeter_insulation_r": 1,
+    "slab_under_insulation_r": 1,
+    "ceiling_assembly_r": 36
+  },
+  "90.1-2013": {
+    "floor_assembly_r": 31,
+    "foundation_wall_assembly_r": 2,
+    "slab_perimeter_insulation_r": 1,
+    "slab_under_insulation_r": 1,
+    "ceiling_assembly_r": 36,
+    "roof_assembly_r": 2.3,
+    "wall_assembly_r": 19,
+    "window_ufactor": 0.3,
+    "window_shgc": 0.3,
+    "door_rvalue": 10,
+    "air_leakage_value": 5,
+    "setpoint_heating_temp": 68,
+    "setpoint_cooling_temp": 78,
+    "kitchen_fan_present": true,
+    "bathroom_fans_present": true
+  }
+}
