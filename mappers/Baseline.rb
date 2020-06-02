@@ -276,6 +276,21 @@ module URBANopt
         ]
       end
 
+      def get_arg_default(arg)
+        case arg.type.valueName.downcase
+        when 'boolean'
+          return arg.defaultValueAsBool
+        when 'double'
+          return arg.defaultValueAsDouble
+        when 'integer'
+          return arg.defaultValueAsInteger
+        when 'string'
+          return arg.defaultValueAsString
+        when 'choice'
+          return arg.defaultValueAsString
+        end
+      end
+
       def create_osw(scenario, features, feature_names)
         
         if features.size != 1
@@ -458,9 +473,17 @@ module URBANopt
             rescue
             end
 
-            args[:site_type] = 'suburban'
-            args[:air_leakage_units] = 'ACH50'
-            args[:air_leakage_value] = 3
+            residential_template_filepath = File.join(File.dirname(__FILE__), 'residential.json')
+            File.open(residential_template_filepath, 'r') do |file|
+              template = JSON.parse(file.read, symbolize_names: true)
+              if template.keys.include?(feature.template.to_sym)
+                puts "Found '#{feature.template}' in #{residential_template_filepath}. Setting arguments to values specified in this file."
+                template = template[feature.template.to_sym]
+                args.update(template)
+              else
+                puts "Could not find '#{feature.template}' in #{residential_template_filepath}. Setting arguments to their default values."
+              end
+            end
 
             resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../measures/BuildResidentialModel/resources'))
             meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
@@ -474,20 +497,17 @@ module URBANopt
             measure.arguments(OpenStudio::Model::Model.new).each do |arg|
               next if [:hpxml_path, :weather_dir, :schedules_output_path].include? arg.name.to_sym
 
-              unless args.keys.include? arg.name.to_sym # argument has not been set and so gets the default value
+              if not args.keys.include? arg.name.to_sym # argument has not been set and so gets the default value
                 next unless arg.hasDefaultValue
 
-                case arg.type.valueName.downcase
-                when 'boolean'
-                  args[arg.name.to_sym] = arg.defaultValueAsBool
-                when 'double'
-                  args[arg.name.to_sym] = arg.defaultValueAsDouble
-                when 'integer'
-                  args[arg.name.to_sym] = arg.defaultValueAsInteger
-                when 'string'
-                  args[arg.name.to_sym] = arg.defaultValueAsString
-                when 'choice'
-                  args[arg.name.to_sym] = arg.defaultValueAsString
+                arg_default = get_arg_default(arg)
+                args[arg.name.to_sym] = arg_default
+              else
+                next unless arg.hasDefaultValue
+
+                arg_default = get_arg_default(arg)
+                if args[arg.name.to_sym] != arg_default
+                  puts "Overriding #{arg.name} default value '#{arg_default}' with '#{args[arg.name.to_sym]}'."
                 end
               end
 
@@ -780,10 +800,8 @@ module URBANopt
               OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'add_hvac', false, 'create_typical_building_from_model 1')
 
               # create a blended space type for each story
-              OpenStudio::Extension.set_measure_argument(osw,
-                                                         'blended_space_type_from_model', '__SKIP__', false)
-              OpenStudio::Extension.set_measure_argument(osw,
-                                                         'blended_space_type_from_model', 'blend_method', 'Building Story')
+              OpenStudio::Extension.set_measure_argument(osw, 'blended_space_type_from_model', '__SKIP__', false)
+              OpenStudio::Extension.set_measure_argument(osw, 'blended_space_type_from_model', 'blend_method', 'Building Story')
 
               # create geometry for the desired feature, this will reuse blended space types in the model for each story and remove the bar geometry
               OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', '__SKIP__', false)
