@@ -2,14 +2,14 @@
   "type": "FeatureCollection",
   "mappers": [],
   "project": {
+    "id": "7c33a001-bccb-413e-ac87-67558b5d4b07",
+    "name": "New Project",
     "begin_date": "2017-01-01T07:00:00.000Z",
+    "end_date": "2017-12-31T07:00:00.000Z",
     "cec_climate_zone": null,
     "climate_zone": "6A",
     "default_template": "90.1-2013",
-    "end_date": "2017-12-31T07:00:00.000Z",
-    "id": "7c33a001-bccb-413e-ac87-67558b5d4b07",
     "import_surrounding_buildings_as_shading": null,
-    "name": "New Project",
     "surface_elevation": null,
     "tariff_filename": null,
     "timesteps_per_hour": 1,
@@ -24,38 +24,41 @@
   ],
   "features": [
     {
-      "geometry": {
-        "coordinates": [
-          -78.84948467732347,
-          42.81677154451123
-        ],
-        "type": "Point"
-      },
+      "type": "Feature",
       "properties": {
+        "id": "53340c2c-ab20-40db-aba1-11ac607c52a7",
+        "name": "Site Origin",
+        "type": "Site Origin",
         "begin_date": "2017-01-01T07:00:00.000Z",
+        "end_date": "2017-12-31T07:00:00.000Z",
         "cec_climate_zone": null,
         "climate_zone": "6A",
-        "default_template": "90.1-2013",
-        "end_date": "2017-12-31T07:00:00.000Z",
-        "id": "53340c2c-ab20-40db-aba1-11ac607c52a7",
+        "default_template": "90.1-2013",      
         "import_surrounding_buildings_as_shading": null,
-        "name": "Site Origin",
         "surface_elevation": null,
         "tariff_filename": null,
         "timesteps_per_hour": 1,
-        "type": "Site Origin",
         "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw"
       },
-      "type": "Feature"
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -78.84948467732347,
+          42.81677154451123
+        ] 
+      }      
     },
 
     {
       "type": "Feature",
       "properties": {
+        "id": "1",
+        "name": "Mixed_use 1",
+        "type": "Building",
         "building_type": "Mixed use",
         "floor_area": 752184,
         "footprint_area": 188046,
-        "id": "1",
+        "number_of_stories": 4,
         "mixed_type_1": "Office",
         "mixed_type_1_percentage": 50,
         "mixed_type_2": "Food service",
@@ -63,10 +66,7 @@
         "mixed_type_3": "Strip shopping mall",
         "mixed_type_3_percentage": 0,
         "mixed_type_4": "Lodging",
-        "mixed_type_4_percentage": 0,
-        "name": "Mixed_use 1",
-        "number_of_stories": 4,
-        "type": "Building"
+        "mixed_type_4_percentage": 0
       },
       "geometry": {
         "type": "Polygon",
@@ -112,13 +112,13 @@
     {
       "type": "Feature",
       "properties": {
+        "id": "2",
+        "name": "Restaurant 1",
+        "type": "Building",
         "building_type": "Food service",
         "floor_area": 22313,
         "footprint_area": 22313,
-        "id": "2",
-        "name": "Restaurant 1",
-        "number_of_stories": 1,
-        "type": "Building"
+        "number_of_stories": 1
       },
       "geometry": {
         "type": "Polygon",
@@ -155,10 +155,10 @@
         "id": "3",
         "name": "Restaurant 10",
         "type": "Building",
-        "footprint_area": 41877,
+        "building_type": "Food service",
         "floor_area": 125631,
-        "number_of_stories": 3,
-        "building_type": "Food service"
+        "footprint_area": 41877,
+        "number_of_stories": 3
       },
       "geometry": {
         "type": "Polygon",
@@ -195,10 +195,10 @@
         "id": "4",
         "name": "Restaurant 12",
         "type": "Building",
-        "footprint_area": 10541,
+        "building_type": "Food service",
         "floor_area": 31623,
-        "number_of_stories": 3,
-        "building_type": "Food service"
+        "footprint_area": 10541,
+        "number_of_stories": 3
       },
       "geometry": {
         "type": "Polygon",
@@ -235,10 +235,10 @@
         "id": "5",
         "name": "Restaurant 14",
         "type": "Building",
-        "footprint_area": 8804,
+        "building_type": "Food service",
         "floor_area": 8804,
-        "number_of_stories": 1,
-        "building_type": "Food service"
+        "footprint_area": 8804,
+        "number_of_stories": 1        
       },
       "geometry": {
         "type": "Polygon",
@@ -275,10 +275,10 @@
         "id": "6",
         "name": "Restaurant 15",
         "type": "Building",
-        "footprint_area": 10689,
+        "building_type": "Food service",
         "floor_area": 10689,
-        "number_of_stories": 1,
-        "building_type": "Food service"
+        "footprint_area": 10689,
+        "number_of_stories": 1        
       },
       "geometry": {
         "type": "Polygon",
@@ -312,12 +312,12 @@
     {
       "type": "Feature",
       "properties": {
-        "building_type": "Office",
         "id": "7",
-        "detailed_model_filename": "7.osm",
-        "number_of_stories": 6,
         "name": "Office 1",
-        "type": "Building"
+        "type": "Building",
+        "building_type": "Office",
+        "number_of_stories": 6,
+        "detailed_model_filename": "7.osm"
       },
       "geometry": {
         "type": "Polygon",
@@ -351,12 +351,13 @@
     {
       "type": "Feature",
       "properties": {
-        "building_type": "Outpatient health care",
+        
         "id": "8",
         "name": "Hospital 1",
-        "detailed_model_filename": "8.osm",
+        "type": "Building",
+        "building_type": "Outpatient health care",
         "number_of_stories": 10,
-        "type": "Building"
+        "detailed_model_filename": "8.osm"
       },
       "geometry": {
         "type": "Polygon",
@@ -398,12 +399,13 @@
     {
       "type": "Feature",
       "properties": {
-        "building_type": "Inpatient health care",
+        
         "id": "9",
-        "detailed_model_filename": "9.osm",
         "name": "Hospital 2",
+        "type": "Building",
+        "building_type": "Inpatient health care",
         "number_of_stories": 3,
-        "type": "Building"
+        "detailed_model_filename": "9.osm"
       },
       "geometry": {
         "type": "Polygon",
@@ -453,10 +455,13 @@
     {
       "type": "Feature",
       "properties": {
+        "id": "10",
+        "name": "Mixed use 2",
+        "type": "Building",
         "building_type": "Mixed use",
         "floor_area": 1278384,
         "footprint_area": 159798,
-        "id": "10",
+        "number_of_stories": 8,
         "mixed_type_1": "Strip shopping mall",
         "mixed_type_1_percentage": 25,
         "mixed_type_2": "Food service",
@@ -464,10 +469,7 @@
         "mixed_type_3": "Office",
         "mixed_type_3_percentage": 15,
         "mixed_type_4": "Lodging",
-        "mixed_type_4_percentage": 35,
-        "name": "Mixed use 2",
-        "number_of_stories": 8,
-        "type": "Building"
+        "mixed_type_4_percentage": 35
       },
       "geometry": {
         "type": "Polygon",
@@ -512,10 +514,10 @@
         "id": "11",
         "name": "Restaurant 13",
         "type": "Building",
-        "footprint_area": 10837,
+        "building_type": "Food service",
         "floor_area": 32511,
-        "number_of_stories": 3,
-        "building_type": "Food service"
+        "footprint_area": 10837,
+        "number_of_stories": 3
       },
       "geometry": {
         "type": "Polygon",
@@ -548,13 +550,13 @@
     
     {"type": "Feature",
       "properties": {
+        "id": "12",
+        "name": "Mall 1",
+        "type": "Building",
         "building_type": "Strip shopping mall",
         "floor_area": 374409,
         "footprint_area": 124803,
-        "id": "12",
-        "name": "Mall 1",
-        "number_of_stories": 3,
-        "type": "Building"
+        "number_of_stories": 3
       },
       "geometry": {
         "type": "Polygon",
@@ -588,13 +590,13 @@
     {
       "type": "Feature",
       "properties": {
+        "id": "13",
+        "name": "Hotel 1",
+        "type": "Building",
         "building_type": "Lodging",
         "floor_area": 316160,
         "footprint_area": 31616,
-        "id": "13",
-        "name": "Hotel 1",
-        "number_of_stories": 10,
-        "type": "Building"
+        "number_of_stories": 10
       },
       "geometry": {
         "type": "Polygon",
