@@ -27,36 +27,34 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # end
 #
 
-# if allow_local && File.exist?('../openstudio-common-measures-gem')
-#   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
-# elsif allow_local
-  # gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
-# else
+if allow_local && File.exist?('../openstudio-common-measures-gem')
+  gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
+elsif allow_local
+  gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
+else
   gem 'openstudio-common-measures', '~> 0.2.0'
-# end
+end
 
-# if allow_local && File.exist?('../openstudio-model-articulation-gem')
-  # gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
-# elsif allow_local
-  # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
-# else
+if allow_local && File.exist?('../openstudio-model-articulation-gem')
+  gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
+elsif allow_local
+  gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
+else
   gem 'openstudio-model-articulation', '~> 0.2.0'
-# end
+end
 
-
-#if allow_local && File.exist?('../urbanopt-scenario-gem')
-#  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
-#elsif allow_local
-  # gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
-#else
+if allow_local && File.exist?('../urbanopt-scenario-gem')
+  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+elsif allow_local
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
+else
   gem 'urbanopt-scenario', '~> 0.3.0'
-#end
+end
 
-#if allow_local && File.exists?('../urbanopt-geojson-gem')
-#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-#elsif allow_local
-  #gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-#else
+if allow_local && File.exists?('../urbanopt-geojson-gem')
+  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+elsif allow_local
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+else
   gem 'urbanopt-geojson', '~> 0.3.0'
-#end
-
+end
