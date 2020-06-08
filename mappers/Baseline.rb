@@ -498,20 +498,22 @@ module URBANopt
               next if [:hpxml_path, :weather_dir, :schedules_output_path].include? arg.name.to_sym
 
               if not args.keys.include? arg.name.to_sym # argument has not been set and so gets the default value
-                next unless arg.hasDefaultValue
-
-                arg_default = get_arg_default(arg)
-                args[arg.name.to_sym] = arg_default
+                if arg.hasDefaultValue
+                  arg_default = get_arg_default(arg)
+                  args[arg.name.to_sym] = arg_default
+                end
               else
-                next unless arg.hasDefaultValue
-
-                arg_default = get_arg_default(arg)
-                if args[arg.name.to_sym] != arg_default
-                  puts "Overriding #{arg.name} default value '#{arg_default}' with '#{args[arg.name.to_sym]}'."
+                if arg.hasDefaultValue
+                  arg_default = get_arg_default(arg)
+                  if args[arg.name.to_sym] != arg_default
+                    puts "Overriding #{arg.name} default value '#{arg_default}' with '#{args[arg.name.to_sym]}'."
+                  end
                 end
               end
 
-              OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg.name, args[arg.name.to_sym])
+              if args.keys.include? arg.name.to_sym
+                OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg.name, args[arg.name.to_sym])
+              end
             end
 
           elsif commercial_building_types.include? building_type
