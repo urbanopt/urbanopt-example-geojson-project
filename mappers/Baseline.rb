@@ -241,6 +241,36 @@ module URBANopt
           end
         end  
       end
+
+      def find_feature_center(locations)
+
+        number_of_locations = locations.length
+       
+        return locations.first if number_of_locations == 1
+       
+        x = y = z = 0.0
+        locations.each do |station|
+          latitude = station[0] * Math::PI / 180
+          longitude = station[1] * Math::PI / 180
+       
+          x += Math.cos(latitude) * Math.cos(longitude)
+          y += Math.cos(latitude) * Math.sin(longitude)
+          z += Math.sin(latitude)
+        end
+       
+        x = x/number_of_locations
+        y = y/number_of_locations
+        z = z/number_of_locations
+       
+        central_longitude =  Math.atan2(y, x)
+        central_square_root = Math.sqrt(x * x + y * y)
+        central_latitude = Math.atan2(z, central_square_root)
+       
+        [central_latitude * 180 / Math::PI, 
+        central_longitude * 180 / Math::PI]
+
+      end
+
       
       def create_osw(scenario, features, feature_names)
         
@@ -251,7 +281,14 @@ module URBANopt
         feature_id = feature.id
         feature_type = feature.type
         # take the first vertex as the location of the buildings
-        feature_location = feature.feature_json[:geometry][:coordinates][0][0].to_s
+        #feature_location = feature.feature_json[:geometry][:coordinates][0][0].to_s
+
+        # take the centroid of a buildings 
+        feature_vertices_coordinates = feature.feature_json[:geometry][:coordinates][0]
+        #puts "feature_vertices_coordinates = #{feature_vertices_coordinates}"
+        feature_location = find_feature_center(feature_vertices_coordinates).to_s
+        #puts "feature_locatin = #{feature_location}"
+        
         feature_name = feature.name
         if feature_names.size == 1
           feature_name = feature_names[0]
