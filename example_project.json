@@ -216,7 +216,7 @@
               "attic_type": "attic - vented",
               "system_type": "Residential - boiler and room air conditioner",
               "heating_system_fuel_type": "fuel oil",
-              "template": "IECC 2009"
+              "template": "IECC 2018"
             },
             "geometry": {
               "type": "Polygon",

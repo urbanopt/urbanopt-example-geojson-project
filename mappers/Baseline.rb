@@ -473,22 +473,32 @@ module URBANopt
             rescue
             end
 
-            residential_template_filepath = File.join(File.dirname(__FILE__), 'residential.json')
+            residential_template_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.json')
             File.open(residential_template_filepath, 'r') do |file|
-              template = JSON.parse(file.read, symbolize_names: true)
-              if template.keys.include?(feature.template.to_sym)
-                template = template[feature.template.to_sym]
-                if feature.template.include?('IECC')
-                  climate_zone = '4A/4B' # FIXME: create a lookup from epw to iecc climate zone
-                end
-                if template.keys.include?(climate_zone.to_sym)
-                  puts "Found '#{feature.template}' and '#{climate_zone}' in #{residential_template_filepath}. Setting arguments to values specified in this file."
-                  template = template[climate_zone.to_sym]
-                  args.update(template)
-                end
+              json = JSON.parse(file.read, symbolize_names: true)
+              climate_zone = '1A' # FIXME: create a lookup from epw to iecc climate zone
+              if json.keys.include? climate_zone.to_sym
+                template = json[climate_zone.to_sym]
+                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'."
               else
-                puts "Could not find '#{feature.template}' in #{residential_template_filepath}. Setting arguments to their default values."
+                break
               end
+              template.each do |arg, levels|
+                level = levels[feature.template.to_sym]
+                if level
+                  template[arg] = level
+                  next
+                end
+                template.delete(arg)
+              end
+              if args[:geometry_foundation_type].include? 'Basement'
+                template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_basement]
+              elsif args[:geometry_foundation_type].include? 'Crawlspace'
+                template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_crawlspace]
+              end
+              template.delete(:foundation_wall_assembly_r_basement)
+              template.delete(:foundation_wall_assembly_r_crawlspace)
+              args.update(template)
             end
 
             resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../measures/BuildResidentialModel/resources'))
@@ -512,8 +522,10 @@ module URBANopt
                 if arg.hasDefaultValue
                   arg_default = get_arg_default(arg)
                   if args[arg.name.to_sym] != arg_default
-                    puts "Overriding #{arg.name} default value '#{arg_default}' with '#{args[arg.name.to_sym]}'."
+                    puts "Overriding #{arg.name} default '#{arg_default}' with '#{args[arg.name.to_sym]}'."
                   end
+                else
+                  puts "Setting #{arg.name} to '#{args[arg.name.to_sym]}'."
                 end
               end
 
