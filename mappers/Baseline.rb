@@ -477,9 +477,15 @@ module URBANopt
             File.open(residential_template_filepath, 'r') do |file|
               template = JSON.parse(file.read, symbolize_names: true)
               if template.keys.include?(feature.template.to_sym)
-                puts "Found '#{feature.template}' in #{residential_template_filepath}. Setting arguments to values specified in this file."
                 template = template[feature.template.to_sym]
-                args.update(template)
+                if feature.template.include?('IECC')
+                  climate_zone = '4A/4B' # FIXME: create a lookup from epw to iecc climate zone
+                end
+                if template.keys.include?(climate_zone.to_sym)
+                  puts "Found '#{feature.template}' and '#{climate_zone}' in #{residential_template_filepath}. Setting arguments to values specified in this file."
+                  template = template[climate_zone.to_sym]
+                  args.update(template)
+                end
               else
                 puts "Could not find '#{feature.template}' in #{residential_template_filepath}. Setting arguments to their default values."
               end

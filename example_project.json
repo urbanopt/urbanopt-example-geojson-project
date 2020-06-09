@@ -215,7 +215,8 @@
               "foundation_type": "crawlspace - vented",
               "attic_type": "attic - vented",
               "system_type": "Residential - boiler and room air conditioner",
-              "heating_system_fuel_type": "fuel oil"
+              "heating_system_fuel_type": "fuel oil",
+              "template": "IECC 2009"
             },
             "geometry": {
               "type": "Polygon",
