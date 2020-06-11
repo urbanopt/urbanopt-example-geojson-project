@@ -602,6 +602,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     args << OpenStudio::Measure::OSArgument::makeChoiceArgument('refrigerator_location', appliance_location_choices, true)
     args << OpenStudio::Measure::OSArgument::makeDoubleArgument('refrigerator_rated_annual_kwh', true)
     args << OpenStudio::Measure::OSArgument::makeDoubleArgument('refrigerator_usage_multiplier', true)
+    args << OpenStudio::Measure::OSArgument::makeStringArgument('refrigerator_weekday_fractions', true)
+    args << OpenStudio::Measure::OSArgument::makeStringArgument('refrigerator_weekend_fractions', true)
+    args << OpenStudio::Measure::OSArgument::makeStringArgument('refrigerator_monthly_multipliers', true)
+    args << OpenStudio::Measure::OSArgument::makeBoolArgument('extra_refrigerator_present', true)
+    args << OpenStudio::Measure::OSArgument::makeChoiceArgument('extra_refrigerator_location', appliance_location_choices, true)
+    args << OpenStudio::Measure::OSArgument::makeDoubleArgument('extra_refrigerator_rated_annual_kwh', true)
+    args << OpenStudio::Measure::OSArgument::makeDoubleArgument('extra_refrigerator_usage_multiplier', true)
 
     cooking_range_oven_fuel_choices = OpenStudio::StringVector.new
     cooking_range_oven_fuel_choices << HPXML::FuelTypeElectricity
@@ -616,6 +623,9 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     args << OpenStudio::Measure::OSArgument::makeBoolArgument('cooking_range_oven_is_induction', true)
     args << OpenStudio::Measure::OSArgument::makeBoolArgument('cooking_range_oven_is_convection', true)
     args << OpenStudio::Measure::OSArgument::makeDoubleArgument('cooking_range_oven_usage_multiplier', true)
+    args << OpenStudio::Measure::OSArgument::makeStringArgument('cooking_range_oven_weekday_fractions', true)
+    args << OpenStudio::Measure::OSArgument::makeStringArgument('cooking_range_oven_weekend_fractions', true)
+    args << OpenStudio::Measure::OSArgument::makeStringArgument('cooking_range_oven_monthly_multipliers', true)
     args << OpenStudio::Measure::OSArgument::makeDoubleArgument('ceiling_fan_efficiency', true)
     args << OpenStudio::Measure::OSArgument::makeStringArgument('ceiling_fan_quantity', true)
     args << OpenStudio::Measure::OSArgument::makeDoubleArgument('ceiling_fan_cooling_setpoint_temp_offset', true)
@@ -623,7 +633,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     args << OpenStudio::Measure::OSArgument::makeStringArgument('plug_loads_other_annual_kwh', true)
     args << OpenStudio::Measure::OSArgument::makeDoubleArgument('plug_loads_other_frac_sensible', true)
     args << OpenStudio::Measure::OSArgument::makeDoubleArgument('plug_loads_other_frac_latent', true)
-    args << OpenStudio::Measure::OSArgument::makeBoolArgument('plug_loads_schedule_values', true)
     args << OpenStudio::Measure::OSArgument::makeStringArgument('plug_loads_weekday_fractions', true)
     args << OpenStudio::Measure::OSArgument::makeStringArgument('plug_loads_weekend_fractions', true)
     args << OpenStudio::Measure::OSArgument::makeStringArgument('plug_loads_monthly_multipliers', true)
@@ -914,12 +923,22 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
              refrigerator_location: runner.getStringArgumentValue('refrigerator_location', user_arguments),
              refrigerator_rated_annual_kwh: runner.getDoubleArgumentValue('refrigerator_rated_annual_kwh', user_arguments),
              refrigerator_usage_multiplier: runner.getDoubleArgumentValue('refrigerator_usage_multiplier', user_arguments),
+             refrigerator_weekday_fractions: runner.getStringArgumentValue('refrigerator_weekday_fractions', user_arguments),
+             refrigerator_weekend_fractions: runner.getStringArgumentValue('refrigerator_weekend_fractions', user_arguments),
+             refrigerator_monthly_multipliers: runner.getStringArgumentValue('refrigerator_monthly_multipliers', user_arguments),
+             extra_refrigerator_present: runner.getBoolArgumentValue('extra_refrigerator_present', user_arguments),
+             extra_refrigerator_location: runner.getStringArgumentValue('extra_refrigerator_location', user_arguments),
+             extra_refrigerator_rated_annual_kwh: runner.getDoubleArgumentValue('extra_refrigerator_rated_annual_kwh', user_arguments),
+             extra_refrigerator_usage_multiplier: runner.getDoubleArgumentValue('extra_refrigerator_usage_multiplier', user_arguments),
              cooking_range_oven_present: runner.getBoolArgumentValue('cooking_range_oven_present', user_arguments),
              cooking_range_oven_location: runner.getStringArgumentValue('cooking_range_oven_location', user_arguments),
              cooking_range_oven_fuel_type: runner.getStringArgumentValue('cooking_range_oven_fuel_type', user_arguments),
              cooking_range_oven_is_induction: runner.getStringArgumentValue('cooking_range_oven_is_induction', user_arguments),
              cooking_range_oven_is_convection: runner.getStringArgumentValue('cooking_range_oven_is_convection', user_arguments),
              cooking_range_oven_usage_multiplier: runner.getDoubleArgumentValue('cooking_range_oven_usage_multiplier', user_arguments),
+             cooking_range_oven_weekday_fractions: runner.getStringArgumentValue('cooking_range_oven_weekday_fractions', user_arguments),
+             cooking_range_oven_weekend_fractions: runner.getStringArgumentValue('cooking_range_oven_weekend_fractions', user_arguments),
+             cooking_range_oven_monthly_multipliers: runner.getStringArgumentValue('cooking_range_oven_monthly_multipliers', user_arguments),
              ceiling_fan_efficiency: runner.getDoubleArgumentValue('ceiling_fan_efficiency', user_arguments),
              ceiling_fan_quantity: runner.getStringArgumentValue('ceiling_fan_quantity', user_arguments),
              ceiling_fan_cooling_setpoint_temp_offset: runner.getDoubleArgumentValue('ceiling_fan_cooling_setpoint_temp_offset', user_arguments),
@@ -927,7 +946,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
              plug_loads_other_annual_kwh: runner.getStringArgumentValue('plug_loads_other_annual_kwh', user_arguments),
              plug_loads_other_frac_sensible: runner.getDoubleArgumentValue('plug_loads_other_frac_sensible', user_arguments),
              plug_loads_other_frac_latent: runner.getDoubleArgumentValue('plug_loads_other_frac_latent', user_arguments),
-             plug_loads_schedule_values: runner.getBoolArgumentValue('plug_loads_schedule_values', user_arguments),
              plug_loads_weekday_fractions: runner.getStringArgumentValue('plug_loads_weekday_fractions', user_arguments),
              plug_loads_weekend_fractions: runner.getStringArgumentValue('plug_loads_weekend_fractions', user_arguments),
              plug_loads_monthly_multipliers: runner.getStringArgumentValue('plug_loads_monthly_multipliers', user_arguments),
