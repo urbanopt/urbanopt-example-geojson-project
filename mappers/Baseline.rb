@@ -368,14 +368,19 @@ module URBANopt
             case feature.foundation_type
             when 'crawlspace - vented'
               args[:geometry_foundation_type] = "VentedCrawlspace"
+              args[:geometry_foundation_height] = 3.0
             when 'crawlspace - unvented'
               args[:geometry_foundation_type] = "UnventedCrawlspace"
+              args[:geometry_foundation_height] = 3.0
             when 'basement - unconditioned'
               args[:geometry_foundation_type] = "UnconditionedBasement"
+              args[:geometry_foundation_height] = 8.0
             when 'basement - conditioned'
               args[:geometry_foundation_type] = "ConditionedBasement"
+              args[:geometry_foundation_height] = 8.0
             when 'ambient'
               args[:geometry_foundation_type] = "Ambient"
+              args[:geometry_foundation_height] = 8.0
             end
 
             args[:geometry_attic_type] = "VentedAttic"

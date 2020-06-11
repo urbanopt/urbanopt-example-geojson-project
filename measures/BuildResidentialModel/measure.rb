@@ -671,7 +671,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
              geometry_foundation_height: runner.getDoubleArgumentValue('geometry_foundation_height', user_arguments),
              geometry_foundation_height_above_grade: runner.getDoubleArgumentValue('geometry_foundation_height_above_grade', user_arguments),
              geometry_roof_type: runner.getStringArgumentValue('geometry_roof_type', user_arguments),
-             geometry_roof_pitch: { '1:12' => 1.0 / 12.0, '2:12' => 2.0 / 12.0, '3:12' => 3.0 / 12.0, '4:12' => 4.0 / 12.0, '5:12' => 5.0 / 12.0, '6:12' => 6.0 / 12.0, '7:12' => 7.0 / 12.0, '8:12' => 8.0 / 12.0, '9:12' => 9.0 / 12.0, '10:12' => 10.0 / 12.0, '11:12' => 11.0 / 12.0, '12:12' => 12.0 / 12.0 }[runner.getStringArgumentValue('geometry_roof_pitch', user_arguments)],
+             geometry_roof_pitch: runner.getStringArgumentValue('geometry_roof_pitch', user_arguments),
              geometry_roof_structure: runner.getStringArgumentValue('geometry_roof_structure', user_arguments),
              geometry_attic_type: runner.getStringArgumentValue('geometry_attic_type', user_arguments),
              geometry_eaves_depth: runner.getDoubleArgumentValue('geometry_eaves_depth', user_arguments),
@@ -694,8 +694,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
              roof_solar_absorptance: runner.getDoubleArgumentValue('roof_solar_absorptance', user_arguments),
              roof_emittance: runner.getDoubleArgumentValue('roof_emittance', user_arguments),
              roof_radiant_barrier: runner.getBoolArgumentValue('roof_radiant_barrier', user_arguments),
-             neighbor_distance: [runner.getDoubleArgumentValue('neighbor_front_distance', user_arguments), runner.getDoubleArgumentValue('neighbor_back_distance', user_arguments), runner.getDoubleArgumentValue('neighbor_left_distance', user_arguments), runner.getDoubleArgumentValue('neighbor_right_distance', user_arguments)],
-             neighbor_height: [runner.getStringArgumentValue('neighbor_front_height', user_arguments), runner.getStringArgumentValue('neighbor_back_height', user_arguments), runner.getStringArgumentValue('neighbor_left_height', user_arguments), runner.getStringArgumentValue('neighbor_right_height', user_arguments)],
+             neighbor_front_distance: runner.getDoubleArgumentValue('neighbor_front_distance', user_arguments),
+             neighbor_back_distance: runner.getDoubleArgumentValue('neighbor_back_distance', user_arguments),
+             neighbor_left_distance: runner.getDoubleArgumentValue('neighbor_left_distance', user_arguments),
+             neighbor_right_distance: runner.getDoubleArgumentValue('neighbor_right_distance', user_arguments),
+             neighbor_front_height: runner.getStringArgumentValue('neighbor_front_height', user_arguments),
+             neighbor_back_height: runner.getStringArgumentValue('neighbor_back_height', user_arguments),
+             neighbor_left_height: runner.getStringArgumentValue('neighbor_left_height', user_arguments),
+             neighbor_right_height: runner.getStringArgumentValue('neighbor_right_height', user_arguments),
              wall_type: runner.getStringArgumentValue('wall_type', user_arguments),
              wall_assembly_r: runner.getDoubleArgumentValue('wall_assembly_r', user_arguments),
              wall_solar_absorptance: runner.getDoubleArgumentValue('wall_solar_absorptance', user_arguments),
@@ -777,8 +783,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
              ducts_return_leakage_units: runner.getStringArgumentValue('ducts_return_leakage_units', user_arguments),
              ducts_supply_leakage_value: runner.getDoubleArgumentValue('ducts_supply_leakage_value', user_arguments),
              ducts_return_leakage_value: runner.getDoubleArgumentValue('ducts_return_leakage_value', user_arguments),
-             ducts_supply_insulation_r_value: runner.getDoubleArgumentValue('ducts_supply_insulation_r', user_arguments),
-             ducts_return_insulation_r_value: runner.getDoubleArgumentValue('ducts_return_insulation_r', user_arguments),
+             ducts_supply_insulation_r: runner.getDoubleArgumentValue('ducts_supply_insulation_r', user_arguments),
+             ducts_return_insulation_r: runner.getDoubleArgumentValue('ducts_return_insulation_r', user_arguments),
              ducts_supply_location: runner.getStringArgumentValue('ducts_supply_location', user_arguments),
              ducts_return_location: runner.getStringArgumentValue('ducts_return_location', user_arguments),
              ducts_supply_surface_area: runner.getStringArgumentValue('ducts_supply_surface_area', user_arguments),
@@ -840,14 +846,22 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
              solar_thermal_collector_rated_thermal_losses: runner.getDoubleArgumentValue('solar_thermal_collector_rated_thermal_losses', user_arguments),
              solar_thermal_storage_volume: runner.getStringArgumentValue('solar_thermal_storage_volume', user_arguments),
              solar_thermal_solar_fraction: runner.getDoubleArgumentValue('solar_thermal_solar_fraction', user_arguments),
-             pv_system_module_type: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getStringArgumentValue("pv_system_module_type_#{n}", user_arguments) },
-             pv_system_location: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getStringArgumentValue("pv_system_location_#{n}", user_arguments) },
-             pv_system_tracking: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getStringArgumentValue("pv_system_tracking_#{n}", user_arguments) },
-             pv_system_array_azimuth: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getDoubleArgumentValue("pv_system_array_azimuth_#{n}", user_arguments) },
-             pv_system_array_tilt: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getStringArgumentValue("pv_system_array_tilt_#{n}", user_arguments) },
-             pv_system_max_power_output: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getDoubleArgumentValue("pv_system_max_power_output_#{n}", user_arguments) },
-             pv_system_inverter_efficiency: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getDoubleArgumentValue("pv_system_inverter_efficiency_#{n}", user_arguments) },
-             pv_system_system_losses_fraction: (1..Constants.MaxNumPhotovoltaics).to_a.map { |n| runner.getDoubleArgumentValue("pv_system_system_losses_fraction_#{n}", user_arguments) },
+             pv_system_module_type_1: runner.getStringArgumentValue('pv_system_module_type_1', user_arguments),
+             pv_system_location_1: runner.getStringArgumentValue('pv_system_location_1', user_arguments),
+             pv_system_tracking_1: runner.getStringArgumentValue('pv_system_tracking_1', user_arguments),
+             pv_system_array_azimuth_1: runner.getDoubleArgumentValue('pv_system_array_azimuth_1', user_arguments),
+             pv_system_array_tilt_1: runner.getStringArgumentValue('pv_system_array_tilt_1', user_arguments),
+             pv_system_max_power_output_1: runner.getDoubleArgumentValue('pv_system_max_power_output_1', user_arguments),
+             pv_system_inverter_efficiency_1: runner.getDoubleArgumentValue('pv_system_inverter_efficiency_1', user_arguments),
+             pv_system_system_losses_fraction_1: runner.getDoubleArgumentValue('pv_system_system_losses_fraction_1', user_arguments),
+             pv_system_module_type_2: runner.getStringArgumentValue('pv_system_module_type_2', user_arguments),
+             pv_system_location_2: runner.getStringArgumentValue('pv_system_location_2', user_arguments),
+             pv_system_tracking_2: runner.getStringArgumentValue('pv_system_tracking_2', user_arguments),
+             pv_system_array_azimuth_2: runner.getDoubleArgumentValue('pv_system_array_azimuth_2', user_arguments),
+             pv_system_array_tilt_2: runner.getStringArgumentValue('pv_system_array_tilt_2', user_arguments),
+             pv_system_max_power_output_2: runner.getDoubleArgumentValue('pv_system_max_power_output_2', user_arguments),
+             pv_system_inverter_efficiency_2: runner.getDoubleArgumentValue('pv_system_inverter_efficiency_2', user_arguments),
+             pv_system_system_losses_fraction_2: runner.getDoubleArgumentValue('pv_system_system_losses_fraction_2', user_arguments),
              lighting_fraction_cfl_interior: runner.getDoubleArgumentValue('lighting_fraction_cfl_interior', user_arguments),
              lighting_fraction_lfl_interior: runner.getDoubleArgumentValue('lighting_fraction_lfl_interior', user_arguments),
              lighting_fraction_led_interior: runner.getDoubleArgumentValue('lighting_fraction_led_interior', user_arguments),
@@ -931,8 +945,20 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     # Check file/dir paths exist
     check_dir_exists(measures_dir, runner)
 
+    # Optionals: get or remove
+    args.keys.each do |arg|
+      begin
+        if args[arg].is_initialized
+          args[arg] = args[arg].get
+        else
+          args.delete(arg)
+        end
+      rescue
+      end
+    end
+
     unit_models = []
-    (1..args[:geometry_num_units].get).to_a.each do |num_unit|
+    (1..args[:geometry_num_units]).to_a.each do |num_unit|
       unit_model = OpenStudio::Model::Model.new
       unit_name = "unit #{num_unit}.osw"
 
@@ -949,6 +975,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args[:hpxml_path] = File.expand_path('../in.xml')
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:schedules_output_path] = '../schedules.csv'
+      measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
 
       # HPXMLtoOpenStudio
@@ -959,12 +986,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # Fill the measure args hash with default values
       measure_args = {}
-      get_measure_args_default_values(unit_model, measure_args, measure)
 
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../in.xml')
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:output_dir] = File.expand_path('..')
+      measure_args[:debug] = false
+      measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
 
       if not apply_measures(measures_dir, measures, runner, unit_model, workflow_json, unit_name, true)
@@ -986,25 +1014,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     end
 
     return true
-  end
-
-  def get_measure_args_default_values(model, args, measure)
-    measure.arguments(model).each do |arg|
-      next unless arg.hasDefaultValue
-
-      case arg.type.valueName.downcase
-      when 'boolean'
-        args[arg.name.to_sym] = arg.defaultValueAsBool
-      when 'double'
-        args[arg.name.to_sym] = arg.defaultValueAsDouble
-      when 'integer'
-        args[arg.name.to_sym] = arg.defaultValueAsInteger
-      when 'string'
-        args[arg.name.to_sym] = arg.defaultValueAsString
-      when 'choice'
-        args[arg.name.to_sym] = arg.defaultValueAsString
-      end
-    end
   end
 end
 
