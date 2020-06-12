@@ -478,34 +478,64 @@ module URBANopt
             rescue
             end
 
-            residential_template_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.json')
-            File.open(residential_template_filepath, 'r') do |file|
-              json = JSON.parse(file.read, symbolize_names: true)
-              climate_zone = '1A' # FIXME: create a lookup from epw to iecc climate zone
-              if json.keys.include? climate_zone.to_sym
-                template = json[climate_zone.to_sym]
-                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'."
-              else
-                break
-              end
-              template.each do |arg, levels|
-                level = levels[feature.template.to_sym]
-                if level
-                  template[arg] = level
+            # Update args with IECC prescriptive values if template points to IECC
+            if feature.template.include? 'IECC'
+
+              # Create json from template
+              residential_template_filepath = File.join(File.dirname(__FILE__), 'residential/IECC.tsv')
+              iecc = {}
+              arguments = []
+              CSV.foreach(residential_template_filepath, { :col_sep => "\t" }) do |row|
+                if arguments.empty?
+                  arguments = row[2..-1]
                   next
                 end
-                template.delete(arg)
+
+                climate_zone = row[0].to_sym
+                year = row[1].to_sym
+                values = row[2..-1]
+
+                arguments.each_with_index do |argument, i|
+                  argument = argument.to_sym
+                  unless iecc.keys.include? climate_zone
+                    iecc[climate_zone] = {}
+                  end
+                  unless iecc[climate_zone].keys.include? argument
+                    iecc[climate_zone][argument] = {}
+                  end
+                  iecc[climate_zone][argument][year] = values[i]
+                end
               end
-              if args[:geometry_foundation_type].include? 'Basement'
-                template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_basement]
-              elsif args[:geometry_foundation_type].include? 'Crawlspace'
-                template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_crawlspace]
+
+              # Update args hash with values from template
+              climate_zone = '1A' # FIXME: create a lookup from epw to iecc climate zone
+              if iecc.keys.include? climate_zone.to_sym
+                template = iecc[climate_zone.to_sym]
+                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'."
+
+                template.each do |arg, levels|
+                  code, year = feature.template.split(' ')
+                  level = levels[year.to_sym]
+                  unless level.nil?
+                    template[arg] = level
+                    next
+                  end
+                  template.delete(arg)
+                end
+
+                if args[:geometry_foundation_type].include? 'Basement'
+                  template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_basement]
+                elsif args[:geometry_foundation_type].include? 'Crawlspace'
+                  template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_crawlspace]
+                end
+                template.delete(:foundation_wall_assembly_r_basement)
+                template.delete(:foundation_wall_assembly_r_crawlspace)
+
+                args.update(template)
               end
-              template.delete(:foundation_wall_assembly_r_basement)
-              template.delete(:foundation_wall_assembly_r_crawlspace)
-              args.update(template)
             end
 
+            # Get instance of BuildResidentialModel measure so we can override defaults with template values
             resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../measures/BuildResidentialModel/resources'))
             meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
             require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
