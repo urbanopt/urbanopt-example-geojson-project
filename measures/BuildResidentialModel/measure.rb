@@ -475,6 +475,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../in.xml')
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
+      measure_args[:software_program_used] = 'URBANopt'
+      measure_args[:software_program_version] = '0.3.1' # TODO: manually update this?
       measure_args[:schedules_output_path] = '../schedules.csv'
       measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
