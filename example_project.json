@@ -166,12 +166,17 @@
             "type": "Feature",
             "properties": {
               "id": "4",
-              "name": "Restaurant 12",
+              "name": "Residential 1",
               "type": "Building",
               "footprint_area": 10541,
               "floor_area": 31623,
               "number_of_stories": 3,
-              "building_type": "Food service"
+              "building_type": "Single-Family Detached",
+              "number_of_bedrooms": 5,
+              "foundation_type": "slab",
+              "attic_type": "attic - conditioned",
+              "system_type": "Residential - electric resistance and central air conditioner",
+              "template": "IECC 2015"
             },
             "geometry": {
               "type": "Polygon",
@@ -205,7 +210,7 @@
             "type": "Feature",
             "properties": {
               "id": "5",
-              "name": "Residential 3",
+              "name": "Residential 2",
               "type": "Building",
               "footprint_area": 8804,
               "floor_area": 8804,
@@ -216,7 +221,7 @@
               "attic_type": "attic - vented",
               "system_type": "Residential - boiler and room air conditioner",
               "heating_system_fuel_type": "fuel oil",
-              "template": "IECC 2018"
+              "template": "IECC 2015"
             },
             "geometry": {
               "type": "Polygon",
@@ -250,12 +255,18 @@
             "type": "Feature",
             "properties": {
               "id": "6",
-              "name": "Restaurant 15",
+              "name": "Residential 3",
               "type": "Building",
               "footprint_area": 10689,
               "floor_area": 10689,
               "number_of_stories": 1,
-              "building_type": "Food service"
+              "building_type": "Single-Family Detached",
+              "number_of_bedrooms": 5,
+              "foundation_type": "basement - conditioned",
+              "attic_type": "attic - unvented",
+              "system_type": "Residential - furnace and evaporative cooler",
+              "heating_system_fuel_type": "natural gas",
+              "template": "IECC 2015"
             },
             "geometry": {
               "type": "Polygon",
