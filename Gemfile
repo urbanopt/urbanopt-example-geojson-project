@@ -9,7 +9,6 @@ ruby '~> 2.5.0'
 # Note that if allow_local is true, but the gem is not found locally, then it will
 # checkout the latest version (develop) from github.
 allow_local = ENV['FAVOR_LOCAL_GEMS']
-allow_local = 1
 
 # Uncomment the extension, core gems if you need to test local development versions. Otherwise
 # these are included in the model articulation and urbanopt gems
@@ -52,10 +51,10 @@ else
   gem 'urbanopt-scenario', '~> 0.3.0'
 end
 
-if allow_local && File.exists?('../urbanopt-geojson-gem')
+# if allow_local && File.exists?('../urbanopt-geojson-gem')
   gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-else
-  gem 'urbanopt-geojson', '~> 0.3.0'
-end
+# elsif allow_local
+#   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+# else
+#   gem 'urbanopt-geojson', '~> 0.3.0'
+# end
