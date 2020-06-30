@@ -31,19 +31,30 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     hpxml_name = 'base.xml'
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
     hpxml.header.timestep = 30
-    hpxml.header.begin_month = 2
-    hpxml.header.begin_day_of_month = 2
-    hpxml.header.end_month = 11
-    hpxml.header.end_day_of_month = 11
+    hpxml.header.sim_begin_month = 2
+    hpxml.header.sim_begin_day_of_month = 2
+    hpxml.header.sim_end_month = 11
+    hpxml.header.sim_end_day_of_month = 11
+    hpxml.header.dst_enabled = false
+    hpxml.header.dst_begin_month = 3
+    hpxml.header.dst_begin_day_of_month = 3
+    hpxml.header.dst_end_month = 10
+    hpxml.header.dst_end_day_of_month = 10
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
-    _test_default_header_values(hpxml_default, 30, 2, 2, 11, 11)
+    _test_default_header_values(hpxml_default, 30, 2, 2, 11, 11, false, 3, 3, 10, 10)
 
-    # Test defaults
+    # Test defaults - DST not in weather file
     hpxml = apply_hpxml_defaults('base.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
-    _test_default_header_values(hpxml_default, 60, 1, 1, 12, 31)
+    _test_default_header_values(hpxml_default, 60, 1, 1, 12, 31, true, 3, 12, 11, 5)
+
+    # Test defaults - DST in weather file
+    hpxml = apply_hpxml_defaults('base-location-epw-filepath-AMY-2012.xml')
+    XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
+    hpxml_default = _test_measure()
+    _test_default_header_values(hpxml_default, 60, 1, 1, 12, 31, true, 3, 11, 11, 4)
   end
 
   def test_site
@@ -300,25 +311,21 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     hpxml_default = _test_measure()
     expected_supply_locations = ['basement - conditioned', 'living space']
     expected_return_locations = ['basement - conditioned', 'living space']
-    expected_supply_areas = [820.125, 273.375]
-    expected_return_areas = [455.625, 151.875]
+    expected_supply_areas = [820.13, 273.38]
+    expected_return_areas = [455.63, 151.88]
     expected_n_return_registers = hpxml_default.building_construction.number_of_conditioned_floors
     _test_default_duct_values(hpxml_default, expected_supply_locations, expected_return_locations, expected_supply_areas, expected_return_areas, expected_n_return_registers)
 
     # Test defaults w/ 1-story building & multiple HVAC systems
-    hpxml_files = ['base-hvac-multiple.xml',
-                   'base-hvac-multiple2.xml']
-    hpxml_files.each do |hpxml_file|
-      hpxml = apply_hpxml_defaults(hpxml_file)
-      XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
-      hpxml_default = _test_measure()
-      expected_supply_locations = ['basement - conditioned', 'basement - conditioned'] * hpxml_default.hvac_distributions.size
-      expected_return_locations = ['basement - conditioned', 'basement - conditioned'] * hpxml_default.hvac_distributions.size
-      expected_supply_areas = [91.125, 91.125] * hpxml_default.hvac_distributions.size
-      expected_return_areas = [33.75, 33.75] * hpxml_default.hvac_distributions.size
-      expected_n_return_registers = hpxml_default.building_construction.number_of_conditioned_floors
-      _test_default_duct_values(hpxml_default, expected_supply_locations, expected_return_locations, expected_supply_areas, expected_return_areas, expected_n_return_registers)
-    end
+    hpxml = apply_hpxml_defaults('base-hvac-multiple.xml')
+    XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
+    hpxml_default = _test_measure()
+    expected_supply_locations = ['basement - conditioned', 'basement - conditioned'] * hpxml_default.hvac_distributions.size
+    expected_return_locations = ['basement - conditioned', 'basement - conditioned'] * hpxml_default.hvac_distributions.size
+    expected_supply_areas = [60.75, 60.75] * hpxml_default.hvac_distributions.size
+    expected_return_areas = [22.5, 22.5] * hpxml_default.hvac_distributions.size
+    expected_n_return_registers = hpxml_default.building_construction.number_of_conditioned_floors
+    _test_default_duct_values(hpxml_default, expected_supply_locations, expected_return_locations, expected_supply_areas, expected_return_areas, expected_n_return_registers)
 
     # Test defaults w/ 2-story building & multiple HVAC systems
     hpxml = apply_hpxml_defaults('base-hvac-multiple.xml')
@@ -327,8 +334,8 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     hpxml_default = _test_measure()
     expected_supply_locations = ['basement - conditioned', 'basement - conditioned', 'living space', 'living space'] * hpxml_default.hvac_distributions.size
     expected_return_locations = ['basement - conditioned', 'basement - conditioned', 'living space', 'living space'] * hpxml_default.hvac_distributions.size
-    expected_supply_areas = [68.344, 68.344, 22.781, 22.781] * hpxml_default.hvac_distributions.size
-    expected_return_areas = [25.312, 25.312, 8.438, 8.438] * hpxml_default.hvac_distributions.size
+    expected_supply_areas = [45.56, 45.56, 15.19, 15.19] * hpxml_default.hvac_distributions.size
+    expected_return_areas = [16.88, 16.88, 5.63, 5.63] * hpxml_default.hvac_distributions.size
     expected_n_return_registers = hpxml_default.building_construction.number_of_conditioned_floors
     _test_default_duct_values(hpxml_default, expected_supply_locations, expected_return_locations, expected_supply_areas, expected_return_areas, expected_n_return_registers)
   end
@@ -629,8 +636,8 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     hpxml_default = _test_measure()
     _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeTelevision, 620, 1.0, 0.0, HPXML::LocationInterior, '0.045, 0.019, 0.01, 0.001, 0.001, 0.001, 0.005, 0.009, 0.018, 0.026, 0.032, 0.038, 0.04, 0.041, 0.043, 0.045, 0.5, 0.055, 0.07, 0.085, 0.097, 0.108, 0.089, 0.07', '0.045, 0.019, 0.01, 0.001, 0.001, 0.001, 0.005, 0.009, 0.018, 0.026, 0.032, 0.038, 0.04, 0.041, 0.043, 0.045, 0.5, 0.055, 0.07, 0.085, 0.097, 0.108, 0.089, 0.07', '1.137, 1.129, 0.961, 0.969, 0.961, 0.993, 0.996, 0.96, 0.993, 0.867, 0.86, 1.137')
     _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeOther, 2457, 0.855, 0.045, HPXML::LocationInterior, '0.035, 0.033, 0.032, 0.031, 0.032, 0.033, 0.037, 0.042, 0.043, 0.043, 0.043, 0.044, 0.045, 0.045, 0.044, 0.046, 0.048, 0.052, 0.053, 0.05, 0.047, 0.045, 0.04, 0.036', '0.035, 0.033, 0.032, 0.031, 0.032, 0.033, 0.037, 0.042, 0.043, 0.043, 0.043, 0.044, 0.045, 0.045, 0.044, 0.046, 0.048, 0.052, 0.053, 0.05, 0.047, 0.045, 0.04, 0.036', '1.248, 1.257, 0.993, 0.989, 0.993, 0.827, 0.821, 0.821, 0.827, 0.99, 0.987, 1.248')
-    _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeElectricVehicleCharging, 1667, 1.0, 0.0, HPXML::LocationExterior, '0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042', '0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042', '1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1')
-    _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeWellPump, 441, 1.0, 0.0, HPXML::LocationExterior, '0.044, 0.023, 0.019, 0.015, 0.016, 0.018, 0.026, 0.033, 0.033, 0.032, 0.033, 0.033, 0.032, 0.032, 0.032, 0.033, 0.045, 0.057, 0.066, 0.076, 0.081, 0.086, 0.075, 0.065', '0.044, 0.023, 0.019, 0.015, 0.016, 0.018, 0.026, 0.033, 0.033, 0.032, 0.033, 0.033, 0.032, 0.032, 0.032, 0.033, 0.045, 0.057, 0.066, 0.076, 0.081, 0.086, 0.075, 0.065', '1.154, 1.161, 1.013, 1.010, 1.013, 0.888, 0.883, 0.883, 0.888, 0.978, 0.974, 1.154')
+    _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeElectricVehicleCharging, 1667, 0.0, 0.0, HPXML::LocationExterior, '0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042', '0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042, 0.042', '1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1')
+    _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeWellPump, 441, 0.0, 0.0, HPXML::LocationExterior, '0.044, 0.023, 0.019, 0.015, 0.016, 0.018, 0.026, 0.033, 0.033, 0.032, 0.033, 0.033, 0.032, 0.032, 0.032, 0.033, 0.045, 0.057, 0.066, 0.076, 0.081, 0.086, 0.075, 0.065', '0.044, 0.023, 0.019, 0.015, 0.016, 0.018, 0.026, 0.033, 0.033, 0.032, 0.033, 0.033, 0.032, 0.032, 0.032, 0.033, 0.045, 0.057, 0.066, 0.076, 0.081, 0.086, 0.075, 0.065', '1.154, 1.161, 1.013, 1.010, 1.013, 0.888, 0.883, 0.883, 0.888, 0.978, 0.974, 1.154')
   end
 
   def test_fuel_loads
@@ -821,12 +828,17 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     return hpxml_default
   end
 
-  def _test_default_header_values(hpxml, tstep, begin_month, begin_day, end_month, end_day)
+  def _test_default_header_values(hpxml, tstep, sim_begin_month, sim_begin_day, sim_end_month, sim_end_day, dst_enabled, dst_begin_month, dst_begin_day_of_month, dst_end_month, dst_end_day_of_month)
     assert_equal(tstep, hpxml.header.timestep)
-    assert_equal(begin_month, hpxml.header.begin_month)
-    assert_equal(begin_day, hpxml.header.begin_day_of_month)
-    assert_equal(end_month, hpxml.header.end_month)
-    assert_equal(end_day, hpxml.header.end_day_of_month)
+    assert_equal(sim_begin_month, hpxml.header.sim_begin_month)
+    assert_equal(sim_begin_day, hpxml.header.sim_begin_day_of_month)
+    assert_equal(sim_end_month, hpxml.header.sim_end_month)
+    assert_equal(sim_end_day, hpxml.header.sim_end_day_of_month)
+    assert_equal(dst_enabled, hpxml.header.dst_enabled)
+    assert_equal(dst_begin_month, hpxml.header.dst_begin_month)
+    assert_equal(dst_begin_day_of_month, hpxml.header.dst_begin_day_of_month)
+    assert_equal(dst_end_month, hpxml.header.dst_end_month)
+    assert_equal(dst_end_day_of_month, hpxml.header.dst_end_day_of_month)
   end
 
   def _test_default_site_values(hpxml, site_type, shelter_coefficient)
@@ -1204,10 +1216,11 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
 
     hpxml.header.timestep = nil
-    hpxml.header.begin_month = nil
-    hpxml.header.begin_day_of_month = nil
-    hpxml.header.end_month = nil
-    hpxml.header.end_day_of_month = nil
+    hpxml.header.sim_begin_month = nil
+    hpxml.header.sim_begin_day_of_month = nil
+    hpxml.header.sim_end_month = nil
+    hpxml.header.sim_end_day_of_month = nil
+    hpxml.header.dst_enabled = nil
 
     hpxml.site.site_type = nil
     hpxml.site.shelter_coefficient = nil
