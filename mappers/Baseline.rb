@@ -33,6 +33,7 @@ require 'openstudio/common_measures'
 require 'openstudio/model_articulation'
 
 require 'json'
+require 'rexml/document'
 
 module URBANopt
   module Scenario
@@ -535,37 +536,33 @@ module URBANopt
               end
             end
 
-            # Get instance of BuildResidentialModel measure so we can override defaults with template values
-            resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../measures/BuildResidentialModel/resources'))
-            meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
-            require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
+            # Parse BuildResidentialModel measure xml so we can override defaults with template values
+            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', '__SKIP__', false)
             measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/hpxml-measures'))
-            measure_subdir = 'BuildResidentialHPXML'
-            full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
-            measure = get_measure_instance(full_measure_path)
+            measure_xml = File.read(File.join(measures_dir, 'BuildResidentialHPXML', 'measure.xml'))
+            measure = REXML::Document.new(measure_xml).root
+            measure.elements.each('arguments/argument') do |arg|
+              arg_name = arg.elements['name'].text.to_sym
+              next if [:hpxml_path, :weather_dir, :schedules_output_path].include? arg_name
 
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', '__SKIP__', false)  
-            measure.arguments(OpenStudio::Model::Model.new).each do |arg|
-              next if [:hpxml_path, :weather_dir, :schedules_output_path].include? arg.name.to_sym
-
-              if not args.keys.include? arg.name.to_sym # argument has not been set and so gets the default value
-                if arg.hasDefaultValue
-                  arg_default = get_arg_default(arg)
-                  args[arg.name.to_sym] = arg_default
+              if not args.keys.include? arg_name # argument has not been set and so gets the default value
+                if arg.elements['default_value']
+                  arg_default = arg.elements['default_value'].text
+                  args[arg_name] = arg_default
                 end
               else
-                if arg.hasDefaultValue
-                  arg_default = get_arg_default(arg)
-                  if args[arg.name.to_sym] != arg_default
-                    puts "Overriding #{arg.name} default '#{arg_default}' with '#{args[arg.name.to_sym]}'."
+                if arg.elements['default_value']
+                  arg_default = arg.elements['default_value'].text
+                  if args[arg_name] != arg_default
+                    puts "Overriding #{arg_name} default '#{arg_default}' with '#{args[arg_name]}'."
                   end
                 else
-                  puts "Setting #{arg.name} to '#{args[arg.name.to_sym]}'."
+                  puts "Setting #{arg_name} to '#{args[arg_name]}'."
                 end
               end
 
-              if args.keys.include? arg.name.to_sym
-                OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg.name, args[arg.name.to_sym])
+              if args.keys.include? arg_name
+                OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg_name, args[arg_name])
               end
             end
 
