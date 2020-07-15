@@ -28,6 +28,7 @@ require_relative 'resources/schedules'
 require_relative 'resources/simcontrols'
 require_relative 'resources/unit_conversions'
 require_relative 'resources/util'
+require_relative 'resources/version'
 require_relative 'resources/waterheater'
 require_relative 'resources/weather'
 require_relative 'resources/xmlhelper'
@@ -89,11 +90,7 @@ class HPXMLtoOpenStudio < OpenStudio::Measure::ModelMeasure
 
     tear_down_model(model, runner)
 
-    # Check for correct versions of OS
-    os_version = '3.0.1'
-    if OpenStudio.openStudioVersion != os_version
-      fail "OpenStudio version #{os_version} is required."
-    end
+    Version.check_openstudio_version()
 
     # assign the user inputs to variables
     hpxml_path = runner.getStringArgumentValue('hpxml_path', user_arguments)
@@ -275,12 +272,12 @@ class OSModel
 
     # HVAC
 
-    add_ideal_system_for_partial_hvac(runner, model, spaces)
+    add_ideal_system(runner, model, spaces, epw_path)
     add_cooling_system(runner, model, spaces)
     add_heating_system(runner, model, spaces)
     add_heat_pump(runner, model, weather, spaces)
     add_dehumidifier(runner, model, spaces)
-    add_residual_hvac(runner, model, spaces)
+    add_residual_ideal_system(runner, model, spaces)
     add_ceiling_fans(runner, model, weather, spaces)
 
     # Hot Water
@@ -426,7 +423,7 @@ class OSModel
     spaces.keys.each do |space_type|
       next unless [HPXML::LocationBasementUnconditioned, HPXML::LocationCrawlspaceUnvented, HPXML::LocationCrawlspaceVented, HPXML::LocationGarage].include? space_type
 
-      floor_area = @hpxml.slabs.select { |s| s.interior_adjacent_to == space_type }.map { |s| s.area }.inject(:+)
+      floor_area = @hpxml.slabs.select { |s| s.interior_adjacent_to == space_type }.map { |s| s.area }.sum(0.0)
       if space_type == HPXML::LocationGarage
         height = 8.0
       else
@@ -440,9 +437,9 @@ class OSModel
     spaces.keys.each do |space_type|
       next unless [HPXML::LocationAtticUnvented, HPXML::LocationAtticVented].include? space_type
 
-      floor_area = @hpxml.frame_floors.select { |f| [f.interior_adjacent_to, f.exterior_adjacent_to].include? space_type }.map { |s| s.area }.inject(:+)
+      floor_area = @hpxml.frame_floors.select { |f| [f.interior_adjacent_to, f.exterior_adjacent_to].include? space_type }.map { |s| s.area }.sum(0.0)
       roofs = @hpxml.roofs.select { |r| r.interior_adjacent_to == space_type }
-      avg_pitch = roofs.map { |r| r.pitch }.inject(:+) / roofs.size
+      avg_pitch = roofs.map { |r| r.pitch }.sum(0.0) / roofs.size
 
       # Assume square hip roof for volume calculations; energy results are very insensitive to actual volume
       length = floor_area**0.5
@@ -905,7 +902,7 @@ class OSModel
     if num_occ > 0
       occ_gain, hrs_per_day, sens_frac, lat_frac = Geometry.get_occupancy_default_values()
       weekday_sch = '1.00000, 1.00000, 1.00000, 1.00000, 1.00000, 1.00000, 1.00000, 0.88310, 0.40861, 0.24189, 0.24189, 0.24189, 0.24189, 0.24189, 0.24189, 0.24189, 0.29498, 0.55310, 0.89693, 0.89693, 0.89693, 1.00000, 1.00000, 1.00000'
-      weekday_sch_sum = weekday_sch.split(',').map(&:to_f).inject(0, :+)
+      weekday_sch_sum = weekday_sch.split(',').map(&:to_f).sum(0.0)
       if (weekday_sch_sum - hrs_per_day).abs > 0.1
         fail 'Occupancy schedule inconsistent with hrs_per_day.'
       end
@@ -1318,9 +1315,9 @@ class OSModel
         slab_exp_perims[slab] = slab.exposed_perimeter
         slab_areas[slab] = slab.area
       end
-      total_slab_exp_perim = slab_exp_perims.values.inject(0, :+)
-      total_slab_area = slab_areas.values.inject(0, :+)
-      total_fnd_wall_length = fnd_wall_lengths.values.inject(0, :+)
+      total_slab_exp_perim = slab_exp_perims.values.sum(0.0)
+      total_slab_area = slab_areas.values.sum(0.0)
+      total_fnd_wall_length = fnd_wall_lengths.values.sum(0.0)
 
       no_wall_slab_exp_perim = {}
 
@@ -1630,7 +1627,7 @@ class OSModel
   end
 
   def self.add_thermal_mass(runner, model, spaces)
-    cfa_basement = @hpxml.slabs.select { |s| s.interior_adjacent_to == HPXML::LocationBasementConditioned }.map { |s| s.area }.inject(0, :+)
+    cfa_basement = @hpxml.slabs.select { |s| s.interior_adjacent_to == HPXML::LocationBasementConditioned }.map { |s| s.area }.sum(0.0)
     if @apply_ashrae140_assumptions
       # 1024 ft2 of interior partition wall mass, no furniture mass
       drywall_thick_in = 0.5
@@ -2015,6 +2012,12 @@ class OSModel
         HVAC.apply_evaporative_cooler(model, runner, cooling_system,
                                       @remaining_cool_load_frac, living_zone,
                                       @hvac_map)
+
+      elsif cooling_system.cooling_system_type == HPXML::HVACTypeMiniSplitAirConditioner
+
+        HVAC.apply_mini_split_air_conditioner(model, runner, cooling_system,
+                                              @remaining_cool_load_frac,
+                                              living_zone, @hvac_map)
       end
 
       @remaining_cool_load_frac -= cooling_system.fraction_cool_load_served
@@ -2050,6 +2053,7 @@ class OSModel
 
       elsif (heating_system.heating_system_type == HPXML::HVACTypeStove ||
              heating_system.heating_system_type == HPXML::HVACTypePortableHeater ||
+             heating_system.heating_system_type == HPXML::HVACTypeFixedHeater ||
              heating_system.heating_system_type == HPXML::HVACTypeWallFurnace ||
              heating_system.heating_system_type == HPXML::HVACTypeFloorFurnace ||
              heating_system.heating_system_type == HPXML::HVACTypeFireplace)
@@ -2110,13 +2114,25 @@ class OSModel
     end
   end
 
-  def self.add_ideal_system_for_partial_hvac(runner, model, spaces)
-    # Adds an ideal air system to meet expected unmet load (i.e., because the sum of fractions load served is less than 1)
+  def self.add_ideal_system(runner, model, spaces, epw_path)
+    # Adds an ideal air system as needed to meet the load (i.e., because the sum of fractions load
+    # served is less than 1 or because we're using an ideal air system for e.g. ASHRAE 140 loads).
     living_zone = spaces[HPXML::LocationLivingSpace].thermalZone.get
     obj_name = Constants.ObjectNameIdealAirSystem
 
     if @hpxml.building_construction.use_only_ideal_air_system
-      HVAC.apply_ideal_air_loads(model, runner, obj_name, 1, 1, living_zone)
+      cooling_load_frac = 1.0
+      heating_load_frac = 1.0
+      if @apply_ashrae140_assumptions
+        if epw_path.end_with? 'USA_CO_Colorado.Springs-Peterson.Field.724660_TMY3.epw'
+          cooling_load_frac = 0.0
+        elsif epw_path.end_with? 'USA_NV_Las.Vegas-McCarran.Intl.AP.723860_TMY3.epw'
+          heating_load_frac = 0.0
+        else
+          fail 'Unexpected weather file for ASHRAE 140 run.'
+        end
+      end
+      HVAC.apply_ideal_air_loads(model, runner, obj_name, cooling_load_frac, heating_load_frac, living_zone)
       return
     end
 
@@ -2140,15 +2156,16 @@ class OSModel
     end
   end
 
-  def self.add_residual_hvac(runner, model, spaces)
+  def self.add_residual_ideal_system(runner, model, spaces)
+    # Adds an ideal air system to meet unexpected load (i.e., because the HVAC systems are undersized to meet the load)
+    #
+    # Addressing unmet load ensures we can correctly calculate total heating/cooling loads without having
+    # to run an additional EnergyPlus simulation solely for that purpose, as well as allows us to report
+    # the unmet load (i.e., the energy delivered by the ideal air system).
+
     living_zone = spaces[HPXML::LocationLivingSpace].thermalZone.get
     obj_name = Constants.ObjectNameIdealAirSystemResidual
 
-    # Adds an ideal air system to meet unexpected load (i.e., because the HVAC systems are undersized to meet the load)
-    #
-    # Addressing unmet load ensures we can correctly calculate heating/cooling loads without having to run
-    # an additional EnergyPlus simulation solely for that purpose, as well as allows us to report
-    # the unmet load (i.e., the energy delivered by the ideal air system).
     if @remaining_cool_load_frac < 1.0
       sequential_cool_load_frac = 1
     else
@@ -2196,6 +2213,7 @@ class OSModel
                                    HPXML::HVACTypeBoiler => [HPXML::HVACDistributionTypeHydronic, HPXML::HVACDistributionTypeDSE],
                                    HPXML::HVACTypeCentralAirConditioner => [HPXML::HVACDistributionTypeAir, HPXML::HVACDistributionTypeDSE],
                                    HPXML::HVACTypeEvaporativeCooler => [HPXML::HVACDistributionTypeAir, HPXML::HVACDistributionTypeDSE],
+                                   HPXML::HVACTypeMiniSplitAirConditioner => [HPXML::HVACDistributionTypeAir, HPXML::HVACDistributionTypeDSE],
                                    HPXML::HVACTypeHeatPumpAirToAir => [HPXML::HVACDistributionTypeAir, HPXML::HVACDistributionTypeDSE],
                                    HPXML::HVACTypeHeatPumpMiniSplit => [HPXML::HVACDistributionTypeAir, HPXML::HVACDistributionTypeDSE],
                                    HPXML::HVACTypeHeatPumpGroundToAir => [HPXML::HVACDistributionTypeAir, HPXML::HVACDistributionTypeDSE] }
@@ -2305,38 +2323,19 @@ class OSModel
       end
     end
 
-    # Ventilation fans
-    vent_mech = nil
-    vent_kitchen = nil
-    vent_bath = nil
-    vent_whf = nil
-    @hpxml.ventilation_fans.each do |vent_fan|
-      if vent_fan.used_for_whole_building_ventilation
-        vent_mech = vent_fan
-      elsif vent_fan.used_for_seasonal_cooling_load_reduction
-        vent_whf = vent_fan
-      elsif vent_fan.used_for_local_ventilation
-        if vent_fan.fan_location == HPXML::LocationKitchen
-          vent_kitchen = vent_fan
-        elsif vent_fan.fan_location == HPXML::LocationBath
-          vent_bath = vent_fan
-        end
-      end
-    end
-
     air_infils = @hpxml.air_infiltration_measurements
-    window_area = @hpxml.windows.map { |w| w.area }.inject(0, :+)
+    window_area = @hpxml.windows.map { |w| w.area }.sum(0.0)
     open_window_area = window_area * @frac_windows_operable * 0.5 * 0.2 # Assume A) 50% of the area of an operable window can be open, and B) 20% of openable window area is actually open
     site_type = @hpxml.site.site_type
     shelter_coef = @hpxml.site.shelter_coefficient
     has_flue_chimney = false # FUTURE: Expose as HPXML input
     @infil_volume = air_infils.select { |i| !i.infiltration_volume.nil? }[0].infiltration_volume
     infil_height = @hpxml.inferred_infiltration_height(@infil_volume)
-    Airflow.apply(model, runner, weather, spaces, air_infils, vent_mech, vent_whf,
+    Airflow.apply(model, runner, weather, spaces, air_infils, @hpxml.ventilation_fans,
                   duct_systems, @infil_volume, infil_height, open_window_area,
-                  @clg_ssn_sensor, @min_neighbor_distance, vent_kitchen, vent_bath,
-                  vented_attic, vented_crawl, site_type, shelter_coef,
-                  has_flue_chimney, @hvac_map, @eri_version, @apply_ashrae140_assumptions)
+                  @clg_ssn_sensor, @min_neighbor_distance, vented_attic, vented_crawl,
+                  site_type, shelter_coef, has_flue_chimney, @hvac_map, @eri_version,
+                  @apply_ashrae140_assumptions)
   end
 
   def self.create_ducts(runner, model, hvac_distribution, spaces)
@@ -3101,7 +3100,7 @@ class OSModel
                                    constr_set.drywall_thick_in, constr_set.osb_thick_in,
                                    constr_set.rigid_r, constr_set.exterior_material,
                                    inside_film, outside_film)
-    elsif [HPXML::WallTypeConcrete, HPXML::WallTypeBrick, HPXML::WallTypeStrawBale, HPXML::WallTypeStone, HPXML::WallTypeLog].include? wall_type
+    elsif [HPXML::WallTypeConcrete, HPXML::WallTypeBrick, HPXML::WallTypeAdobe, HPXML::WallTypeStrawBale, HPXML::WallTypeStone, HPXML::WallTypeLog].include? wall_type
       constr_sets = [
         GenericConstructionSet.new(10.0, 0.5, drywall_thick_in, mat_ext_finish), # w/R-10 rigid
         GenericConstructionSet.new(0.0, 0.5, drywall_thick_in, mat_ext_finish),  # Standard
@@ -3115,6 +3114,9 @@ class OSModel
       elsif wall_type == HPXML::WallTypeBrick
         thick_in = 8.0
         base_mat = BaseMaterial.Brick
+      elsif wall_type == HPXML::WallTypeAdobe
+        thick_in = 10.0
+        base_mat = BaseMaterial.Soil
       elsif wall_type == HPXML::WallTypeStrawBale
         thick_in = 23.0
         base_mat = BaseMaterial.StrawBale
