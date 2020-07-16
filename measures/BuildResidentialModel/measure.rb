@@ -56,8 +56,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # assign the user inputs to variables
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
-    measure_subdir = 'BuildResidentialHPXML'
-    full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+    full_measure_path = File.join(measures_dir, 'BuildResidentialHPXML', 'measure.rb')
     check_file_exists(full_measure_path, runner)
     measure = get_measure_instance(full_measure_path)
     args = measure.get_argument_values(runner, user_arguments)
@@ -87,16 +86,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     unit_models = []
     (1..args[:geometry_num_units]).to_a.each do |num_unit|
       unit_model = OpenStudio::Model::Model.new
-      unit_name = "unit #{num_unit}.osw"
 
       # BuildResidentialHPXML
+      measure_subdir = 'BuildResidentialHPXML'
 
-      # Fill the measure args hash with default values
-      measure_args = args
-
+      measure_args = args.clone
       measures = {}
       measures[measure_subdir] = []
-      measure_args[:hpxml_path] = File.expand_path('../in.xml')
+      measure_args[:hpxml_path] = File.expand_path('../out.xml')
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:software_program_used] = 'URBANopt'
       measure_args[:software_program_version] = '0.3.1'
@@ -106,24 +103,28 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # HPXMLtoOpenStudio
       measure_subdir = 'HPXMLtoOpenStudio'
+
       full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
-      measure = get_measure_instance(full_measure_path)
 
-      # Fill the measure args hash with default values
       measure_args = {}
-
       measures[measure_subdir] = []
-      measure_args[:hpxml_path] = File.expand_path('../in.xml')
+      measure_args[:hpxml_path] = File.expand_path('../out.xml')
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:output_dir] = File.expand_path('..')
-      measure_args[:debug] = false
+      measure_args[:debug] = true
       measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
-
-      if not apply_measures(measures_dir, measures, runner, unit_model, workflow_json, unit_name, true)
+      if not apply_measures(measures_dir, measures, runner, unit_model, workflow_json, 'out.osw', true)
         return false
       end
+
+      unit_dir = File.expand_path("../unit #{num_unit}")
+      Dir.mkdir(unit_dir)
+      FileUtils.cp(File.expand_path('../out.osw'), unit_dir)
+      FileUtils.cp(File.expand_path('../out.xml'), unit_dir)
+      FileUtils.cp(File.expand_path('../in.xml'), unit_dir)
+      FileUtils.cp(File.expand_path('../in.osm'), unit_dir)
 
       unit_models << unit_model
     end
