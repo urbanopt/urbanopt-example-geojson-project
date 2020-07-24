@@ -154,7 +154,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         zone.setName("unit_#{num_unit}_#{zone.name.to_s}")
       end
       moodified_unit_dir = File.expand_path("../unit #{num_unit}/modified_unit.osm")
-      model.save(moodified_unit_dir, true)
+      unit_model.save(moodified_unit_dir, true)
 
       # passing modified copy into array, can move earlier if we don't want the modified copy
       unit_models << unit_model
