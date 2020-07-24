@@ -141,34 +141,35 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../in.xml'), unit_dir)
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir)
 
-      # TODO: confirm if this array is still needed, same for unit files above
       unit_models << unit_model
 
+      # TODO: rename spaces if not unique, offset x 50' and save new copy of OSM so string can be passed into measure
+
       # TODO: run merge merge_spaces_from_external_file to add this unit to original model
-      measures_dir = nil
+      merge_measures_dir = nil
       osw_measure_paths = runner.workflow.measurePaths
       osw_measure_paths.each do |orig_measure_path|
         next if not orig_measure_path.to_s.include?('gems/openstudio-model-articulation')
-        measures_dir = orig_measure_path.to_s
+        merge_measures_dir = orig_measure_path.to_s
         break
       end
-      measure_subdir = 'merge_spaces_from_external_file'
-      measures = {}
-      measure_args = {}
-      measures[measure_subdir] = []
-      measure_args[:external_model_name] = unit_dir + '/in.osm'
-      measure_args[:merge_geometry] = true
-      measure_args[:merge_loads] = true
-      measure_args[:merge_attribute_names] = true
-      measure_args[:add_spaces] = true
-      measure_args[:remove_spaces] = false
-      measure_args[:merge_schedules] = true
-      measure_args[:compact_to_ruleset] = false
-      measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
-      measures[measure_subdir] << measure_args
+      merge_measure_subdir = 'merge_spaces_from_external_file'
+      merge_measures = {}
+      merge_measure_args = {}
+      merge_measures[merge_measure_subdir] = []
+      merge_measure_args[:external_model_name] = unit_dir + '/in.osm'
+      merge_measure_args[:merge_geometry] = true
+      merge_measure_args[:merge_loads] = true
+      merge_measure_args[:merge_attribute_names] = true
+      merge_measure_args[:add_spaces] = true
+      merge_measure_args[:remove_spaces] = false
+      merge_measure_args[:merge_schedules] = true
+      merge_measure_args[:compact_to_ruleset] = false
+      merge_measure_args = Hash[merge_measure_args.collect{ |k, v| [k.to_s, v] }]
+      merge_measures[merge_measure_subdir] << merge_measure_args
 
       # for this instance pass in original model and not unit_model. unit_model path witll be an argument
-      if not apply_measures(measures_dir, measures, runner, model, workflow_json, 'out.osw', true)
+      if not apply_measures(merge_measures_dir, merge_measures, runner, model, workflow_json, 'out.osw', true)
         return false
       end
 
@@ -184,8 +185,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     clg_sch = OpenStudio::Model::ScheduleConstant.new(model)
     clg_sch.setValue(24.0)
     temp_thermostat = OpenStudio::Model::ThermostatSetpointDualSetpoint.new(model)
-    temp_thermostat.setHeatingSchedule
-    temp_thermostat.setCoolingSchedule
+    temp_thermostat.setHeatingSchedule(htg_sch)
+    temp_thermostat.setCoolingSchedule(clg_sch)
     model.getThermalZones.each do |zone|
       if ! zone.thermostatSetpointDualSetpoint.is_initialized
         zone.setThermostatSetpointDualSetpoint(temp_thermostat)
