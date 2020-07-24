@@ -136,6 +136,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     end
 
     # TODO: if merging inside loop then move this code before the loop
+    # when supporting mixed use will not want to do this This may included supporting common areas like corridors that are not part of a unit.
     model.getBuilding.remove
     model.getShadowCalculation.remove
     model.getSimulationControl.remove
@@ -143,11 +144,17 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     model.getTimestep.remove
 
     # TODO: merge will be moved inside loop where unit_models is populated, may not need that array unless for diagnostics?
+    # do new spaces need to be offset x,y,z to get to proper position or am I saving the geometry from the original OSM.
     unit_models.each do |unit_model|
       model.addObjects(unit_model.objects, true)
     end
 
     # TODO: add ideal loads until replace with full hvac, may need to create place holder thermostat as well.
+    # this can be moved inside loop while looping through units.
+    # also add thermostats for now
+    model.getThermalZones.each do |zone|
+      zone.setUseIdealAirLoads(true)
+    end
 
     return true
   end
