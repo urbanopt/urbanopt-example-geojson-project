@@ -145,27 +145,25 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       unit_models << unit_model
 
       # TODO: run merge merge_spaces_from_external_file to add this unit to original model
-      measure_dir = nil
+      measures_dir = nil
       osw_measure_paths = runner.workflow.measurePaths
       osw_measure_paths.each do |orig_measure_path|
-        next if not orig_measure_path.include?('gems/openstudio-model-articulation')
-        measure_dir = orig_measure_path
+        next if not orig_measure_path.to_s.include?('gems/openstudio-model-articulation')
+        measures_dir = orig_measure_path.to_s
         break
       end
       measure_subdir = 'merge_spaces_from_external_file'
-
-      osw_measure_paths = runner.workflow.measurePaths
-      osw_measure_paths.each do |orig_measure_paths|
-        workflowJSON.addMeasurePath(orig_measure_paths)
-      end
-
       measures = {}
       measure_args = {}
       measures[measure_subdir] = []
       measure_args[:external_model_name] = unit_dir + '/in.osm'
       measure_args[:merge_geometry] = true
+      measure_args[:merge_loads] = true
+      measure_args[:merge_attribute_names] = true
       measure_args[:add_spaces] = true
       measure_args[:remove_spaces] = false
+      measure_args[:merge_schedules] = true
+      measure_args[:compact_to_ruleset] = false
       measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
 
