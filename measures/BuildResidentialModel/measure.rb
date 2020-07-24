@@ -141,6 +141,22 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../in.xml'), unit_dir)
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir)
 
+      # create building unit object to assign to spaces
+      building_unit = OpenStudio::Model::BuildingUnit.new(model)
+
+      # save modified copy of model for use with merge
+      unit_model.getSpaces.sort.each do |space|
+        space.setName("unit_#{num_unit}_#{space.name.to_s}")
+        space.setYOrigin(15 * (num_unit -1)) # meters
+        space.setBuildingUnit(building_unit)
+      end
+      unit_model.getThermalZones.sort.each do |zone|
+        zone.setName("unit_#{num_unit}_#{zone.name.to_s}")
+      end
+      moodified_unit_dir = File.expand_path("../unit #{num_unit}/modified_unit.osm")
+      model.save(moodified_unit_dir, true)
+
+      # passing modified copy into array, can move earlier if we don't want the modified copy
       unit_models << unit_model
 
       # TODO: rename spaces if not unique, offset x 50' and save new copy of OSM so string can be passed into measure
@@ -157,7 +173,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       merge_measures = {}
       merge_measure_args = {}
       merge_measures[merge_measure_subdir] = []
-      merge_measure_args[:external_model_name] = unit_dir + '/in.osm'
+      merge_measure_args[:external_model_name] = unit_dir + '/modified_unit.osm'
       merge_measure_args[:merge_geometry] = true
       merge_measure_args[:merge_loads] = true
       merge_measure_args[:merge_attribute_names] = true
