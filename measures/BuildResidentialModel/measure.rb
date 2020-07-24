@@ -8,6 +8,12 @@ require_relative '../../resources/hpxml-measures/BuildResidentialHPXML/resources
 require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/hpxml'
 require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/constants'
 
+require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/constants'
+
+# require gem for merge measure
+#require 'openstudio-model-articulation'
+#require 'openstudio-model-articulation/lib/measures'
+
 resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
 meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
 require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
@@ -129,16 +135,19 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       unit_models << unit_model
     end
 
-    # TODO: merge all unit models into a single model
+    # TODO: if merging inside loop then move this code before the loop
     model.getBuilding.remove
     model.getShadowCalculation.remove
     model.getSimulationControl.remove
     model.getSite.remove
     model.getTimestep.remove
 
+    # TODO: merge will be moved inside loop where unit_models is populated, may not need that array unless for diagnostics?
     unit_models.each do |unit_model|
       model.addObjects(unit_model.objects, true)
     end
+
+    # TODO: add ideal loads until replace with full hvac, may need to create place holder thermostat as well.
 
     return true
   end
