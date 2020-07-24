@@ -142,26 +142,26 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir)
 
       # create building unit object to assign to spaces
-      building_unit = OpenStudio::Model::BuildingUnit.new(model)
+      building_unit = OpenStudio::Model::BuildingUnit.new(unit_model)
+      building_unit.setName("building_unit_#{num_unit}")
 
       # save modified copy of model for use with merge
       unit_model.getSpaces.sort.each do |space|
         space.setName("unit_#{num_unit}_#{space.name.to_s}")
-        space.setYOrigin(15 * (num_unit -1)) # meters
+        space.setYOrigin(60 * (num_unit -1)) # meters
         space.setBuildingUnit(building_unit)
       end
       unit_model.getThermalZones.sort.each do |zone|
         zone.setName("unit_#{num_unit}_#{zone.name.to_s}")
       end
-      moodified_unit_dir = File.expand_path("../unit #{num_unit}/modified_unit.osm")
-      unit_model.save(moodified_unit_dir, true)
+      moodified_unit_path = File.expand_path("../unit #{num_unit}/modified_unit.osm")
+      unit_model.save(moodified_unit_path, true)
 
       # passing modified copy into array, can move earlier if we don't want the modified copy
       unit_models << unit_model
 
-      # TODO: rename spaces if not unique, offset x 50' and save new copy of OSM so string can be passed into measure
 
-      # TODO: run merge merge_spaces_from_external_file to add this unit to original model
+      # run merge merge_spaces_from_external_file to add this unit to original model
       merge_measures_dir = nil
       osw_measure_paths = runner.workflow.measurePaths
       osw_measure_paths.each do |orig_measure_path|
@@ -173,7 +173,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       merge_measures = {}
       merge_measure_args = {}
       merge_measures[merge_measure_subdir] = []
-      merge_measure_args[:external_model_name] = unit_dir + '/modified_unit.osm'
+      merge_measure_args[:external_model_name] = moodified_unit_path
       merge_measure_args[:merge_geometry] = true
       merge_measure_args[:merge_loads] = true
       merge_measure_args[:merge_attribute_names] = true
@@ -193,7 +193,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # TODO: add surface intersection and matching
 
-    # TODO: add ideal loads until replace with full hvac, may need to create place holder thermostat as well.
+    # TODO: temporarily add ideal loads until replace with full hvac in merge measure
     # this can be moved inside loop while looping through units.
     # also add thermostats for now
     htg_sch = OpenStudio::Model::ScheduleConstant.new(model)
