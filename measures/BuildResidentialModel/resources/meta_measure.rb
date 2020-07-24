@@ -41,6 +41,7 @@ def apply_measures(measures_dir, measures, runner, model, workflow_json = nil, o
     workflowJSON = OpenStudio::WorkflowJSON.new
     workflowJSON.setOswPath(File.expand_path("../#{osw_out}"))
     workflowJSON.addMeasurePath("resources/hpxml-measures")
+    # TODO: pull in measure paths from primary OSW which will give accss to openstudio-model-articulation gems
     steps = OpenStudio::WorkflowStepVector.new
     workflow_order.each do |measure_subdir|
       measures[measure_subdir].each do |args|

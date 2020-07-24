@@ -10,9 +10,9 @@ require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/con
 
 require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/constants'
 
-# require gem for merge measure
-#require 'openstudio-model-articulation'
-#require 'openstudio-model-articulation/lib/measures'
+# require gem for merge measures (will not need this of we grab measure paths from primary osw for meta osws)
+require 'openstudio-model-articulation'
+require 'measures'
 
 resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
 meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
