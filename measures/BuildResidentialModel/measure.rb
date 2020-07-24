@@ -10,9 +10,10 @@ require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/con
 
 require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/constants'
 
-# require gem for merge measures (will not need this of we grab measure paths from primary osw for meta osws)
-require 'openstudio-model-articulation'
-require 'measures'
+# require gem for merge measures
+# was able to harvest measure paths from primary osw for meta osw. Remove this once confirm that works
+#require 'openstudio-model-articulation'
+#require 'measures/merge_spaces_from_external_file/measure.rb'
 
 resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
 meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
@@ -89,6 +90,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
     end
 
+    # TODO: if merging inside loop then move this code before the loop, may not be needed at all
+    # when supporting mixed use or non unit spaces like corrodior, will not want this
+    #model.getBuilding.remove
+    #model.getShadowCalculation.remove
+    #model.getSimulationControl.remove
+    #model.getSite.remove
+    #model.getTimestep.remove
+
     unit_models = []
     (1..args[:geometry_num_units]).to_a.each do |num_unit|
       unit_model = OpenStudio::Model::Model.new
@@ -132,27 +141,57 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../in.xml'), unit_dir)
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir)
 
+      # TODO: confirm if this array is still needed, same for unit files above
       unit_models << unit_model
+
+      # TODO: run merge merge_spaces_from_external_file to add this unit to original model
+      measure_dir = nil
+      osw_measure_paths = runner.workflow.measurePaths
+      osw_measure_paths.each do |orig_measure_path|
+        next if not orig_measure_path.include?('gems/openstudio-model-articulation')
+        measure_dir = orig_measure_path
+        break
+      end
+      measure_subdir = 'merge_spaces_from_external_file'
+
+      osw_measure_paths = runner.workflow.measurePaths
+      osw_measure_paths.each do |orig_measure_paths|
+        workflowJSON.addMeasurePath(orig_measure_paths)
+      end
+
+      measures = {}
+      measure_args = {}
+      measures[measure_subdir] = []
+      measure_args[:external_model_name] = unit_dir + '/in.osm'
+      measure_args[:merge_geometry] = true
+      measure_args[:add_spaces] = true
+      measure_args[:remove_spaces] = false
+      measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
+      measures[measure_subdir] << measure_args
+
+      # for this instance pass in original model and not unit_model. unit_model path witll be an argument
+      if not apply_measures(measures_dir, measures, runner, model, workflow_json, 'out.osw', true)
+        return false
+      end
+
     end
 
-    # TODO: if merging inside loop then move this code before the loop
-    # when supporting mixed use will not want to do this This may included supporting common areas like corridors that are not part of a unit.
-    model.getBuilding.remove
-    model.getShadowCalculation.remove
-    model.getSimulationControl.remove
-    model.getSite.remove
-    model.getTimestep.remove
-
-    # TODO: merge will be moved inside loop where unit_models is populated, may not need that array unless for diagnostics?
-    # do new spaces need to be offset x,y,z to get to proper position or am I saving the geometry from the original OSM.
-    unit_models.each do |unit_model|
-      model.addObjects(unit_model.objects, true)
-    end
+    # TODO: add surface intersection and matching
 
     # TODO: add ideal loads until replace with full hvac, may need to create place holder thermostat as well.
     # this can be moved inside loop while looping through units.
     # also add thermostats for now
+    htg_sch = OpenStudio::Model::ScheduleConstant.new(model)
+    htg_sch.setValue(21.0)
+    clg_sch = OpenStudio::Model::ScheduleConstant.new(model)
+    clg_sch.setValue(24.0)
+    temp_thermostat = OpenStudio::Model::ThermostatSetpointDualSetpoint.new(model)
+    temp_thermostat.setHeatingSchedule
+    temp_thermostat.setCoolingSchedule
     model.getThermalZones.each do |zone|
+      if ! zone.thermostatSetpointDualSetpoint.is_initialized
+        zone.setThermostatSetpointDualSetpoint(temp_thermostat)
+      end
       zone.setUseIdealAirLoads(true)
     end
 
