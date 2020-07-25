@@ -147,13 +147,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # save modified copy of model for use with merge
       unit_model.getSpaces.sort.each do |space|
-        space.setName("unit_#{num_unit}_#{space.name.to_s}")
         space.setYOrigin(60 * (num_unit -1)) # meters
         space.setBuildingUnit(building_unit)
       end
-      unit_model.getThermalZones.sort.each do |zone|
-        zone.setName("unit_#{num_unit}_#{zone.name.to_s}")
+
+      # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
+      unit_model.objects.each do |model_object|
+        next if model_object.name.nil?
+        model_object.setName("unit_#{num_unit} #{model_object.name.to_s}")
       end
+
       moodified_unit_path = File.expand_path("../unit #{num_unit}/modified_unit.osm")
       unit_model.save(moodified_unit_path, true)
 
@@ -191,7 +194,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     end
 
-    # TODO: add surface intersection and matching
+    # TODO: add surface intersection and matching (is don't in measure now but would be better to do once at end, make bool to skip in merge measure)
 
     # TODO: temporarily add ideal loads until replace with full hvac in merge measure
     # this can be moved inside loop while looping through units.
@@ -208,6 +211,19 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         zone.setThermostatSetpointDualSetpoint(temp_thermostat)
       end
       zone.setUseIdealAirLoads(true)
+    end
+
+    # TODO: temporary alter objects with surface properly convection coefficients
+    model.getSurfaces.sort.each do |surface|
+      if surface.outsideBoundaryCondition == "Foundation" then surface.setOutsideBoundaryCondition("Ground") end
+    end
+
+    # TODO: temporary clean up objects that might be orphaned and warn user so they have option to correct
+    model.getSurfacePropertyExposedFoundationPerimeters.each do |surf_prop|
+      if surf_prop.surfaceName == "" # isn't optional but field is ending up empty when comes over with spaces
+        runner.registerWarning("surfacePropertyExposedFoundationPerimeters with handle of #{surf_prop.handle} isn't associated with a surface.")
+        surf_prop.remove
+      end
     end
 
     return true
