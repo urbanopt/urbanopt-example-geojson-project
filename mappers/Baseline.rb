@@ -348,7 +348,7 @@ module URBANopt
               args[:geometry_unit_type] = "single-family attached"
             when 'Multifamily'
               args[:geometry_num_units] = feature.number_of_residential_units
-              args[:geometry_unit_type] = "multi-family - uncategorized"
+              args[:geometry_unit_type] = "apartment unit"
             end
 
             args[:geometry_num_floors_above_grade] = feature.number_of_stories
@@ -543,7 +543,7 @@ module URBANopt
             measure = REXML::Document.new(measure_xml).root
             measure.elements.each('arguments/argument') do |arg|
               arg_name = arg.elements['name'].text.to_sym
-              next if [:hpxml_path, :weather_dir, :schedules_output_path].include? arg_name
+              next if [:hpxml_path, :weather_dir].include? arg_name
 
               if not args.keys.include? arg_name # argument has not been set and so gets the default value
                 if arg.elements['default_value']
