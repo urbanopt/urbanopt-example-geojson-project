@@ -1,14 +1,10 @@
 # see the URL below for information on how to write OpenStudio measures
 # http://nrel.github.io/OpenStudio-user-documentation/measures/measure_writing_guide/
 
-resources_path = File.absolute_path(File.join(File.dirname(__FILE__), "../HPXMLtoOpenStudio/resources"))
-unless File.exists? resources_path
-  resources_path = File.join(OpenStudio::BCLMeasure::userMeasuresDir.to_s, "HPXMLtoOpenStudio/resources") # Hack to run measures in the OS App since applied measures are copied off into a temporary directory
-end
+resources_path = File.absolute_path(File.join(File.dirname(__FILE__), "../BuildResidentialModel/resources"))
 require File.join(resources_path, "constants")
 require File.join(resources_path, "geometry")
 require File.join(resources_path, "unit_conversions")
-require File.join(resources_path, "schedules")
 
 # start the measure
 class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::ModelMeasure
@@ -19,7 +15,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
 
   # human readable description
   def description
-    return "Sets the basic geometry for the single-family detached building. Building is limited to one foundation type. Garage is tucked within the building, on the front left or front right corners of the building. Sets the number of bedrooms, bathrooms, and occupants in the building. Sets the neighbors (front, back, left, and/or right) of the building for shading purposes. Neighboring buildings will have the same geometry as the model building.#{Constants.WorkflowDescription}"
+    return "Sets the basic geometry for the single-family detached building. Building is limited to one foundation type. Garage is tucked within the building, on the front left or front right corners of the building. Sets the number of bedrooms, bathrooms, and occupants in the building. Sets the neighbors (front, back, left, and/or right) of the building for shading purposes. Neighboring buildings will have the same geometry as the model building.#{WholeBuildingConstants.WorkflowDescription}"
   end
 
   # human readable description of modeling approach
@@ -136,15 +132,15 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
 
     # make a choice argument for model objects
     roof_type_display_names = OpenStudio::StringVector.new
-    roof_type_display_names << Constants.RoofTypeGable
-    roof_type_display_names << Constants.RoofTypeHip
-    roof_type_display_names << Constants.RoofTypeFlat
+    roof_type_display_names << WholeBuildingConstants.RoofTypeGable
+    roof_type_display_names << WholeBuildingConstants.RoofTypeHip
+    roof_type_display_names << WholeBuildingConstants.RoofTypeFlat
 
     # make a choice argument for roof type
     roof_type = OpenStudio::Measure::OSArgument::makeChoiceArgument("roof_type", roof_type_display_names, true)
     roof_type.setDisplayName("Roof Type")
     roof_type.setDescription("The roof type of the building.")
-    roof_type.setDefaultValue(Constants.RoofTypeGable)
+    roof_type.setDefaultValue(WholeBuildingConstants.RoofTypeGable)
     args << roof_type
 
     # make a choice argument for model objects
@@ -171,14 +167,14 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
 
     # make a choice argument for model objects
     roof_structure_display_names = OpenStudio::StringVector.new
-    roof_structure_display_names << Constants.RoofStructureTrussCantilever
-    roof_structure_display_names << Constants.RoofStructureRafter
+    roof_structure_display_names << WholeBuildingConstants.RoofStructureTrussCantilever
+    roof_structure_display_names << WholeBuildingConstants.RoofStructureRafter
 
     # make a choice argument for roof type
     roof_structure = OpenStudio::Measure::OSArgument::makeChoiceArgument("roof_structure", roof_structure_display_names, true)
     roof_structure.setDisplayName("Roof Structure")
     roof_structure.setDescription("The roof structure of the building.")
-    roof_structure.setDefaultValue(Constants.RoofStructureTrussCantilever)
+    roof_structure.setDefaultValue(WholeBuildingConstants.RoofStructureTrussCantilever)
     args << roof_structure
 
     # make a choice argument for eaves depth
@@ -269,17 +265,17 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
     roof_type = runner.getStringArgumentValue("roof_type", user_arguments)
     roof_pitch = { "1:12" => 1.0 / 12.0, "2:12" => 2.0 / 12.0, "3:12" => 3.0 / 12.0, "4:12" => 4.0 / 12.0, "5:12" => 5.0 / 12.0, "6:12" => 6.0 / 12.0, "7:12" => 7.0 / 12.0, "8:12" => 8.0 / 12.0, "9:12" => 9.0 / 12.0, "10:12" => 10.0 / 12.0, "11:12" => 11.0 / 12.0, "12:12" => 12.0 / 12.0 }[runner.getStringArgumentValue("roof_pitch", user_arguments)]
     roof_structure = runner.getStringArgumentValue("roof_structure", user_arguments)
-    eaves_depth = UnitConversions.convert(runner.getDoubleArgumentValue("eaves_depth", user_arguments), "ft", "m")
+    eaves_depth = WholeBuildingUnitConversions.convert(runner.getDoubleArgumentValue("eaves_depth", user_arguments), "ft", "m")
     num_br = runner.getStringArgumentValue("num_bedrooms", user_arguments).split(",").map(&:strip)
     num_ba = runner.getStringArgumentValue("num_bathrooms", user_arguments).split(",").map(&:strip)
-    num_occupants = Constants.Auto
+    num_occupants = WholeBuildingConstants.Auto
     if model.getBuilding.additionalProperties.getFeatureAsInteger("num_occupants").is_initialized
       num_occupants = "#{model.getBuilding.additionalProperties.getFeatureAsInteger("num_occupants").get}"
     end
-    neighbor_left_offset = UnitConversions.convert(runner.getDoubleArgumentValue("neighbor_left_offset", user_arguments), "ft", "m")
-    neighbor_right_offset = UnitConversions.convert(runner.getDoubleArgumentValue("neighbor_right_offset", user_arguments), "ft", "m")
-    neighbor_back_offset = UnitConversions.convert(runner.getDoubleArgumentValue("neighbor_back_offset", user_arguments), "ft", "m")
-    neighbor_front_offset = UnitConversions.convert(runner.getDoubleArgumentValue("neighbor_front_offset", user_arguments), "ft", "m")
+    neighbor_left_offset = WholeBuildingUnitConversions.convert(runner.getDoubleArgumentValue("neighbor_left_offset", user_arguments), "ft", "m")
+    neighbor_right_offset = WholeBuildingUnitConversions.convert(runner.getDoubleArgumentValue("neighbor_right_offset", user_arguments), "ft", "m")
+    neighbor_back_offset = WholeBuildingUnitConversions.convert(runner.getDoubleArgumentValue("neighbor_back_offset", user_arguments), "ft", "m")
+    neighbor_front_offset = WholeBuildingUnitConversions.convert(runner.getDoubleArgumentValue("neighbor_front_offset", user_arguments), "ft", "m")
     orientation = runner.getDoubleArgumentValue("orientation", user_arguments)
 
     if foundation_type == "slab"
@@ -309,11 +305,11 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
     end
 
     # Convert to SI
-    total_ffa = UnitConversions.convert(total_ffa, "ft^2", "m^2")
-    wall_height = UnitConversions.convert(wall_height, "ft", "m")
-    garage_width = UnitConversions.convert(garage_width, "ft", "m")
-    garage_depth = UnitConversions.convert(garage_depth, "ft", "m")
-    foundation_height = UnitConversions.convert(foundation_height, "ft", "m")
+    total_ffa = WholeBuildingUnitConversions.convert(total_ffa, "ft^2", "m^2")
+    wall_height = WholeBuildingUnitConversions.convert(wall_height, "ft", "m")
+    garage_width = WholeBuildingUnitConversions.convert(garage_width, "ft", "m")
+    garage_depth = WholeBuildingUnitConversions.convert(garage_depth, "ft", "m")
+    foundation_height = WholeBuildingUnitConversions.convert(foundation_height, "ft", "m")
 
     garage_area = garage_width * garage_depth
     has_garage = false
@@ -322,11 +318,11 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
     end
 
     # error checking
-    if garage_protrusion > 0 and roof_type == Constants.RoofTypeHip and has_garage
+    if garage_protrusion > 0 and roof_type == WholeBuildingConstants.RoofTypeHip and has_garage
       runner.registerError("Cannot handle protruding garage and hip roof.")
       return false
     end
-    if garage_protrusion > 0 and aspect_ratio < 1 and has_garage and roof_type == Constants.RoofTypeGable
+    if garage_protrusion > 0 and aspect_ratio < 1 and has_garage and roof_type == WholeBuildingConstants.RoofTypeGable
       runner.registerError("Cannot handle protruding garage and attic ridge running from front to back.")
       return false
     end
@@ -393,13 +389,13 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
           garage_nw_point = OpenStudio::Point3d.new(length - garage_width, garage_depth - garage_protrusion * garage_depth, z)
           garage_ne_point = OpenStudio::Point3d.new(length, garage_depth - garage_protrusion * garage_depth, z)
           garage_se_point = OpenStudio::Point3d.new(length, -garage_protrusion * garage_depth, z)
-          garage_polygon = Geometry.make_polygon(garage_sw_point, garage_nw_point, garage_ne_point, garage_se_point)
+          garage_polygon = WholeBuildingGeometry.make_polygon(garage_sw_point, garage_nw_point, garage_ne_point, garage_se_point)
         elsif garage_position == "Left"
           garage_sw_point = OpenStudio::Point3d.new(0, -garage_protrusion * garage_depth, z)
           garage_nw_point = OpenStudio::Point3d.new(0, garage_depth - garage_protrusion * garage_depth, z)
           garage_ne_point = OpenStudio::Point3d.new(garage_width, garage_depth - garage_protrusion * garage_depth, z)
           garage_se_point = OpenStudio::Point3d.new(garage_width, -garage_protrusion * garage_depth, z)
-          garage_polygon = Geometry.make_polygon(garage_sw_point, garage_nw_point, garage_ne_point, garage_se_point)
+          garage_polygon = WholeBuildingGeometry.make_polygon(garage_sw_point, garage_nw_point, garage_ne_point, garage_se_point)
         end
 
         # make space
@@ -407,12 +403,12 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
         garage_space = garage_space.get
         garage_space_name = "garage space"
         garage_space.setName(garage_space_name)
-        if space_types_hash.keys.include? Constants.SpaceTypeGarage
-          garage_space_type = space_types_hash[Constants.SpaceTypeGarage]
+        if space_types_hash.keys.include? WholeBuildingConstants.SpaceTypeGarage
+          garage_space_type = space_types_hash[WholeBuildingConstants.SpaceTypeGarage]
         else
           garage_space_type = OpenStudio::Model::SpaceType.new(model)
-          garage_space_type.setStandardsSpaceType(Constants.SpaceTypeGarage)
-          space_types_hash[Constants.SpaceTypeGarage] = garage_space_type
+          garage_space_type.setStandardsSpaceType(WholeBuildingConstants.SpaceTypeGarage)
+          space_types_hash[WholeBuildingConstants.SpaceTypeGarage] = garage_space_type
         end
         garage_space.setSpaceType(garage_space_type)
         runner.registerInfo("Set #{garage_space_name}.")
@@ -420,7 +416,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
         # set this to the garage zone
         garage_space.setThermalZone(garage_zone)
 
-        m = Geometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
+        m = WholeBuildingGeometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
         m[0, 3] = 0
         m[1, 3] = 0
         m[2, 3] = z
@@ -433,11 +429,11 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
           se_point = OpenStudio::Point3d.new(length, 0, z)
           l_se_point = OpenStudio::Point3d.new(length - garage_width, 0, z)
           if (garage_depth < width or garage_protrusion > 0) and garage_protrusion < 1 # garage protrudes but not fully
-            living_polygon = Geometry.make_polygon(sw_point, nw_point, ne_point, garage_ne_point, garage_nw_point, l_se_point)
+            living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, ne_point, garage_ne_point, garage_nw_point, l_se_point)
           elsif garage_protrusion < 1 # garage fits perfectly within living space
-            living_polygon = Geometry.make_polygon(sw_point, nw_point, garage_nw_point, garage_sw_point)
+            living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, garage_nw_point, garage_sw_point)
           else # garage fully protrudes
-            living_polygon = Geometry.make_polygon(sw_point, nw_point, ne_point, se_point)
+            living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, ne_point, se_point)
           end
         elsif garage_position == "Left"
           sw_point = OpenStudio::Point3d.new(0, 0, z)
@@ -446,11 +442,11 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
           se_point = OpenStudio::Point3d.new(length, 0, z)
           l_sw_point = OpenStudio::Point3d.new(garage_width, 0, z)
           if (garage_depth < width or garage_protrusion > 0) and garage_protrusion < 1 # garage protrudes but not fully
-            living_polygon = Geometry.make_polygon(garage_nw_point, nw_point, ne_point, se_point, l_sw_point, garage_ne_point)
+            living_polygon = WholeBuildingGeometry.make_polygon(garage_nw_point, nw_point, ne_point, se_point, l_sw_point, garage_ne_point)
           elsif garage_protrusion < 1 # garage fits perfectly within living space
-            living_polygon = Geometry.make_polygon(garage_se_point, garage_ne_point, ne_point, se_point)
+            living_polygon = WholeBuildingGeometry.make_polygon(garage_se_point, garage_ne_point, ne_point, se_point)
           else # garage fully protrudes
-            living_polygon = Geometry.make_polygon(sw_point, nw_point, ne_point, se_point)
+            living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, ne_point, se_point)
           end
         end
         foundation_polygon_with_wrong_zs = living_polygon
@@ -469,9 +465,9 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
             se_point = OpenStudio::Point3d.new(length, 0, z)
             l_se_point = OpenStudio::Point3d.new(length - garage_width, 0, z)
             if garage_protrusion > 0 # garage protrudes
-              living_polygon = Geometry.make_polygon(sw_point, nw_point, ne_point, garage_se_point, garage_sw_point, l_se_point)
+              living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, ne_point, garage_se_point, garage_sw_point, l_se_point)
             else # garage does not protrude
-              living_polygon = Geometry.make_polygon(sw_point, nw_point, ne_point, se_point)
+              living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, ne_point, se_point)
             end
           elsif garage_position == "Left"
             sw_point = OpenStudio::Point3d.new(0, 0, z)
@@ -480,9 +476,9 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
             se_point = OpenStudio::Point3d.new(length, 0, z)
             l_sw_point = OpenStudio::Point3d.new(garage_width, 0, z)
             if garage_protrusion > 0 # garage protrudes
-              living_polygon = Geometry.make_polygon(garage_sw_point, nw_point, ne_point, se_point, l_sw_point, garage_se_point)
+              living_polygon = WholeBuildingGeometry.make_polygon(garage_sw_point, nw_point, ne_point, se_point, l_sw_point, garage_se_point)
             else # garage does not protrude
-              living_polygon = Geometry.make_polygon(sw_point, nw_point, ne_point, se_point)
+              living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, ne_point, se_point)
             end
           end
 
@@ -492,7 +488,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
           nw_point = OpenStudio::Point3d.new(0, width, z)
           ne_point = OpenStudio::Point3d.new(length, width, z)
           se_point = OpenStudio::Point3d.new(length, 0, z)
-          living_polygon = Geometry.make_polygon(sw_point, nw_point, ne_point, se_point)
+          living_polygon = WholeBuildingGeometry.make_polygon(sw_point, nw_point, ne_point, se_point)
           if z == foundation_offset
             foundation_polygon_with_wrong_zs = living_polygon
           end
@@ -510,12 +506,12 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
         living_space_name = "living space"
       end
       living_space.setName(living_space_name)
-      if space_types_hash.keys.include? Constants.SpaceTypeLiving
-        living_space_type = space_types_hash[Constants.SpaceTypeLiving]
+      if space_types_hash.keys.include? WholeBuildingConstants.SpaceTypeLiving
+        living_space_type = space_types_hash[WholeBuildingConstants.SpaceTypeLiving]
       else
         living_space_type = OpenStudio::Model::SpaceType.new(model)
-        living_space_type.setStandardsSpaceType(Constants.SpaceTypeLiving)
-        space_types_hash[Constants.SpaceTypeLiving] = living_space_type
+        living_space_type.setStandardsSpaceType(WholeBuildingConstants.SpaceTypeLiving)
+        space_types_hash[WholeBuildingConstants.SpaceTypeLiving] = living_space_type
       end
       living_space.setSpaceType(living_space_type)
       runner.registerInfo("Set #{living_space_name}.")
@@ -523,7 +519,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
       # set these to the living zone
       living_space.setThermalZone(living_zone)
 
-      m = Geometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
+      m = WholeBuildingGeometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
       m[0, 3] = 0
       m[1, 3] = 0
       m[2, 3] = z
@@ -532,7 +528,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
     end
 
     # Attic
-    if roof_type != Constants.RoofTypeFlat
+    if roof_type != WholeBuildingConstants.RoofTypeFlat
 
       z = z + wall_height
 
@@ -550,40 +546,40 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
       roof_sw_point = OpenStudio::Point3d.new(0, 0, z)
 
       # make polygons
-      polygon_floor = Geometry.make_polygon(roof_nw_point, roof_ne_point, roof_se_point, roof_sw_point)
+      polygon_floor = WholeBuildingGeometry.make_polygon(roof_nw_point, roof_ne_point, roof_se_point, roof_sw_point)
       side_type = nil
-      if roof_type == Constants.RoofTypeGable
+      if roof_type == WholeBuildingConstants.RoofTypeGable
         if length >= width
           roof_w_point = OpenStudio::Point3d.new(0, width / 2.0, z + attic_height)
           roof_e_point = OpenStudio::Point3d.new(length, width / 2.0, z + attic_height)
-          polygon_s_roof = Geometry.make_polygon(roof_e_point, roof_w_point, roof_sw_point, roof_se_point)
-          polygon_n_roof = Geometry.make_polygon(roof_w_point, roof_e_point, roof_ne_point, roof_nw_point)
-          polygon_w_wall = Geometry.make_polygon(roof_w_point, roof_nw_point, roof_sw_point)
-          polygon_e_wall = Geometry.make_polygon(roof_e_point, roof_se_point, roof_ne_point)
+          polygon_s_roof = WholeBuildingGeometry.make_polygon(roof_e_point, roof_w_point, roof_sw_point, roof_se_point)
+          polygon_n_roof = WholeBuildingGeometry.make_polygon(roof_w_point, roof_e_point, roof_ne_point, roof_nw_point)
+          polygon_w_wall = WholeBuildingGeometry.make_polygon(roof_w_point, roof_nw_point, roof_sw_point)
+          polygon_e_wall = WholeBuildingGeometry.make_polygon(roof_e_point, roof_se_point, roof_ne_point)
         else
           roof_w_point = OpenStudio::Point3d.new(length / 2.0, 0, z + attic_height)
           roof_e_point = OpenStudio::Point3d.new(length / 2.0, width, z + attic_height)
-          polygon_s_roof = Geometry.make_polygon(roof_e_point, roof_w_point, roof_se_point, roof_ne_point)
-          polygon_n_roof = Geometry.make_polygon(roof_w_point, roof_e_point, roof_nw_point, roof_sw_point)
-          polygon_w_wall = Geometry.make_polygon(roof_w_point, roof_sw_point, roof_se_point)
-          polygon_e_wall = Geometry.make_polygon(roof_e_point, roof_ne_point, roof_nw_point)
+          polygon_s_roof = WholeBuildingGeometry.make_polygon(roof_e_point, roof_w_point, roof_se_point, roof_ne_point)
+          polygon_n_roof = WholeBuildingGeometry.make_polygon(roof_w_point, roof_e_point, roof_nw_point, roof_sw_point)
+          polygon_w_wall = WholeBuildingGeometry.make_polygon(roof_w_point, roof_sw_point, roof_se_point)
+          polygon_e_wall = WholeBuildingGeometry.make_polygon(roof_e_point, roof_ne_point, roof_nw_point)
         end
         side_type = "Wall"
-      elsif roof_type == Constants.RoofTypeHip
+      elsif roof_type == WholeBuildingConstants.RoofTypeHip
         if length >= width
           roof_w_point = OpenStudio::Point3d.new(width / 2.0, width / 2.0, z + attic_height)
           roof_e_point = OpenStudio::Point3d.new(length - width / 2.0, width / 2.0, z + attic_height)
-          polygon_s_roof = Geometry.make_polygon(roof_e_point, roof_w_point, roof_sw_point, roof_se_point)
-          polygon_n_roof = Geometry.make_polygon(roof_w_point, roof_e_point, roof_ne_point, roof_nw_point)
-          polygon_w_wall = Geometry.make_polygon(roof_w_point, roof_nw_point, roof_sw_point)
-          polygon_e_wall = Geometry.make_polygon(roof_e_point, roof_se_point, roof_ne_point)
+          polygon_s_roof = WholeBuildingGeometry.make_polygon(roof_e_point, roof_w_point, roof_sw_point, roof_se_point)
+          polygon_n_roof = WholeBuildingGeometry.make_polygon(roof_w_point, roof_e_point, roof_ne_point, roof_nw_point)
+          polygon_w_wall = WholeBuildingGeometry.make_polygon(roof_w_point, roof_nw_point, roof_sw_point)
+          polygon_e_wall = WholeBuildingGeometry.make_polygon(roof_e_point, roof_se_point, roof_ne_point)
         else
           roof_w_point = OpenStudio::Point3d.new(length / 2.0, length / 2.0, z + attic_height)
           roof_e_point = OpenStudio::Point3d.new(length / 2.0, width - length / 2.0, z + attic_height)
-          polygon_s_roof = Geometry.make_polygon(roof_e_point, roof_w_point, roof_se_point, roof_ne_point)
-          polygon_n_roof = Geometry.make_polygon(roof_w_point, roof_e_point, roof_nw_point, roof_sw_point)
-          polygon_w_wall = Geometry.make_polygon(roof_w_point, roof_sw_point, roof_se_point)
-          polygon_e_wall = Geometry.make_polygon(roof_e_point, roof_ne_point, roof_nw_point)
+          polygon_s_roof = WholeBuildingGeometry.make_polygon(roof_e_point, roof_w_point, roof_se_point, roof_ne_point)
+          polygon_n_roof = WholeBuildingGeometry.make_polygon(roof_w_point, roof_e_point, roof_nw_point, roof_sw_point)
+          polygon_w_wall = WholeBuildingGeometry.make_polygon(roof_w_point, roof_sw_point, roof_se_point)
+          polygon_e_wall = WholeBuildingGeometry.make_polygon(roof_e_point, roof_ne_point, roof_nw_point)
         end
         side_type = "RoofCeiling"
       end
@@ -620,11 +616,11 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
         attic_zone.setName("unfinished attic zone")
         attic_space.setThermalZone(attic_zone)
         attic_space_name = "unfinished attic space"
-        attic_space_type_name = Constants.SpaceTypeUnfinishedAttic
+        attic_space_type_name = WholeBuildingConstants.SpaceTypeUnfinishedAttic
       elsif attic_type == "finished attic"
         attic_space.setThermalZone(living_zone)
         attic_space_name = "finished attic space"
-        attic_space_type_name = Constants.SpaceTypeLiving
+        attic_space_type_name = WholeBuildingConstants.SpaceTypeLiving
       end
       attic_space.setName(attic_space_name)
       if space_types_hash.keys.include? attic_space_type_name
@@ -637,7 +633,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
       attic_space.setSpaceType(attic_space_type)
       runner.registerInfo("Set #{attic_space_name}.")
 
-      m = Geometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
+      m = WholeBuildingGeometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
       m[0, 3] = 0
       m[1, 3] = 0
       m[2, 3] = z
@@ -675,16 +671,16 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
       foundation_space = foundation_space.get
       if foundation_type == "crawlspace"
         foundation_space_name = "crawl space"
-        foundation_space_type_name = Constants.SpaceTypeCrawl
+        foundation_space_type_name = WholeBuildingConstants.SpaceTypeCrawl
       elsif foundation_type == "unfinished basement"
         foundation_space_name = "unfinished basement space"
-        foundation_space_type_name = Constants.SpaceTypeUnfinishedBasement
+        foundation_space_type_name = WholeBuildingConstants.SpaceTypeUnfinishedBasement
       elsif foundation_type == "finished basement"
         foundation_space_name = "finished basement space"
-        foundation_space_type_name = Constants.SpaceTypeFinishedBasement
+        foundation_space_type_name = WholeBuildingConstants.SpaceTypeFinishedBasement
       elsif foundation_type == "pier and beam"
         foundation_space_name = "pier and beam space"
-        foundation_space_type_name = Constants.SpaceTypePierBeam
+        foundation_space_type_name = WholeBuildingConstants.SpaceTypePierBeam
       end
       foundation_space.setName(foundation_space_name)
       if space_types_hash.keys.include? foundation_space_type_name
@@ -703,7 +699,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
       # set foundation walls outside boundary condition
       spaces = model.getSpaces
       spaces.each do |space|
-        if Geometry.get_space_floor_z(space) + UnitConversions.convert(space.zOrigin, "m", "ft") < 0
+        if WholeBuildingGeometry.get_space_floor_z(space) + WholeBuildingUnitConversions.convert(space.zOrigin, "m", "ft") < 0
           surfaces = space.surfaces
           surfaces.each do |surface|
             next if surface.surfaceType.downcase != "wall"
@@ -713,7 +709,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
         end
       end
 
-      m = Geometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
+      m = WholeBuildingGeometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
       m[0, 3] = 0
       m[1, 3] = 0
       m[2, 3] = z
@@ -731,7 +727,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
     OpenStudio::Model.intersectSurfaces(spaces)
     OpenStudio::Model.matchSurfaces(spaces)
 
-    if has_garage and roof_type != Constants.RoofTypeFlat
+    if has_garage and roof_type != WholeBuildingConstants.RoofTypeFlat
       if num_floors > 1
         space_with_roof_over_garage = living_space
       else
@@ -804,10 +800,10 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
             roof_s_point = OpenStudio::Point3d.new((sw_point.x + se_point.x) / 2, sw_point.y, num_floors * wall_height + garage_attic_height)
           end
 
-          polygon_w_roof = Geometry.make_polygon(nw_point, sw_point, roof_s_point, roof_n_point)
-          polygon_e_roof = Geometry.make_polygon(ne_point, roof_n_point, roof_s_point, se_point)
-          polygon_n_wall = Geometry.make_polygon(nw_point, roof_n_point, ne_point)
-          polygon_s_wall = Geometry.make_polygon(sw_point, se_point, roof_s_point)
+          polygon_w_roof = WholeBuildingGeometry.make_polygon(nw_point, sw_point, roof_s_point, roof_n_point)
+          polygon_e_roof = WholeBuildingGeometry.make_polygon(ne_point, roof_n_point, roof_s_point, se_point)
+          polygon_n_wall = WholeBuildingGeometry.make_polygon(nw_point, roof_n_point, ne_point)
+          polygon_s_wall = WholeBuildingGeometry.make_polygon(sw_point, se_point, roof_s_point)
 
           deck_w = OpenStudio::Model::Surface.new(polygon_w_roof, model)
           deck_w.setSurfaceType("RoofCeiling")
@@ -830,14 +826,14 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
           wall_s.setSpace(garage_attic_space)
 
           if attic_type == "finished attic"
-            garage_attic_space_type_name = Constants.SpaceTypeLiving
+            garage_attic_space_type_name = WholeBuildingConstants.SpaceTypeLiving
             garage_attic_space.setThermalZone(living_zone)
           else
             if num_floors > 1
-              garage_attic_space_type_name = Constants.SpaceTypeUnfinishedAttic
+              garage_attic_space_type_name = WholeBuildingConstants.SpaceTypeUnfinishedAttic
               garage_attic_space.setThermalZone(attic_zone)
             else
-              garage_attic_space_type_name = Constants.SpaceTypeGarageAttic
+              garage_attic_space_type_name = WholeBuildingConstants.SpaceTypeGarageAttic
               garage_attic_space.setThermalZone(garage_zone)
             end
           end
@@ -866,7 +862,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
           # remove triangular surface between unfinished attic and garage attic
           unless attic_space.nil?
             attic_space.surfaces.each do |surface|
-              next if roof_type == Constants.RoofTypeHip
+              next if roof_type == WholeBuildingConstants.RoofTypeHip
               next unless surface.vertices.length == 3
               next unless (90 - surface.tilt * 180 / Math::PI).abs > 0.01 # don't remove the vertical attic walls
               next unless surface.adjacentSurface.is_initialized
@@ -878,7 +874,7 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
 
           garage_attic_space.surfaces.each do |surface|
             if num_floors > 1 or attic_type == "finished attic"
-              m = Geometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
+              m = WholeBuildingGeometry.initialize_transformation_matrix(OpenStudio::Matrix.new(4, 4, 0))
               m[2, 3] = -attic_space.zOrigin
               transformation = OpenStudio::Transformation.new(m)
               new_vertices = transformation * surface.vertices
@@ -912,12 +908,12 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
 
       foundation_walls << surface
     end
-    garage_spaces = Geometry.get_garage_spaces(model.getSpaces)
+    garage_spaces = WholeBuildingGeometry.get_garage_spaces(model.getSpaces)
     garage_spaces.each do |garage_space|
       garage_space.surfaces.each do |surface|
         next if surface.surfaceType.downcase != "floor"
 
-        adjacent_wall_surfaces = Geometry.get_walls_connected_to_floor(foundation_walls, surface, false)
+        adjacent_wall_surfaces = WholeBuildingGeometry.get_walls_connected_to_floor(foundation_walls, surface, false)
         adjacent_wall_surfaces.each do |adjacent_wall_surface|
           adjacent_wall_surface.setOutsideBoundaryCondition("Adiabatic")
         end
@@ -926,10 +922,10 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
 
     # Store building unit information
     unit = OpenStudio::Model::BuildingUnit.new(model)
-    unit.setBuildingUnitType(Constants.BuildingUnitTypeResidential)
-    unit.setName(Constants.ObjectNameBuildingUnit)
+    unit.setBuildingUnitType(WholeBuildingConstants.BuildingUnitTypeResidential)
+    unit.setName(WholeBuildingConstants.ObjectNameBuildingUnit)
     model.getSpaces.each do |space|
-      next if not Geometry.space_is_finished(space)
+      next if not WholeBuildingGeometry.space_is_finished(space)
 
       space.setBuildingUnit(unit)
     end
@@ -950,34 +946,24 @@ class CreateResidentialSingleFamilyDetachedGeometry < OpenStudio::Measure::Model
     model.getBuilding.setStandardsNumberOfStories(num_floors)
 
     # Store the building type
-    model.getBuilding.setStandardsBuildingType(Constants.BuildingTypeSingleFamilyDetached)
+    model.getBuilding.setStandardsBuildingType(WholeBuildingConstants.BuildingTypeSingleFamilyDetached)
 
-    result = Geometry.process_beds_and_baths(model, runner, num_br, num_ba)
+    result = WholeBuildingGeometry.process_beds_and_baths(model, runner, num_br, num_ba)
     unless result
       return false
     end
 
-    schedules_file = SchedulesFile.new(runner: runner, model: model)
-    if not schedules_file.validated?
-      return false
-    end
-
-    result = Geometry.process_occupants(model, runner, num_occupants, occ_gain = 384.0, sens_frac = 0.573, lat_frac = 0.427, schedules_file)
+    result = WholeBuildingGeometry.process_eaves(model, runner, eaves_depth, roof_structure)
     unless result
       return false
     end
 
-    result = Geometry.process_eaves(model, runner, eaves_depth, roof_structure)
+    result = WholeBuildingGeometry.process_neighbors(model, runner, neighbor_left_offset, neighbor_right_offset, neighbor_back_offset, neighbor_front_offset)
     unless result
       return false
     end
 
-    result = Geometry.process_neighbors(model, runner, neighbor_left_offset, neighbor_right_offset, neighbor_back_offset, neighbor_front_offset)
-    unless result
-      return false
-    end
-
-    result = Geometry.process_orientation(model, runner, orientation)
+    result = WholeBuildingGeometry.process_orientation(model, runner, orientation)
     unless result
       return false
     end
