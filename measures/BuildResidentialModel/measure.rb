@@ -184,6 +184,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       merge_measure_args[:remove_spaces] = false
       merge_measure_args[:merge_schedules] = true
       merge_measure_args[:compact_to_ruleset] = false
+      merge_measure_args[:merge_zones] = true
+      merge_measure_args[:merge_air_loops] = true
       merge_measure_args = Hash[merge_measure_args.collect{ |k, v| [k.to_s, v] }]
       merge_measures[merge_measure_subdir] << merge_measure_args
 
@@ -195,36 +197,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     end
 
     # TODO: add surface intersection and matching (is don't in measure now but would be better to do once at end, make bool to skip in merge measure)
-
-    # TODO: temporarily add ideal loads until replace with full hvac in merge measure
-    # this can be moved inside loop while looping through units.
-    # also add thermostats for now
-    htg_sch = OpenStudio::Model::ScheduleConstant.new(model)
-    htg_sch.setValue(21.0)
-    clg_sch = OpenStudio::Model::ScheduleConstant.new(model)
-    clg_sch.setValue(24.0)
-    temp_thermostat = OpenStudio::Model::ThermostatSetpointDualSetpoint.new(model)
-    temp_thermostat.setHeatingSchedule(htg_sch)
-    temp_thermostat.setCoolingSchedule(clg_sch)
-    model.getThermalZones.each do |zone|
-      if ! zone.thermostatSetpointDualSetpoint.is_initialized
-        zone.setThermostatSetpointDualSetpoint(temp_thermostat)
-      end
-      zone.setUseIdealAirLoads(true)
-    end
-
-    # TODO: temporary alter objects with surface properly convection coefficients
-    model.getSurfaces.sort.each do |surface|
-      if surface.outsideBoundaryCondition == "Foundation" then surface.setOutsideBoundaryCondition("Ground") end
-    end
-
-    # TODO: temporary clean up objects that might be orphaned and warn user so they have option to correct
-    model.getSurfacePropertyExposedFoundationPerimeters.each do |surf_prop|
-      if surf_prop.surfaceName == "" # isn't optional but field is ending up empty when comes over with spaces
-        runner.registerWarning("surfacePropertyExposedFoundationPerimeters with handle of #{surf_prop.handle} isn't associated with a surface.")
-        surf_prop.remove
-      end
-    end
 
     return true
   end
