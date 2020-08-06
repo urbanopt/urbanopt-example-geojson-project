@@ -67,7 +67,12 @@ else
   gem 'openstudio-load-flexibility-measures', '~> 0.1.2'
 end
 
-gem 'openstudio-standards', path: '../openstudio-standards'
+if allow_local && File.exist?('../openstudio-standards')
+  gem 'openstudio-standards', path: '../openstudio-standards'
+elsif allow_local
+  gem 'openstudio-standards', github: 'NREL/openstudio-standards', branch: 'master'
+end
+
 
 
 
