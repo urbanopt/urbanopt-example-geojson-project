@@ -114,9 +114,18 @@ module URBANopt
         end
 
         if feature_names[0].to_s == 'Hotel 1'
-          # This feature needs revision - PTAC coils need to be explicitly excluded
-          # Turn off for now.
-          OpenStudio::Extension.set_measure_argument(osw, 'add_distributed_ice_storage_to_air_loop_for_load_flexibility', '__SKIP__', true)
+          # PTAC coils must be explicitly excluded
+          ptac_coils = ['BUILDING STORY 10 THERMALZONE PTAC 1SPD DX AC CLG COIL 458KBTU/HR 9.5EER',
+                        'BUILDING STORY 4 THERMALZONE PTAC 1SPD DX AC CLG COIL 369KBTU/HR 9.5EER',
+                        'BUILDING STORY 5 THERMALZONE PTAC 1SPD DX AC CLG COIL 370KBTU/HR 9.5EER',
+                        'BUILDING STORY 6 THERMALZONE PTAC 1SPD DX AC CLG COIL 370KBTU/HR 9.5EER',
+                        'BUILDING STORY 7 THERMALZONE PTAC 1SPD DX AC CLG COIL 370KBTU/HR 9.5EER',
+                        'BUILDING STORY 8 THERMALZONE PTAC 1SPD DX AC CLG COIL 370KBTU/HR 9.5EER',
+                        'BUILDING STORY 9 THERMALZONE PTAC 1SPD DX AC CLG COIL 371KBTU/HR 9.5EER']
+
+          ptac_coils.each do |ptac|
+            OpenStudio::Extension.set_measure_argument(osw, 'add_distributed_ice_storage_to_air_loop_for_load_flexibility', ptac, false)
+          end
         end
 
         return osw
