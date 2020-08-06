@@ -18,7 +18,6 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # elsif allow_local
 #   gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
 # end
-gem 'openstudio-extension', path: '../OpenStudio-extension-gem'
 
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #   gem 'urbanopt-core', path: '../urbanopt-core-gem'
