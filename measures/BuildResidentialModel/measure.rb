@@ -180,7 +180,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # save modified copy of model for use with merge
       unit_model.getSpaces.sort.each do |space|
-        space.setYOrigin(60 * (num_unit -1)) # meters
+        space.setYOrigin(60 * (num_unit-1)) # meters
         space.setBuildingUnit(building_unit)
       end
 
@@ -190,7 +190,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         model_object.setName("unit_#{num_unit} #{model_object.name.to_s}")
       end
 
-      moodified_unit_path = File.expand_path("../unit #{num_unit}/modified_unit.osm")
+      moodified_unit_path = File.join(unit_dir, 'modified_unit.osm')
       unit_model.save(moodified_unit_path, true)
 
       # passing modified copy into array, can move earlier if we don't want the modified copy
