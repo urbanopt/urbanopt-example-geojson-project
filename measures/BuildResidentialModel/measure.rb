@@ -3,10 +3,6 @@
 
 require 'openstudio'
 
-# require_relative '../../resources/hpxml-measures/BuildResidentialHPXML/resources/constants'
-# require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/hpxml'
-# require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/constants'
-
 resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
 meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
 require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
@@ -131,10 +127,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:software_program_used] = 'URBANopt'
       measure_args[:software_program_version] = '0.3.1'
-      measure_args[:geometry_level] = 'Bottom'
-      # measure_args[:geometry_level] = unit.additionalProperties.getFeatureAsString('GeometryLevel') # TODO
-      measure_args[:geometry_horizontal_location] = 'Left'
-      # measure_args[:geometry_horizontal_location] = unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation') # TODO
+      if unit.additionalProperties.getFeatureAsString('GeometryLevel').is_initialized
+        measure_args[:geometry_level] = unit.additionalProperties.getFeatureAsString('GeometryLevel').get
+      end
+      if unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').is_initialized
+        measure_args[:geometry_horizontal_location] = unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').get
+      end
       measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
 
