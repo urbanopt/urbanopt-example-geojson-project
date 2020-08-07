@@ -3,13 +3,6 @@
 
 require 'openstudio'
 
-require_relative '../../resources/hpxml-measures/BuildResidentialHPXML/resources/constants'
-
-require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/hpxml'
-require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/constants'
-
-require_relative '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/constants'
-
 # require gem for merge measures
 # was able to harvest measure paths from primary osw for meta osw. Remove this once confirm that works
 #require 'openstudio-model-articulation'
@@ -45,7 +38,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     args = OpenStudio::Measure::OSArgumentVector.new
     measure.arguments(model).each do |arg|
-      next if ['hpxml_path', 'weather_dir', 'schedules_output_path'].include? arg.name
+      next if ['hpxml_path', 'weather_dir'].include? arg.name
       args << arg
     end
 
@@ -68,17 +61,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     measure = get_measure_instance(full_measure_path)
     args = measure.get_argument_values(runner, user_arguments)
 
-    # Get file/dir paths
-    resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
-    workflow_json = File.join(resources_dir, 'measure-info.json')
-
-    # Apply HPXML measures
-    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
-
-    # Check file/dir paths exist
-    check_dir_exists(measures_dir, runner)
-
-    # Optionals: get or remove
+    # optionals: get or remove
     args.keys.each do |arg|
       begin # TODO: how to check if arg is an optional or not?
         if args[arg].is_initialized
@@ -92,37 +75,87 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # TODO: if merging inside loop then move this code before the loop, may not be needed at all
     # when supporting mixed use or non unit spaces like corrodior, will not want this
-    #model.getBuilding.remove
-    #model.getShadowCalculation.remove
-    #model.getSimulationControl.remove
-    #model.getSite.remove
-    #model.getTimestep.remove
+    # model.getBuilding.remove
+    # model.getShadowCalculation.remove
+    # model.getSimulationControl.remove
+    # model.getSite.remove
+    # model.getTimestep.remove
+
+    # apply whole building create geometry measures
+    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../measures'))
+    check_dir_exists(measures_dir, runner)
+
+    if args[:geometry_unit_type] == 'single-family detached'
+      measure_subdir = 'ResidentialGeometryCreateSingleFamilyDetached'
+    elsif args[:geometry_unit_type] == 'single-family attached'
+      measure_subdir = 'ResidentialGeometryCreateSingleFamilyAttached'
+    elsif args[:geometry_unit_type] == 'apartment unit'
+      measure_subdir = 'ResidentialGeometryCreateMultifamily'
+    end
+
+    full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+    check_file_exists(full_measure_path, runner)
+    measure = get_measure_instance(full_measure_path)
+
+    measure_args = {}
+    whole_building_model = OpenStudio::Model::Model.new
+    get_measure_args_default_values(whole_building_model, measure_args, measure)
+
+    measures = {}
+    measures[measure_subdir] = []
+    if ['ResidentialGeometryCreateSingleFamilyAttached', 'ResidentialGeometryCreateMultifamily'].include? measure_subdir
+      measure_args[:unit_ffa] = args[:geometry_cfa]
+      measure_args[:num_floors] = args[:geometry_num_floors_above_grade]
+      measure_args[:num_units] = args[:geometry_num_units]
+    end
+    measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
+    measures[measure_subdir] << measure_args
+
+    if not apply_measures(measures_dir, measures, runner, whole_building_model, nil, nil, true)
+      return false
+    end
+
+    # get file/dir paths
+    resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
+    workflow_json = File.join(resources_dir, 'measure-info.json')
+
+    # apply HPXML measures
+    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
+    check_dir_exists(measures_dir, runner)
 
     unit_models = []
-    (1..args[:geometry_num_units]).to_a.each do |num_unit|
+    whole_building_model.getBuildingUnits.each_with_index do |unit, num_unit|
       unit_model = OpenStudio::Model::Model.new
 
       # BuildResidentialHPXML
       measure_subdir = 'BuildResidentialHPXML'
 
-      measure_args = args.clone
+      # fill the measure args hash with default values
+      measure_args = args
+
       measures = {}
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../out.xml')
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:software_program_used] = 'URBANopt'
       measure_args[:software_program_version] = '0.3.1'
-      measure_args[:schedules_output_path] = '../schedules.csv'
+      if unit.additionalProperties.getFeatureAsString('GeometryLevel').is_initialized
+        measure_args[:geometry_level] = unit.additionalProperties.getFeatureAsString('GeometryLevel').get
+      end
+      if unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').is_initialized
+        measure_args[:geometry_horizontal_location] = unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').get
+      end
       measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
 
       # HPXMLtoOpenStudio
       measure_subdir = 'HPXMLtoOpenStudio'
-
       full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
 
+      # fill the measure args hash with default values
       measure_args = {}
+
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../out.xml')
       measure_args[:weather_dir] = File.expand_path('../../../../weather')
@@ -130,16 +163,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args[:debug] = true
       measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
+
       if not apply_measures(measures_dir, measures, runner, unit_model, workflow_json, 'out.osw', true)
         return false
       end
 
-      unit_dir = File.expand_path("../unit #{num_unit}")
+      unit_dir = File.expand_path("../unit #{num_unit+1}")
       Dir.mkdir(unit_dir)
-      FileUtils.cp(File.expand_path('../out.osw'), unit_dir)
-      FileUtils.cp(File.expand_path('../out.xml'), unit_dir)
-      FileUtils.cp(File.expand_path('../in.xml'), unit_dir)
-      FileUtils.cp(File.expand_path('../in.osm'), unit_dir)
+      FileUtils.cp(File.expand_path('../out.xml'), unit_dir) # this is the raw hpxml file
+      FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
+      FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
 
       # create building unit object to assign to spaces
       building_unit = OpenStudio::Model::BuildingUnit.new(unit_model)
@@ -162,7 +195,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # passing modified copy into array, can move earlier if we don't want the modified copy
       unit_models << unit_model
-
 
       # run merge merge_spaces_from_external_file to add this unit to original model
       merge_measures_dir = nil
@@ -201,6 +233,25 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     # TODO: add surface intersection and matching (is don't in measure now but would be better to do once at end, make bool to skip in merge measure)
 
     return true
+  end
+
+  def get_measure_args_default_values(model, args, measure)
+    measure.arguments(model).each do |arg|
+      next unless arg.hasDefaultValue
+
+      case arg.type.valueName.downcase
+      when "boolean"
+        args[arg.name] = arg.defaultValueAsBool
+      when "double"
+        args[arg.name] = arg.defaultValueAsDouble
+      when "integer"
+        args[arg.name] = arg.defaultValueAsInteger
+      when "string"
+        args[arg.name] = arg.defaultValueAsString
+      when "choice"
+        args[arg.name] = arg.defaultValueAsString
+      end
+    end
   end
 end
 

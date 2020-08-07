@@ -526,14 +526,14 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
 
   def test_ceiling_fans
     # Test inputs not overridden by defaults
-    hpxml_name = 'base-misc-ceiling-fans.xml'
+    hpxml_name = 'base-lighting-ceiling-fans.xml'
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_ceiling_fan_values(hpxml_default, 2, 100)
 
     # Test defaults
-    hpxml = apply_hpxml_defaults('base-misc-ceiling-fans.xml')
+    hpxml = apply_hpxml_defaults('base-lighting-ceiling-fans.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_ceiling_fan_values(hpxml_default, 4, 70.4)
@@ -541,7 +541,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
 
   def test_pools
     # Test inputs not overridden by defaults
-    hpxml_name = 'base-misc-large-uncommon-loads.xml'
+    hpxml_name = 'base-misc-loads-large-uncommon.xml'
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
     pool = hpxml.pools[0]
     pool.heater_load_units = HPXML::UnitsKwhPerYear
@@ -559,14 +559,14 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     _test_default_pool_pump_values(hpxml_default, 3000, '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1')
 
     # Test defaults
-    hpxml = apply_hpxml_defaults('base-misc-large-uncommon-loads.xml')
+    hpxml = apply_hpxml_defaults('base-misc-loads-large-uncommon.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_pool_heater_values(hpxml_default, HPXML::UnitsThermPerYear, 236, '0.003, 0.003, 0.003, 0.004, 0.008, 0.015, 0.026, 0.044, 0.084, 0.121, 0.127, 0.121, 0.120, 0.090, 0.075, 0.061, 0.037, 0.023, 0.013, 0.008, 0.004, 0.003, 0.003, 0.003', '0.003, 0.003, 0.003, 0.004, 0.008, 0.015, 0.026, 0.044, 0.084, 0.121, 0.127, 0.121, 0.120, 0.090, 0.075, 0.061, 0.037, 0.023, 0.013, 0.008, 0.004, 0.003, 0.003, 0.003', '1.154, 1.161, 1.013, 1.010, 1.013, 0.888, 0.883, 0.883, 0.888, 0.978, 0.974, 1.154')
     _test_default_pool_pump_values(hpxml_default, 2496, '0.003, 0.003, 0.003, 0.004, 0.008, 0.015, 0.026, 0.044, 0.084, 0.121, 0.127, 0.121, 0.120, 0.090, 0.075, 0.061, 0.037, 0.023, 0.013, 0.008, 0.004, 0.003, 0.003, 0.003', '0.003, 0.003, 0.003, 0.004, 0.008, 0.015, 0.026, 0.044, 0.084, 0.121, 0.127, 0.121, 0.120, 0.090, 0.075, 0.061, 0.037, 0.023, 0.013, 0.008, 0.004, 0.003, 0.003, 0.003', '1.154, 1.161, 1.013, 1.010, 1.013, 0.888, 0.883, 0.883, 0.888, 0.978, 0.974, 1.154')
 
     # Test defaults 2
-    hpxml = apply_hpxml_defaults('base-misc-large-uncommon-loads2.xml')
+    hpxml = apply_hpxml_defaults('base-misc-loads-large-uncommon2.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_pool_heater_values(hpxml_default, nil, nil, nil, nil, nil)
@@ -575,7 +575,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
 
   def test_hot_tubs
     # Test inputs not overridden by defaults
-    hpxml_name = 'base-misc-large-uncommon-loads.xml'
+    hpxml_name = 'base-misc-loads-large-uncommon.xml'
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
     hot_tub = hpxml.hot_tubs[0]
     hot_tub.heater_load_units = HPXML::UnitsThermPerYear
@@ -593,14 +593,14 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     _test_default_hot_tub_pump_values(hpxml_default, 3000, '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1')
 
     # Test defaults
-    hpxml = apply_hpxml_defaults('base-misc-large-uncommon-loads.xml')
+    hpxml = apply_hpxml_defaults('base-misc-loads-large-uncommon.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_hot_tub_heater_values(hpxml_default, HPXML::UnitsKwhPerYear, 1125, '0.024, 0.029, 0.024, 0.029, 0.047, 0.067, 0.057, 0.024, 0.024, 0.019, 0.015, 0.014, 0.014, 0.014, 0.024, 0.058, 0.126, 0.122, 0.068, 0.061, 0.051, 0.043, 0.024, 0.024', '0.024, 0.029, 0.024, 0.029, 0.047, 0.067, 0.057, 0.024, 0.024, 0.019, 0.015, 0.014, 0.014, 0.014, 0.024, 0.058, 0.126, 0.122, 0.068, 0.061, 0.051, 0.043, 0.024, 0.024', '0.837, 0.835, 1.084, 1.084, 1.084, 1.096, 1.096, 1.096, 1.096, 0.931, 0.925, 0.837')
     _test_default_hot_tub_pump_values(hpxml_default, 1111, '0.024, 0.029, 0.024, 0.029, 0.047, 0.067, 0.057, 0.024, 0.024, 0.019, 0.015, 0.014, 0.014, 0.014, 0.024, 0.058, 0.126, 0.122, 0.068, 0.061, 0.051, 0.043, 0.024, 0.024', '0.024, 0.029, 0.024, 0.029, 0.047, 0.067, 0.057, 0.024, 0.024, 0.019, 0.015, 0.014, 0.014, 0.014, 0.024, 0.058, 0.126, 0.122, 0.068, 0.061, 0.051, 0.043, 0.024, 0.024', '0.921, 0.928, 0.921, 0.915, 0.921, 1.160, 1.158, 1.158, 1.160, 0.921, 0.915, 0.921')
 
     # Test defaults 2
-    hpxml = apply_hpxml_defaults('base-misc-large-uncommon-loads2.xml')
+    hpxml = apply_hpxml_defaults('base-misc-loads-large-uncommon2.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_hot_tub_heater_values(hpxml_default, HPXML::UnitsKwhPerYear, 225, '0.024, 0.029, 0.024, 0.029, 0.047, 0.067, 0.057, 0.024, 0.024, 0.019, 0.015, 0.014, 0.014, 0.014, 0.024, 0.058, 0.126, 0.122, 0.068, 0.061, 0.051, 0.043, 0.024, 0.024', '0.024, 0.029, 0.024, 0.029, 0.047, 0.067, 0.057, 0.024, 0.024, 0.019, 0.015, 0.014, 0.014, 0.014, 0.024, 0.058, 0.126, 0.122, 0.068, 0.061, 0.051, 0.043, 0.024, 0.024', '0.837, 0.835, 1.084, 1.084, 1.084, 1.096, 1.096, 1.096, 1.096, 0.931, 0.925, 0.837')
@@ -609,7 +609,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
 
   def test_plug_loads
     # Test inputs not overridden by defaults
-    hpxml_name = 'base-misc-large-uncommon-loads.xml'
+    hpxml_name = 'base-misc-loads-large-uncommon.xml'
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
     tv_pl = hpxml.plug_loads.select { |pl| pl.plug_load_type == HPXML::PlugLoadTypeTelevision }[0]
     tv_pl.kWh_per_year = 1000
@@ -651,7 +651,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeWellPump, 3000, 0.3, 0.6, HPXML::LocationInterior, '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1')
 
     # Test defaults
-    hpxml = apply_hpxml_defaults('base-misc-large-uncommon-loads.xml')
+    hpxml = apply_hpxml_defaults('base-misc-loads-large-uncommon.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_plug_load_values(hpxml_default, HPXML::PlugLoadTypeTelevision, 620, 1.0, 0.0, HPXML::LocationInterior, '0.037, 0.018, 0.009, 0.007, 0.011, 0.018, 0.029, 0.040, 0.049, 0.058, 0.065, 0.072, 0.076, 0.086, 0.091, 0.102, 0.127, 0.156, 0.210, 0.294, 0.363, 0.344, 0.208, 0.090', '0.044, 0.022, 0.012, 0.008, 0.011, 0.014, 0.024, 0.043, 0.071, 0.094, 0.112, 0.123, 0.132, 0.156, 0.178, 0.196, 0.206, 0.213, 0.251, 0.330, 0.388, 0.358, 0.226, 0.103', '1.137, 1.129, 0.961, 0.969, 0.961, 0.993, 0.996, 0.96, 0.993, 0.867, 0.86, 1.137')
@@ -662,7 +662,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
 
   def test_fuel_loads
     # Test inputs not overridden by defaults
-    hpxml_name = 'base-misc-large-uncommon-loads.xml'
+    hpxml_name = 'base-misc-loads-large-uncommon.xml'
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
     gg_fl = hpxml.fuel_loads.select { |fl| fl.fuel_load_type == HPXML::FuelLoadTypeGrill }[0]
     gg_fl.therm_per_year = 1000
@@ -695,7 +695,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     _test_default_fuel_load_values(hpxml_default, HPXML::FuelLoadTypeFireplace, 3000, 0.4, 0.5, HPXML::LocationExterior, '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42, 0.42', '1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1')
 
     # Test defaults
-    hpxml = apply_hpxml_defaults('base-misc-large-uncommon-loads.xml')
+    hpxml = apply_hpxml_defaults('base-misc-loads-large-uncommon.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_fuel_load_values(hpxml_default, HPXML::FuelLoadTypeGrill, 33, 0.0, 0.0, HPXML::LocationExterior, '0.004, 0.001, 0.001, 0.002, 0.007, 0.012, 0.029, 0.046, 0.044, 0.041, 0.044, 0.046, 0.042, 0.038, 0.049, 0.059, 0.110, 0.161, 0.115, 0.070, 0.044, 0.019, 0.013, 0.007', '0.004, 0.001, 0.001, 0.002, 0.007, 0.012, 0.029, 0.046, 0.044, 0.041, 0.044, 0.046, 0.042, 0.038, 0.049, 0.059, 0.110, 0.161, 0.115, 0.070, 0.044, 0.019, 0.013, 0.007', '1.097, 1.097, 0.991, 0.987, 0.991, 0.890, 0.896, 0.896, 0.890, 1.085, 1.085, 1.097')
@@ -717,7 +717,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     _test_default_oven_values(hpxml_default, false)
 
     # Test defaults w/ appliances
-    hpxml = apply_hpxml_defaults('base-misc-large-uncommon-loads.xml')
+    hpxml = apply_hpxml_defaults('base-misc-loads-large-uncommon.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
     _test_default_clothes_washer_values(hpxml_default, HPXML::LocationLivingSpace, 1.0, 400.0, 0.12, 1.09, 27.0, 3.0, 6.0, 1.0)
@@ -767,16 +767,66 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     # Test inputs not overridden by defaults
     hpxml_name = 'base.xml'
     hpxml = HPXML.new(hpxml_path: File.join(@root_path, 'workflow', 'sample_files', hpxml_name))
-    hpxml.lighting.usage_multiplier = 2.0
+    hpxml.lighting.interior_usage_multiplier = 2.0
+    hpxml.lighting.garage_usage_multiplier = 2.0
+    hpxml.lighting.exterior_usage_multiplier = 2.0
+    hpxml.lighting.interior_weekday_fractions = '0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.70, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.70, 0.70, 0.50, 0.50, 0.20, 0.20, 0.20, 0.20'
+    hpxml.lighting.interior_weekend_fractions = '0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.70, 0.40, 0.40, 0.40, 0.40, 0.40, 0.40, 0.40, 0.40, 0.80, 0.90, 0.70, 0.60, 0.20, 0.20, 0.20, 0.20'
+    hpxml.lighting.interior_monthly_multipliers = '1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0'
+    hpxml.lighting.exterior_weekday_fractions = '0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.03, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.03, 0.04, 0.06, 0.09, 0.10, 0.09, 0.06'
+    hpxml.lighting.exterior_weekend_fractions = '0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.03, 0.05, 0.06, 0.08, 0.09, 0.08, 0.05'
+    hpxml.lighting.exterior_monthly_multipliers = '1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1'
+    hpxml.lighting.garage_weekday_fractions = '0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.03, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.03, 0.04, 0.06, 0.09, 0.10, 0.09, 0.06'
+    hpxml.lighting.garage_weekend_fractions = '0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.03, 0.05, 0.06, 0.08, 0.09, 0.08, 0.05'
+    hpxml.lighting.garage_monthly_multipliers = '1.2, 1.2, 1.2 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2'
+    hpxml.lighting.holiday_exists = true
+    hpxml.lighting.holiday_kwh_per_day = 0.7
+    hpxml.lighting.holiday_period_begin_month = 11
+    hpxml.lighting.holiday_period_begin_day_of_month = 19
+    hpxml.lighting.holiday_period_end_month = 12
+    hpxml.lighting.holiday_period_end_day_of_month = 31
+    hpxml.lighting.holiday_weekday_fractions = '0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.005, 0.050, 0.150, 0.150, 0.250, 0.150, 0.050, 0.020'
+    hpxml.lighting.holiday_weekend_fractions = '0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.007, 0.070, 0.170, 0.170, 0.270, 0.170, 0.070, 0.040'
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
-    _test_default_lighting_values(hpxml_default, 2.0)
+    _test_default_lighting_values(hpxml_default, 2.0, 2.0, 2.0,
+                                  { int_wk_sch: '0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.70, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.70, 0.70, 0.50, 0.50, 0.20, 0.20, 0.20, 0.20',
+                                    int_wknd_sch: '0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.70, 0.40, 0.40, 0.40, 0.40, 0.40, 0.40, 0.40, 0.40, 0.80, 0.90, 0.70, 0.60, 0.20, 0.20, 0.20, 0.20',
+                                    int_month_mult: '1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0',
+                                    ext_wk_sch: '0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.03, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.03, 0.04, 0.06, 0.09, 0.10, 0.09, 0.06',
+                                    ext_wknd_sch: '0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.03, 0.05, 0.06, 0.08, 0.09, 0.08, 0.05',
+                                    ext_month_mult: '1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1',
+                                    grg_wk_sch: '0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.03, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.03, 0.04, 0.06, 0.09, 0.10, 0.09, 0.06',
+                                    grg_wknd_sch: '0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.03, 0.03, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.02, 0.03, 0.05, 0.06, 0.08, 0.09, 0.08, 0.05',
+                                    grg_month_mult: '1.2, 1.2, 1.2 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2',
+                                    hol_kwh_per_day: 0.7,
+                                    hol_begin_month: 11,
+                                    hol_begin_day_of_month: 19,
+                                    hol_end_month: 12,
+                                    hol_end_day_of_month: 31,
+                                    hol_wk_sch: '0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.005, 0.050, 0.150, 0.150, 0.250, 0.150, 0.050, 0.020',
+                                    hol_wknd_sch: '0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.007, 0.070, 0.170, 0.170, 0.270, 0.170, 0.070, 0.040' })
 
     # Test defaults
     hpxml = apply_hpxml_defaults('base.xml')
     XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
     hpxml_default = _test_measure()
-    _test_default_lighting_values(hpxml_default, 1.0)
+    _test_default_lighting_values(hpxml_default, 1.0, 1.0, 1.0,
+                                  { ext_wk_sch: '0.046, 0.046, 0.046, 0.046, 0.046, 0.037, 0.035, 0.034, 0.033, 0.028, 0.022, 0.015, 0.012, 0.011, 0.011, 0.012, 0.019, 0.037, 0.049, 0.065, 0.091, 0.105, 0.091, 0.063',
+                                    ext_wknd_sch: '0.046, 0.046, 0.045, 0.045, 0.046, 0.045, 0.044, 0.041, 0.036, 0.03, 0.024, 0.016, 0.012, 0.011, 0.011, 0.012, 0.019, 0.038, 0.048, 0.06, 0.083, 0.098, 0.085, 0.059',
+                                    ext_month_mult: '1.248, 1.257, 0.993, 0.989, 0.993, 0.827, 0.821, 0.821, 0.827, 0.99, 0.987, 1.248' })
+
+    # Test defaults w/ garage
+    hpxml = apply_hpxml_defaults('base-enclosure-garage.xml')
+    XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
+    hpxml_default = _test_measure()
+    _test_default_lighting_values(hpxml_default, 1.0, 1.0, 1.0,
+                                  { ext_wk_sch: '0.046, 0.046, 0.046, 0.046, 0.046, 0.037, 0.035, 0.034, 0.033, 0.028, 0.022, 0.015, 0.012, 0.011, 0.011, 0.012, 0.019, 0.037, 0.049, 0.065, 0.091, 0.105, 0.091, 0.063',
+                                    ext_wknd_sch: '0.046, 0.046, 0.045, 0.045, 0.046, 0.045, 0.044, 0.041, 0.036, 0.03, 0.024, 0.016, 0.012, 0.011, 0.011, 0.012, 0.019, 0.038, 0.048, 0.06, 0.083, 0.098, 0.085, 0.059',
+                                    ext_month_mult: '1.248, 1.257, 0.993, 0.989, 0.993, 0.827, 0.821, 0.821, 0.827, 0.99, 0.987, 1.248',
+                                    grg_wk_sch: '0.046, 0.046, 0.046, 0.046, 0.046, 0.037, 0.035, 0.034, 0.033, 0.028, 0.022, 0.015, 0.012, 0.011, 0.011, 0.012, 0.019, 0.037, 0.049, 0.065, 0.091, 0.105, 0.091, 0.063',
+                                    grg_wknd_sch: '0.046, 0.046, 0.045, 0.045, 0.046, 0.045, 0.044, 0.041, 0.036, 0.03, 0.024, 0.016, 0.012, 0.011, 0.011, 0.012, 0.019, 0.038, 0.048, 0.06, 0.083, 0.098, 0.085, 0.059',
+                                    grg_month_mult: '1.248, 1.257, 0.993, 0.989, 0.993, 0.827, 0.821, 0.821, 0.827, 0.99, 0.987, 1.248' })
   end
 
   def test_pv
@@ -886,6 +936,7 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     return_duct_idx = 0
     hpxml.hvac_distributions.each do |hvac_distribution|
       next unless hvac_distribution.distribution_system_type == HPXML::HVACDistributionTypeAir
+
       assert_equal(n_return_registers, hvac_distribution.number_of_return_registers)
       hvac_distribution.ducts.each do |duct|
         if duct.duct_type == HPXML::DuctTypeSupply
@@ -1088,8 +1139,75 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
     assert_equal(is_convection, hpxml.ovens[0].is_convection)
   end
 
-  def _test_default_lighting_values(hpxml, usage_multiplier)
-    assert_equal(usage_multiplier, hpxml.lighting.usage_multiplier)
+  def _test_default_lighting_values(hpxml, interior_usage_multiplier, garage_usage_multiplier, exterior_usage_multiplier, schedules = {})
+    assert_equal(interior_usage_multiplier, hpxml.lighting.interior_usage_multiplier)
+    assert_equal(garage_usage_multiplier, hpxml.lighting.garage_usage_multiplier)
+    assert_equal(exterior_usage_multiplier, hpxml.lighting.exterior_usage_multiplier)
+    if not schedules[:grg_wk_sch].nil?
+      assert_equal(schedules[:grg_wk_sch], hpxml.lighting.garage_weekday_fractions)
+    else
+      assert_nil(hpxml.lighting.garage_weekday_fractions)
+    end
+    if not schedules[:grg_wknd_sch].nil?
+      assert_equal(schedules[:grg_wknd_sch], hpxml.lighting.garage_weekend_fractions)
+    else
+      assert_nil(hpxml.lighting.garage_weekend_fractions)
+    end
+    if not schedules[:grg_month_mult].nil?
+      assert_equal(schedules[:grg_month_mult], hpxml.lighting.garage_monthly_multipliers)
+    else
+      assert_nil(hpxml.lighting.garage_monthly_multipliers)
+    end
+    if not schedules[:ext_wk_sch].nil?
+      assert_equal(schedules[:ext_wk_sch], hpxml.lighting.exterior_weekday_fractions)
+    else
+      assert_nil(hpxml.lighting.exterior_weekday_fractions)
+    end
+    if not schedules[:ext_wknd_sch].nil?
+      assert_equal(schedules[:ext_wknd_sch], hpxml.lighting.exterior_weekend_fractions)
+    else
+      assert_nil(hpxml.lighting.exterior_weekday_fractions)
+    end
+    if not schedules[:ext_month_mult].nil?
+      assert_equal(schedules[:ext_month_mult], hpxml.lighting.exterior_monthly_multipliers)
+    else
+      assert_nil(hpxml.lighting.exterior_monthly_multipliers)
+    end
+    if not schedules[:hol_kwh_per_day].nil?
+      assert_equal(schedules[:hol_kwh_per_day], hpxml.lighting.holiday_kwh_per_day)
+    else
+      assert_nil(hpxml.lighting.holiday_kwh_per_day)
+    end
+    if not schedules[:hol_begin_month].nil?
+      assert_equal(schedules[:hol_begin_month], hpxml.lighting.holiday_period_begin_month)
+    else
+      assert_nil(hpxml.lighting.holiday_period_begin_month)
+    end
+    if not schedules[:hol_begin_day_of_month].nil?
+      assert_equal(schedules[:hol_begin_day_of_month], hpxml.lighting.holiday_period_begin_day_of_month)
+    else
+      assert_nil(hpxml.lighting.holiday_period_begin_day_of_month)
+    end
+    if not schedules[:hol_end_month].nil?
+      assert_equal(schedules[:hol_end_month], hpxml.lighting.holiday_period_end_month)
+    else
+      assert_nil(hpxml.lighting.holiday_period_end_month)
+    end
+    if not schedules[:hol_end_day_of_month].nil?
+      assert_equal(schedules[:hol_end_day_of_month], hpxml.lighting.holiday_period_end_day_of_month)
+    else
+      assert_nil(hpxml.lighting.holiday_period_end_day_of_month)
+    end
+    if not schedules[:hol_wk_sch].nil?
+      assert_equal(schedules[:hol_wk_sch], hpxml.lighting.holiday_weekday_fractions)
+    else
+      assert_nil(hpxml.lighting.holiday_weekday_fractions)
+    end
+    if not schedules[:hol_wknd_sch].nil?
+      assert_equal(schedules[:hol_wknd_sch], hpxml.lighting.holiday_weekend_fractions)
+    else
+      assert_nil(hpxml.lighting.holiday_weekend_fractions)
+    end
   end
 
   def _test_default_standard_distribution_values(hpxml, piping_length)
@@ -1445,7 +1563,9 @@ class HPXMLtoOpenStudioDefaultsTest < MiniTest::Test
       fuel_load.monthly_multipliers = nil
     end
 
-    hpxml.lighting.usage_multiplier = nil
+    hpxml.lighting.interior_usage_multiplier = nil
+    hpxml.lighting.garage_usage_multiplier = nil
+    hpxml.lighting.exterior_usage_multiplier = nil
 
     hpxml.pv_systems.each do |pv|
       pv.inverter_efficiency = nil

@@ -1231,51 +1231,64 @@ class OSModel
       # Apply construction
 
       if frame_floor.is_ceiling
-        inside_film = Material.AirFilmFloorAverage
-      else
-        inside_film = Material.AirFilmFloorReduced
-      end
-      if frame_floor.is_ceiling
-        outside_film = Material.AirFilmFloorAverage
-      elsif frame_floor.is_exterior
-        outside_film = Material.AirFilmOutside
-      else
-        outside_film = Material.AirFilmFloorReduced
-      end
-      if frame_floor.is_floor && (frame_floor.interior_adjacent_to == HPXML::LocationLivingSpace)
-        covering = Material.CoveringBare
-      end
-      if @apply_ashrae140_assumptions
-        if frame_floor.is_exterior # Raised floor
+        if @apply_ashrae140_assumptions
+          # Attic floor
+          inside_film = Material.AirFilmFloorASHRAE140
+          outside_film = Material.AirFilmFloorASHRAE140
+        else
+          inside_film = Material.AirFilmFloorAverage
+          outside_film = Material.AirFilmFloorAverage
+        end
+        constr_sets = [
+          WoodStudConstructionSet.new(Material.Stud2x6, 0.10, 0.0, 0.0, 0.5, nil),  # 2x6, 24" o.c.
+          WoodStudConstructionSet.new(Material.Stud2x4, 0.13, 0.0, 0.0, 0.5, nil),  # 2x4, 16" o.c.
+          WoodStudConstructionSet.new(Material.Stud2x4, 0.01, 0.0, 0.0, 0.0, nil), # Fallback
+        ]
+      else # Floor
+        if @apply_ashrae140_assumptions
+          # Raised floor
           inside_film = Material.AirFilmFloorASHRAE140
           outside_film = Material.AirFilmFloorZeroWindASHRAE140
           surface.setWindExposure('NoWind')
           covering = Material.CoveringBare(1.0)
-        elsif frame_floor.is_ceiling # Attic floor
-          inside_film = Material.AirFilmFloorASHRAE140
-          outside_film = Material.AirFilmFloorASHRAE140
+        else
+          inside_film = Material.AirFilmFloorReduced
+          if frame_floor.is_exterior
+            outside_film = Material.AirFilmOutside
+          else
+            outside_film = Material.AirFilmFloorReduced
+          end
+          if frame_floor.interior_adjacent_to == HPXML::LocationLivingSpace
+            covering = Material.CoveringBare
+          end
         end
+        constr_sets = [
+          WoodStudConstructionSet.new(Material.Stud2x6, 0.10, 10.0, 0.75, 0.0, covering), # 2x6, 24" o.c. + R10
+          WoodStudConstructionSet.new(Material.Stud2x6, 0.10, 0.0, 0.75, 0.0, covering),  # 2x6, 24" o.c.
+          WoodStudConstructionSet.new(Material.Stud2x4, 0.13, 0.0, 0.5, 0.0, covering),   # 2x4, 16" o.c.
+          WoodStudConstructionSet.new(Material.Stud2x4, 0.01, 0.0, 0.0, 0.0, nil), # Fallback
+        ]
       end
       assembly_r = frame_floor.insulation_assembly_r_value
 
-      constr_sets = [
-        WoodStudConstructionSet.new(Material.Stud2x6, 0.10, 10.0, 0.75, 0.0, covering), # 2x6, 24" o.c. + R10
-        WoodStudConstructionSet.new(Material.Stud2x6, 0.10, 0.0, 0.75, 0.0, covering),  # 2x6, 24" o.c.
-        WoodStudConstructionSet.new(Material.Stud2x4, 0.13, 0.0, 0.5, 0.0, covering),   # 2x4, 16" o.c.
-        WoodStudConstructionSet.new(Material.Stud2x4, 0.01, 0.0, 0.0, 0.0, nil), # Fallback
-      ]
       match, constr_set, cavity_r = pick_wood_stud_construction_set(assembly_r, constr_sets, inside_film, outside_film, frame_floor.id)
 
-      mat_floor_covering = nil
       install_grade = 1
+      if frame_floor.is_ceiling
+        Constructions.apply_ceiling(runner, model, [surface], "#{frame_floor.id} construction",
+                                    cavity_r, install_grade,
+                                    constr_set.stud.thick_in, constr_set.framing_factor,
+                                    constr_set.stud.thick_in, constr_set.drywall_thick_in,
+                                    inside_film, outside_film)
 
-      # Floor
-      Constructions.apply_floor(runner, model, [surface], "#{frame_floor.id} construction",
-                                cavity_r, install_grade,
-                                constr_set.framing_factor, constr_set.stud.thick_in,
-                                constr_set.osb_thick_in, constr_set.rigid_r,
-                                mat_floor_covering, constr_set.exterior_material,
-                                inside_film, outside_film)
+      else # Floor
+        Constructions.apply_floor(runner, model, [surface], "#{frame_floor.id} construction",
+                                  cavity_r, install_grade,
+                                  constr_set.framing_factor, constr_set.stud.thick_in,
+                                  constr_set.osb_thick_in, constr_set.rigid_r,
+                                  constr_set.exterior_material, inside_film, outside_film)
+      end
+
       check_surface_assembly_rvalue(runner, [surface], inside_film, outside_film, assembly_r, match)
     end
   end
@@ -1872,7 +1885,7 @@ class OSModel
     elsif type == 'floor'
       Constructions.apply_floor(runner, model, surfaces, 'AdiabaticFloorConstruction',
                                 0, 1, 0.07, 5.5, 0.75, 99,
-                                Material.FloorWood, Material.CoveringBare,
+                                Material.CoveringBare,
                                 Material.AirFilmFloorReduced,
                                 Material.AirFilmFloorReduced)
     elsif type == 'roof'
@@ -1886,6 +1899,25 @@ class OSModel
   end
 
   def self.add_hot_water_and_appliances(runner, model, weather, spaces)
+    if @hpxml.clothes_washers.empty?
+      runner.registerWarning('No clothes washer specified, the model will not include clothes washer energy use.')
+    end
+    if @hpxml.clothes_dryers.empty?
+      runner.registerWarning('No clothes dryer specified, the model will not include clothes dryer energy use.')
+    end
+    if @hpxml.dishwashers.empty?
+      runner.registerWarning('No dishwasher specified, the model will not include dishwasher energy use.')
+    end
+    if @hpxml.refrigerators.empty?
+      runner.registerWarning('No refrigerator specified, the model will not include refrigerator energy use.')
+    end
+    if @hpxml.cooking_ranges.empty?
+      runner.registerWarning('No cooking range specified, the model will not include cooking range/oven energy use.')
+    end
+    if @hpxml.water_heating_systems.empty?
+      runner.registerWarning('No water heater specified, the model will not include water heating energy use.')
+    end
+
     # Assign spaces
     @hpxml.clothes_washers.each do |clothes_washer|
       clothes_washer.additional_properties.space = get_space_from_location(clothes_washer.location, 'ClothesWasher', model, spaces)
@@ -2170,12 +2202,14 @@ class OSModel
       sequential_cool_load_frac = 1
     else
       sequential_cool_load_frac = 0 # no cooling system, don't add ideal air for cooling either
+      runner.registerWarning('No cooling system specified, the model will not include space cooling energy use.')
     end
 
     if @remaining_heat_load_frac < 1.0
       sequential_heat_load_frac = 1
     else
       sequential_heat_load_frac = 0 # no heating system, don't add ideal air for heating either
+      runner.registerWarning('No heating system specified, the model will not include space heating energy use.')
     end
     if (sequential_heat_load_frac > 0) || (sequential_cool_load_frac > 0)
       HVAC.apply_ideal_air_loads(model, runner, obj_name, sequential_cool_load_frac, sequential_heat_load_frac,
@@ -2227,6 +2261,7 @@ class OSModel
 
   def self.add_mels(runner, model, spaces)
     # Misc
+    modeled_mels = []
     @hpxml.plug_loads.each do |plug_load|
       if plug_load.plug_load_type == HPXML::PlugLoadTypeOther
         obj_name = Constants.ObjectNameMiscPlugLoads
@@ -2238,11 +2273,18 @@ class OSModel
         obj_name = Constants.ObjectNameMiscWellPump
       end
       if obj_name.nil?
-        runner.registerWarning("Unexpected plug load '#{plug_load.id}'. The plug load will not be modeled.")
+        runner.registerWarning("Unexpected plug load type '#{plug_load.plug_load_type}'. The plug load will not be modeled.")
         next
       end
+      modeled_mels << plug_load.plug_load_type
 
       MiscLoads.apply_plug(model, plug_load, obj_name, @cfa, spaces[HPXML::LocationLivingSpace])
+    end
+    if not modeled_mels.include? HPXML::PlugLoadTypeOther
+      runner.registerWarning("No '#{HPXML::PlugLoadTypeOther}' plug loads specified, the model will not include misc plug load energy use.")
+    end
+    if not modeled_mels.include? HPXML::PlugLoadTypeTelevision
+      runner.registerWarning("No '#{HPXML::PlugLoadTypeTelevision}' plug loads specified, the model will not include television plug load energy use.")
     end
   end
 
@@ -2257,7 +2299,7 @@ class OSModel
         obj_name = Constants.ObjectNameMiscFireplace
       end
       if obj_name.nil?
-        runner.registerWarning("Unexpected fuel load '#{fuel_load.id}'. The fuel load will not be modeled.")
+        runner.registerWarning("Unexpected fuel load type '#{fuel_load.fuel_load_type}'. The fuel load will not be modeled.")
         next
       end
 
@@ -2266,8 +2308,8 @@ class OSModel
   end
 
   def self.add_lighting(runner, model, weather, spaces)
-    Lighting.apply(model, weather, spaces, @hpxml.lighting_groups,
-                   @hpxml.lighting.usage_multiplier, @eri_version)
+    Lighting.apply(runner, model, weather, spaces, @hpxml.lighting_groups,
+                   @hpxml.lighting, @eri_version)
   end
 
   def self.add_pools_and_hot_tubs(runner, model, spaces)
@@ -3508,7 +3550,10 @@ class OSModel
   # Should be called when the object's energy use is NOT sensitive to ambient temperature
   # (e.g., appliances).
   def self.get_space_from_location(location, object_name, model, spaces)
-    return if location == HPXML::LocationOther
+    return if [HPXML::LocationOtherHeatedSpace,
+               HPXML::LocationOtherHousingUnit,
+               HPXML::LocationOtherMultifamilyBufferSpace,
+               HPXML::LocationOtherNonFreezingSpace].include? location
 
     num_orig_spaces = spaces.size
 
