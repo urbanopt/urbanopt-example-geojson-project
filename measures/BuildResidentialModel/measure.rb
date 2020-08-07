@@ -186,7 +186,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       merge_measure_args[:compact_to_ruleset] = false
       merge_measure_args[:merge_zones] = true
       merge_measure_args[:merge_air_loops] = true
-      merge_measure_args[:merge_plant_loops] = false # need to address control issue in E+ run
+      merge_measure_args[:merge_plant_loops] = true
       merge_measure_args[:merge_swh] = true
       merge_measure_args = Hash[merge_measure_args.collect{ |k, v| [k.to_s, v] }]
       merge_measures[merge_measure_subdir] << merge_measure_args
