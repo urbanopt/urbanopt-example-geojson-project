@@ -43,18 +43,18 @@ else
   gem 'openstudio-model-articulation', '~> 0.2.0'
 end
 
-if allow_local && File.exist?('../urbanopt-scenario-gem')
-  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
-elsif allow_local
+#if allow_local && File.exist?('../urbanopt-scenario-gem')
+#  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+#elsif allow_local
   gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
-else
-  gem 'urbanopt-scenario', '~> 0.3.0'
-end
+#else
+#  gem 'urbanopt-scenario', '~> 0.3.0'
+#end
 
-if allow_local && File.exists?('../urbanopt-geojson-gem')
-  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-elsif allow_local
+#if allow_local && File.exists?('../urbanopt-geojson-gem')
+#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+#elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-else
-  gem 'urbanopt-geojson', '~> 0.3.0'
-end
+#else
+#  gem 'urbanopt-geojson', '~> 0.3.0'
+#end
