@@ -43,36 +43,32 @@ else
   gem 'openstudio-model-articulation', '~> 0.2.0'
 end
 
-if allow_local && File.exist?('../urbanopt-scenario-gem')
-  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
-elsif allow_local
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'thermalstorage-heine'
-else
-  gem 'urbanopt-scenario', '~> 0.3.0'
-end
+#if allow_local && File.exist?('../urbanopt-scenario-gem')
+#  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+#elsif allow_local
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
+#else
+#  gem 'urbanopt-scenario', '~> 0.3.0'
+#end
 
-if allow_local && File.exist?('../urbanopt-geojson-gem')
-  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-elsif allow_local
+#if allow_local && File.exist?('../urbanopt-geojson-gem')
+#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+#elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-else
-  gem 'urbanopt-geojson', '~> 0.3.0'
-end
+#else
+#  gem 'urbanopt-geojson', '~> 0.3.0'
+#end
 
-if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
-  gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
-elsif allow_local
+#if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
+#  gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
+#elsif allow_local
   gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'master'
-else
-  gem 'openstudio-load-flexibility-measures', '~> 0.1.2'
-end
+#else
+#  gem 'openstudio-load-flexibility-measures', '~> 0.1.2'
+#end
 
-if allow_local && File.exist?('../openstudio-standards')
-  gem 'openstudio-standards', path: '../openstudio-standards'
-elsif allow_local
-  gem 'openstudio-standards', github: 'NREL/openstudio-standards', branch: 'master'
-end
-
-
-
-
+#if allow_local && File.exist?('../openstudio-standards')
+#  gem 'openstudio-standards', path: '../openstudio-standards'
+#elsif allow_local
+#  gem 'openstudio-standards', github: 'NREL/openstudio-standards', branch: 'master'
+#end
