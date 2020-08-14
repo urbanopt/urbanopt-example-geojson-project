@@ -324,6 +324,7 @@ module URBANopt
           building_type = feature.building_type
 
           if residential_building_types.include? building_type
+            debug = true
 
             args = {}
 
@@ -418,73 +419,54 @@ module URBANopt
             rescue
             end
 
-            case system_type
-            when 'Residential - electric resistance and no cooling'
+            if system_type.include?('electric resistance')
               args[:heating_system_type] = "ElectricResistance"
-              args[:cooling_system_type] = "none"
-              args[:heat_pump_type] = "none"
-            when 'Residential - electric resistance and central air conditioner'
-              args[:heating_system_type] = "ElectricResistance"
-              args[:cooling_system_type] = "central air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - electric resistance and room air conditioner'
-              args[:heating_system_type] = "ElectricResistance"
-              args[:cooling_system_type] = "room air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - electric resistance and evaporative cooler'
-              args[:heating_system_type] = "ElectricResistance"
-              args[:cooling_system_type] = "evaporative cooler"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and no cooling'
+            elsif system_type.include?('furnace')
               args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "none"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and central air conditioner'
-              args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "central air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and room air conditioner'
-              args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "room air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and evaporative cooler'
-              args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "evaporative cooler"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and no cooling'
+            elsif system_type.include?('boiler')
               args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "none"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and central air conditioner'
-              args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "central air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and room air conditioner'
-              args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "room air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and evaporative cooler'
-              args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "evaporative cooler"
-              args[:heat_pump_type] = "none"
-            when 'Residential - air-to-air heat pump'
+            else
               args[:heating_system_type] = "none"
+            end
+
+            if system_type.include?('central air conditioner')
+              args[:cooling_system_type] = "central air conditioner"
+            elsif system_type.include?('room air conditioner')
+              args[:cooling_system_type] = "room air conditioner"
+            elsif system_type.include?('evaporative cooler')
+              args[:cooling_system_type] = "evaporative cooler"
+            else
               args[:cooling_system_type] = "none"
+            end
+
+            if system_type.include?('air-to-air')
               args[:heat_pump_type] = "air-to-air"
-            when 'Residential - mini-split heat pump'
-              args[:heating_system_type] = "none"
-              args[:cooling_system_type] = "none"
+            elsif system_type.include?('mini-split')
               args[:heat_pump_type] = "mini-split"
-            when 'Residential - ground-to-air heat pump'
-              args[:heating_system_type] = "none"
-              args[:cooling_system_type] = "none"
+            elsif system_type.include?('ground-to-air')
               args[:heat_pump_type] = "ground-to-air"
+            else
+              args[:heat_pump_type] = "none"
             end
 
             args[:heating_system_fuel] = "natural gas"
             begin
               args[:heating_system_fuel] = feature.heating_system_fuel_type
             rescue
+            end
+
+            if args[:heating_system_type] == "ElectricResistance" or args[:heat_pump_type] != "none" 
+              args[:heating_system_fuel] = "electricity"
+            end
+
+            args[:heating_system_heating_efficiency] = 0.92
+            if args[:heating_system_fuel] == "electricity"
+              args[:heating_system_heating_efficiency] = 1.0
+            end
+
+            if args[:heat_pump_type] == "mini-split"
+              args[:heat_pump_cooling_efficiency_seer] = 19.0
+              args[:heat_pump_heating_efficiency_hspf] = 10.0
             end
 
             # Update args with IECC prescriptive values if template points to IECC
@@ -520,7 +502,7 @@ module URBANopt
               climate_zone = '1A' # FIXME: create a lookup from epw to iecc climate zone
               if iecc.keys.include? climate_zone.to_sym
                 template = iecc[climate_zone.to_sym]
-                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'."
+                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'." if debug
 
                 template.each do |arg, levels|
                   code, year = feature.template.split(' ')
@@ -539,6 +521,12 @@ module URBANopt
                 end
                 template.delete(:foundation_wall_assembly_r_basement)
                 template.delete(:foundation_wall_assembly_r_crawlspace)
+
+                if ['VentedCrawlspace', 'UnconditionedBasement'].include?(args[:geometry_foundation_type])
+                  template.delete(:foundation_wall_assembly_r)
+                elsif ['UnventedCrawlspace', 'ConditionedBasement'].include?(args[:geometry_foundation_type])
+                  template[:floor_assembly_r] = 1.85
+                end
 
                 args.update(template)
               end
@@ -559,13 +547,15 @@ module URBANopt
                   args[arg_name] = arg_default
                 end
               else
-                if arg.elements['default_value']
-                  arg_default = arg.elements['default_value'].text
-                  if args[arg_name] != arg_default
-                    puts "Overriding #{arg_name} default '#{arg_default}' with '#{args[arg_name]}'."
+                if debug
+                  if arg.elements['default_value']
+                    arg_default = arg.elements['default_value'].text
+                    if args[arg_name] != arg_default
+                      puts "Overriding #{arg_name} default '#{arg_default}' with '#{args[arg_name]}'."
+                    end
+                  else
+                    puts "Setting #{arg_name} to '#{args[arg_name]}'."
                   end
-                else
-                  puts "Setting #{arg_name} to '#{args[arg_name]}'."
                 end
               end
 
