@@ -26,3 +26,5 @@ out.txt
 
 # running config
 runner.conf
+
+.DS_Store
