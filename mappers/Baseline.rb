@@ -328,6 +328,7 @@ module URBANopt
 
             args = {}
 
+            # Simulation Control
             args[:simulation_control_timestep] = 60
             begin
               args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
@@ -348,6 +349,7 @@ module URBANopt
 
             args[:weather_station_epw_filepath] = feature.weather_filename
 
+            # Geometry
             args[:geometry_num_units] = 1
             case building_type
             when 'Single-Family Detached'
@@ -413,40 +415,38 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_num_units]
 
+            # HVAC
             system_type = "Residential - furnace and central air conditioner"
             begin
               system_type = feature.system_type
             rescue
             end
 
+            args[:heating_system_type] = "none"
             if system_type.include?('electric resistance')
               args[:heating_system_type] = "ElectricResistance"
             elsif system_type.include?('furnace')
               args[:heating_system_type] = "Furnace"
             elsif system_type.include?('boiler')
               args[:heating_system_type] = "Boiler"
-            else
-              args[:heating_system_type] = "none"
             end
 
+            args[:cooling_system_type] = "none"
             if system_type.include?('central air conditioner')
               args[:cooling_system_type] = "central air conditioner"
             elsif system_type.include?('room air conditioner')
               args[:cooling_system_type] = "room air conditioner"
             elsif system_type.include?('evaporative cooler')
               args[:cooling_system_type] = "evaporative cooler"
-            else
-              args[:cooling_system_type] = "none"
             end
 
+            args[:heat_pump_type] = "none"
             if system_type.include?('air-to-air')
               args[:heat_pump_type] = "air-to-air"
             elsif system_type.include?('mini-split')
               args[:heat_pump_type] = "mini-split"
             elsif system_type.include?('ground-to-air')
               args[:heat_pump_type] = "ground-to-air"
-            else
-              args[:heat_pump_type] = "none"
             end
 
             args[:heating_system_fuel] = "natural gas"
@@ -468,6 +468,33 @@ module URBANopt
               args[:heat_pump_cooling_efficiency_seer] = 19.0
               args[:heat_pump_heating_efficiency_hspf] = 10.0
             end
+
+            # Appliances
+            args[:kitchen_fan_present] = true
+            args[:bathroom_fans_present] = true
+            args[:clothes_washer_efficiency_imef] = '2.92'
+            args[:clothes_washer_rated_annual_kwh] = '75'
+            args[:clothes_washer_label_electric_rate] = '0.12'
+            args[:clothes_washer_label_gas_rate] = '1.09'
+            args[:clothes_washer_label_annual_gas_cost] = '7'
+            args[:clothes_washer_label_usage] = '6'
+            args[:clothes_washer_capacity] = '4.5'
+            args[:clothes_dryer_fuel_type] = 'electricity'
+            args[:clothes_dryer_efficiency_cef] = '3.92'
+            args[:clothes_dryer_control_type] = 'timer'
+            args[:dishwasher_efficiency_kwh] = '199'
+            args[:dishwasher_label_electric_rate] = '0.12'
+            args[:dishwasher_label_gas_rate] = '1.09'
+            args[:dishwasher_label_annual_gas_cost] = '18'
+            args[:dishwasher_label_usage] = '4'
+            args[:dishwasher_place_setting_capacity] = '12'
+            args[:refrigerator_rated_annual_kwh] = '400'
+            args[:lighting_fraction_cfl_interior] = 0
+            args[:lighting_fraction_cfl_exterior] = 0
+            args[:lighting_fraction_lfl_interior] = 0
+            args[:lighting_fraction_lfl_exterior] = 0
+            args[:lighting_fraction_led_interior] = 1
+            args[:lighting_fraction_led_exterior] = 1
 
             # Update args with IECC prescriptive values if template points to IECC
             if feature.template.include? 'IECC'
@@ -521,12 +548,6 @@ module URBANopt
                 end
                 template.delete(:foundation_wall_assembly_r_basement)
                 template.delete(:foundation_wall_assembly_r_crawlspace)
-
-                if ['VentedCrawlspace', 'UnconditionedBasement'].include?(args[:geometry_foundation_type])
-                  template.delete(:foundation_wall_assembly_r)
-                elsif ['UnventedCrawlspace', 'ConditionedBasement'].include?(args[:geometry_foundation_type])
-                  template[:floor_assembly_r] = 1.85
-                end
 
                 args.update(template)
               end
