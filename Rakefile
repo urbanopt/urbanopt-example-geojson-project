@@ -30,7 +30,7 @@
 
 require 'openstudio/extension'
 require 'openstudio/extension/rake_task'
-require 'urbanopt/reporting'
+require 'urbanopt/scenario'
 require 'urbanopt/geojson'
 
 module URBANopt
@@ -46,7 +46,7 @@ module URBANopt
 
       def initialize
         super
-        @root_dir = File.absolute_path(File.dirname(__FILE__))
+        @root_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'example_project'))
       end
 
       # Return the absolute path of the measures or empty string if there is none, can be used when configuring OSWs
@@ -60,27 +60,20 @@ module URBANopt
         return File.absolute_path(File.join(@root_dir, 'weather'))
       end
 
-      # Doc templates are common files like copyright files which are used to update measures and other code
-      # Doc templates will only be applied to measures in the current repository
-      # Return the absolute path of the doc templates dir or nil if there is none
-      def doc_templates_dir
-        return File.absolute_path(File.join(@root_dir, 'doc_templates'))
-      end
-
     end
   end
 end
 
 def root_dir
-  return File.dirname(__FILE__)
+  return File.join(File.dirname(__FILE__), 'example_project')
 end
 
 def baseline_scenario
   name = 'Baseline Scenario'
-  run_dir = File.join(File.dirname(__FILE__), 'run/baseline_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
-  mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
+  run_dir = File.join(root_dir, 'run/baseline_scenario/')
+  feature_file_path = File.join(root_dir, 'example_project.json')
+  csv_file = File.join(root_dir, 'baseline_scenario.csv')
+  mapper_files_dir = File.join(root_dir, 'mappers/')
   num_header_rows = 1
 
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
@@ -91,10 +84,10 @@ end
 
 def high_efficiency_scenario
   name = 'High Efficiency Scenario'
-  run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
-  mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
+  run_dir = File.join(root_dir, 'run/high_efficiency_scenario/')
+  feature_file_path = File.join(root_dir, 'example_project.json')
+  csv_file = File.join(root_dir, 'high_efficiency_scenario.csv')
+  mapper_files_dir = File.join(root_dir, 'mappers/')
   num_header_rows = 1
 
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
@@ -104,15 +97,23 @@ end
 
 def mixed_scenario
   name = 'Mixed Scenario'
-  run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), 'mixed_scenario.csv')
-  mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
+  run_dir = File.join(root_dir, 'run/mixed_scenario/')
+  feature_file_path = File.join(root_dir, 'example_project.json')
+  csv_file = File.join(root_dir, 'mixed_scenario.csv')
+  mapper_files_dir = File.join(root_dir, 'mappers/')
   num_header_rows = 1
 
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
+end
+
+def configure_project
+  # write a runner.conf in project dir
+  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install")}
+  File.open(File.join(root_dir, 'runner.conf'), "w") do |f|
+    f.write(options.to_json)
+  end
 end
 
 # Load in the rake tasks from the base extension gem
@@ -130,7 +131,7 @@ end
 desc 'Run Baseline Scenario'
 task :run_baseline do
   puts 'Running Baseline Scenario...'
-
+  configure_project
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
   scenario_runner.run(baseline_scenario)
 end
@@ -160,7 +161,7 @@ end
 desc 'Run High Efficiency Scenario'
 task :run_high_efficiency do
   puts 'Running High Efficiency Scenario...'
-
+  configure_project
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
   scenario_runner.run(high_efficiency_scenario)
 end
@@ -190,7 +191,7 @@ end
 desc 'Run Mixed Scenario'
 task :run_mixed do
   puts 'Running Mixed Scenario...'
-
+  configure_project
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
   scenario_runner.run(mixed_scenario)
 end

@@ -14,7 +14,7 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # these are included in the model articulation and urbanopt gems
 #
 # if allow_local && File.exist?('../OpenStudio-extension-gem')
-   gem 'openstudio-extension', path: '../OpenStudio-extension-gem'
+#   gem 'openstudio-extension', path: '../OpenStudio-extension-gem'
 # elsif allow_local
 #   gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
 # end
@@ -42,23 +42,13 @@ else
   gem 'openstudio-model-articulation', '~> 0.2.0'
 end
 
-if allow_local && File.exist?('../urbanopt-scenario-gem')
-  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
-elsif allow_local
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
-else
-  #gem 'urbanopt-scenario', '~> 0.3.0'
-  # temporary: 
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'gem_split'
-end
-
-if allow_local && File.exists?('../urbanopt-geojson-gem')
-  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-elsif allow_local
+# if allow_local && File.exists?('../urbanopt-geojson-gem')
+#   gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+# elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-else
-  gem 'urbanopt-geojson', '~> 0.3.0'
-end
+# else
+#   gem 'urbanopt-geojson', '~> 0.3.0'
+# end
 
 if allow_local && File.exists?('../urbanopt-reporting-gem')
   gem 'urbanopt-reporting', path: '../urbanotp-reporting-gem'
