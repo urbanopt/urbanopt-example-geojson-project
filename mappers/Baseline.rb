@@ -324,7 +324,7 @@ module URBANopt
           building_type = feature.building_type
 
           if residential_building_types.include? building_type
-            debug = true
+            debug = false
 
             args = {}
 
@@ -395,7 +395,7 @@ module URBANopt
               args[:geometry_foundation_height] = 8.0
             end
 
-            args[:geometry_attic_type] = "VentedAttic"
+            args[:geometry_attic_type] = "ConditionedAttic"
             args[:geometry_roof_type] = "flat"
             begin
               case feature.attic_type
@@ -541,13 +541,21 @@ module URBANopt
                   template.delete(arg)
                 end
 
+                # Determine which surfaces to place insulation on
                 if args[:geometry_foundation_type].include? 'Basement'
                   template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_basement]
+                  template[:floor_assembly_r] = 2.1
                 elsif args[:geometry_foundation_type].include? 'Crawlspace'
                   template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_crawlspace]
+                  template[:floor_assembly_r] = 2.1
                 end
                 template.delete(:foundation_wall_assembly_r_basement)
                 template.delete(:foundation_wall_assembly_r_crawlspace)
+
+                if ["ConditionedAttic"].include?(args[:geometry_attic_type])
+                  template[:roof_assembly_r] = template[:ceiling_assembly_r]
+                  template[:ceiling_assembly_r] = 2.1
+                end
 
                 args.update(template)
               end
