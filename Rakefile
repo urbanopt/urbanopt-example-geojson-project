@@ -121,7 +121,7 @@ rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONPro
 ### Baseline
 
 desc 'Clear Baseline Scenario'
-task :clear_baseline, [:json, :csv] do
+task :clear_baseline, [:json, :csv] do |t, args|
   puts 'Clearing Baseline Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
@@ -142,7 +142,7 @@ task :run_baseline, [:json, :csv] do |t, args|
 end
 
 desc 'Post Process Baseline Scenario'
-task :post_process_baseline, [:json, :csv] do
+task :post_process_baseline, [:json, :csv] do |t, args|
   puts 'Post Processing Baseline Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
@@ -161,7 +161,7 @@ end
 ### High Efficiency
 
 desc 'Clear High Efficiency Scenario'
-task :clear_high_efficiency, [:json, :csv] do
+task :clear_high_efficiency, [:json, :csv] do |t, args|
   puts 'Clearing High Efficiency Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
@@ -171,7 +171,7 @@ task :clear_high_efficiency, [:json, :csv] do
 end
 
 desc 'Run High Efficiency Scenario'
-task :run_high_efficiency, [:json, :csv] do
+task :run_high_efficiency, [:json, :csv] do |t, args|
   puts 'Running High Efficiency Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
@@ -182,7 +182,7 @@ task :run_high_efficiency, [:json, :csv] do
 end
 
 desc 'Post Process High Efficiency Scenario'
-task :post_process_high_efficiency, [:json, :csv] do
+task :post_process_high_efficiency, [:json, :csv] do |t, args|
   puts 'Post Processing High Efficiency Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
@@ -201,7 +201,7 @@ end
 ### Mixed
 
 desc 'Clear Mixed Scenario'
-task :clear_mixed, [:json, :csv] do
+task :clear_mixed, [:json, :csv] do |t, args|
   puts 'Clearing Mixed Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
@@ -211,7 +211,7 @@ task :clear_mixed, [:json, :csv] do
 end
 
 desc 'Run Mixed Scenario'
-task :run_mixed, [:json, :csv] do
+task :run_mixed, [:json, :csv] do |t, args|
   puts 'Running Mixed Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
@@ -222,7 +222,7 @@ task :run_mixed, [:json, :csv] do
 end
 
 desc 'Post Process Mixed Scenario'
-task :post_process_mixed, [:json, :csv] do
+task :post_process_mixed, [:json, :csv] do |t, args|
   puts 'Post Processing Mixed Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
