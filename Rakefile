@@ -30,7 +30,7 @@
 
 require 'openstudio/extension'
 require 'openstudio/extension/rake_task'
-require 'urbanopt/scenario'
+require 'urbanopt/reporting'
 require 'urbanopt/geojson'
 
 module URBANopt
