@@ -75,25 +75,24 @@ def root_dir
   return File.dirname(__FILE__)
 end
 
-def baseline_scenario
+def baseline_scenario(json, csv)
   name = 'Baseline Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/baseline_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), 'baseline_scenario.csv')
+  feature_file_path = File.join(File.dirname(__FILE__), json)
+  csv_file = File.join(File.dirname(__FILE__), csv)
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
 
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
-
 end
 
-def high_efficiency_scenario
+def high_efficiency_scenario(json, csv)
   name = 'High Efficiency Scenario'
-  run_dir = File.join(File.dirname(__FILE__), 'run/high_efficiency_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), 'high_efficiency_scenario.csv')
+  run_dir = File.join(File.dirname(__FILE__), 'run/highefficiency_scenario/')
+  feature_file_path = File.join(File.dirname(__FILE__), json)
+  csv_file = File.join(File.dirname(__FILE__), csv)
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
 
@@ -102,11 +101,11 @@ def high_efficiency_scenario
   return scenario
 end
 
-def mixed_scenario
+def mixed_scenario(json, csv)
   name = 'Mixed Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
-  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
-  csv_file = File.join(File.dirname(__FILE__), 'mixed_scenario.csv')
+  feature_file_path = File.join(File.dirname(__FILE__), json)
+  csv_file = File.join(File.dirname(__FILE__), csv)
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
 
@@ -122,24 +121,34 @@ rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONPro
 ### Baseline
 
 desc 'Clear Baseline Scenario'
-task :clear_baseline do
+task :clear_baseline, [:json, :csv] do
   puts 'Clearing Baseline Scenario...'
-  baseline_scenario.clear
+
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
+  baseline_scenario(json, csv).clear
 end
 
 desc 'Run Baseline Scenario'
-task :run_baseline do
+task :run_baseline, [:json, :csv] do |t, args|
   puts 'Running Baseline Scenario...'
 
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-  scenario_runner.run(baseline_scenario)
+  scenario_runner.run(baseline_scenario(json, csv))
 end
 
 desc 'Post Process Baseline Scenario'
-task :post_process_baseline do
+task :post_process_baseline, [:json, :csv] do
   puts 'Post Processing Baseline Scenario...'
 
-  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario)
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario(json, csv))
   scenario_result = default_post_processor.run
   # save scenario reports
   scenario_result.save
@@ -152,24 +161,34 @@ end
 ### High Efficiency
 
 desc 'Clear High Efficiency Scenario'
-task :clear_high_efficiency do
+task :clear_high_efficiency, [:json, :csv] do
   puts 'Clearing High Efficiency Scenario...'
-  high_efficiency_scenario.clear
+
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
+  high_efficiency_scenario(json, csv).clear
 end
 
 desc 'Run High Efficiency Scenario'
-task :run_high_efficiency do
+task :run_high_efficiency, [:json, :csv] do
   puts 'Running High Efficiency Scenario...'
 
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-  scenario_runner.run(high_efficiency_scenario)
+  scenario_runner.run(high_efficiency_scenario(json, csv))
 end
 
 desc 'Post Process High Efficiency Scenario'
-task :post_process_high_efficiency do
+task :post_process_high_efficiency, [:json, :csv] do
   puts 'Post Processing High Efficiency Scenario...'
 
-  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario)
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario(json, csv))
   scenario_result = default_post_processor.run
   # save scenario reports
   scenario_result.save
@@ -182,24 +201,34 @@ end
 ### Mixed
 
 desc 'Clear Mixed Scenario'
-task :clear_mixed do
+task :clear_mixed, [:json, :csv] do
   puts 'Clearing Mixed Scenario...'
-  mixed_scenario.clear
+
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
+  mixed_scenario(json, csv).clear
 end
 
 desc 'Run Mixed Scenario'
-task :run_mixed do
+task :run_mixed, [:json, :csv] do
   puts 'Running Mixed Scenario...'
 
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-  scenario_runner.run(mixed_scenario)
+  scenario_runner.run(mixed_scenario(json, csv))
 end
 
 desc 'Post Process Mixed Scenario'
-task :post_process_mixed do
+task :post_process_mixed, [:json, :csv] do
   puts 'Post Processing Mixed Scenario...'
 
-  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario)
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario(json, csv))
   scenario_result = default_post_processor.run
   # save scenario reports
   scenario_result.save
