@@ -165,7 +165,7 @@ task :clear_high_efficiency, [:json, :csv] do
   puts 'Clearing High Efficiency Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  csv = 'high_efficiency_scenario.csv' if args[:csv].nil?
 
   high_efficiency_scenario(json, csv).clear
 end
@@ -175,7 +175,7 @@ task :run_high_efficiency, [:json, :csv] do
   puts 'Running High Efficiency Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  csv = 'high_efficiency_scenario.csv' if args[:csv].nil?
 
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
   scenario_runner.run(high_efficiency_scenario(json, csv))
@@ -186,7 +186,7 @@ task :post_process_high_efficiency, [:json, :csv] do
   puts 'Post Processing High Efficiency Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  csv = 'high_efficiency_scenario.csv' if args[:csv].nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario(json, csv))
   scenario_result = default_post_processor.run
@@ -205,7 +205,7 @@ task :clear_mixed, [:json, :csv] do
   puts 'Clearing Mixed Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  csv = 'mixed_scenario.csv' if args[:csv].nil?
 
   mixed_scenario(json, csv).clear
 end
@@ -215,7 +215,7 @@ task :run_mixed, [:json, :csv] do
   puts 'Running Mixed Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  csv = 'mixed_scenario.csv' if args[:csv].nil?
 
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
   scenario_runner.run(mixed_scenario(json, csv))
@@ -226,7 +226,7 @@ task :post_process_mixed, [:json, :csv] do
   puts 'Post Processing Mixed Scenario...'
 
   json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  csv = 'mixed_scenario.csv' if args[:csv].nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario(json, csv))
   scenario_result = default_post_processor.run
