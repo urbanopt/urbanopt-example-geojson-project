@@ -102,6 +102,19 @@ def high_efficiency_scenario
   return scenario
 end
 
+def thermal_storage_scenario
+  name = 'Thermal Storage Scenario'
+  run_dir = File.join(File.dirname(__FILE__), 'run/thermal_storage_scenario/')
+  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
+  csv_file = File.join(File.dirname(__FILE__), 'thermal_storage_scenario.csv')
+  mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
+  num_header_rows = 1
+
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
 def mixed_scenario
   name = 'Mixed Scenario'
   run_dir = File.join(File.dirname(__FILE__), 'run/mixed_scenario/')
@@ -179,6 +192,36 @@ task :post_process_high_efficiency do
   end
 end
 
+### Thermal Storage
+
+desc 'Clear Thermal Storage Scenario'
+task :clear_thermal_storage do
+  puts 'Clearing Thermal Storage Scenario...'
+  thermal_storage_scenario.clear
+end
+
+desc 'Run Thermal Storage Scenario'
+task :run_thermal_storage do
+  puts 'Running Thermal Storage Scenario...'
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(thermal_storage_scenario)
+end
+
+desc 'Post Process Thermal Storage Scenario'
+task :post_process_thermal_storage do
+  puts 'Post Processing Thermal Storage Scenario...'
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(thermal_storage_scenario)
+  scenario_result = default_post_processor.run
+  # save scenario reports
+  scenario_result.save
+  # save feature reports
+  scenario_result.feature_reports.each do |feature_report|
+    feature_report.save_feature_report()
+  end
+end
+
 ### Mixed
 
 desc 'Clear Mixed Scenario'
@@ -212,17 +255,17 @@ end
 ### All
 
 desc 'Clear all scenarios'
-task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_mixed] do
+task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_mixed] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task :run_all => [:run_baseline, :run_high_efficiency, :run_mixed] do
+task :run_all => [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_mixed] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_mixed] do
+task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_mixed] do
   # post_process all the scenarios
 end
 
