@@ -46,7 +46,7 @@ end
 #if allow_local && File.exist?('../urbanopt-scenario-gem')
 #  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 #elsif allow_local
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'gem_split_n'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 #else
 #  gem 'urbanopt-scenario', '~> 0.3.0'
 #end
@@ -54,7 +54,7 @@ end
 #if allow_local && File.exist?('../urbanopt-reporting-gem')
 #  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 #elsif allow_local
-  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'split_update'
+  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
 #else
 #  gem 'urbanopt-reporting', '~> 0.1.0'
 #end
