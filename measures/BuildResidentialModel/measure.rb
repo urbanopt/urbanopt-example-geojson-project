@@ -56,7 +56,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # assign the user inputs to variables
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
-    full_measure_path = File.join(measures_dir, 'BuildResidentialHPXML', 'measure.rb')
+    measure_subdir = 'BuildResidentialHPXML'
+    full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
     check_file_exists(full_measure_path, runner)
     measure = get_measure_instance(full_measure_path)
     args = measure.get_argument_values(runner, user_arguments)
@@ -72,14 +73,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       rescue
       end
     end
-
-    # TODO: if merging inside loop then move this code before the loop, may not be needed at all
-    # when supporting mixed use or non unit spaces like corrodior, will not want this
-    # model.getBuilding.remove
-    # model.getShadowCalculation.remove
-    # model.getSimulationControl.remove
-    # model.getSite.remove
-    # model.getTimestep.remove
 
     # apply whole building create geometry measures
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../measures'))
