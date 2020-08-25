@@ -36,8 +36,8 @@ require 'urbanopt/geojson'
 module URBANopt
   module ExampleGeoJSONProject
     class ExampleGeoJSONProject < OpenStudio::Extension::Extension
-     
-      # number of datapoints(features) you want to run in parallel 
+
+      # number of datapoints(features) you want to run in parallel
       # based on the number of available processors on your local machine.
       OpenStudio::Extension::Extension::NUM_PARALLEL = 7
 
@@ -48,25 +48,25 @@ module URBANopt
         super
         @root_dir = File.absolute_path(File.dirname(__FILE__))
       end
-      
+
       # Return the absolute path of the measures or empty string if there is none, can be used when configuring OSWs
       def measures_dir
         ""
       end
-      
+
       # Relevant files such as weather data, design days, etc.
       # Return the absolute path of the files or nil if there is none, used when configuring OSWs
       def files_dir
         return File.absolute_path(File.join(@root_dir, 'weather'))
       end
-      
+
       # Doc templates are common files like copyright files which are used to update measures and other code
       # Doc templates will only be applied to measures in the current repository
       # Return the absolute path of the doc templates dir or nil if there is none
       def doc_templates_dir
         return File.absolute_path(File.join(@root_dir, 'doc_templates'))
       end
-      
+
     end
   end
 end
@@ -86,7 +86,7 @@ def baseline_scenario
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
-  
+
 end
 
 def high_efficiency_scenario
@@ -94,6 +94,19 @@ def high_efficiency_scenario
   run_dir = File.join(File.dirname(__FILE__), 'run/highefficiency_scenario/')
   feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
   csv_file = File.join(File.dirname(__FILE__), 'highefficiency_scenario.csv')
+  mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
+  num_header_rows = 1
+
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def thermal_storage_scenario
+  name = 'Thermal Storage Scenario'
+  run_dir = File.join(File.dirname(__FILE__), 'run/thermal_storage_scenario/')
+  feature_file_path = File.join(File.dirname(__FILE__), 'example_project.json')
+  csv_file = File.join(File.dirname(__FILE__), 'thermal_storage_scenario.csv')
   mapper_files_dir = File.join(File.dirname(__FILE__), 'mappers/')
   num_header_rows = 1
 
@@ -119,7 +132,7 @@ end
 rake_task = OpenStudio::Extension::RakeTask.new
 rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONProject)
 
-### Baseline 
+### Baseline
 
 desc 'Clear Baseline Scenario'
 task :clear_baseline do
@@ -138,18 +151,18 @@ end
 desc 'Post Process Baseline Scenario'
 task :post_process_baseline do
   puts 'Post Processing Baseline Scenario...'
-  
+
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario)
   scenario_result = default_post_processor.run
   # save scenario reports
   scenario_result.save
-  # save feature reports 
+  # save feature reports
   scenario_result.feature_reports.each do |feature_report|
     feature_report.save_feature_report()
   end
 end
 
-### High Efficiency 
+### High Efficiency
 
 desc 'Clear High Efficiency Scenario'
 task :clear_high_efficiency do
@@ -168,12 +181,42 @@ end
 desc 'Post Process High Efficiency Scenario'
 task :post_process_high_efficiency do
   puts 'Post Processing High Efficiency Scenario...'
-  
+
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario)
   scenario_result = default_post_processor.run
   # save scenario reports
   scenario_result.save
-  # save feature reports 
+  # save feature reports
+  scenario_result.feature_reports.each do |feature_report|
+    feature_report.save_feature_report()
+  end
+end
+
+### Thermal Storage
+
+desc 'Clear Thermal Storage Scenario'
+task :clear_thermal_storage do
+  puts 'Clearing Thermal Storage Scenario...'
+  thermal_storage_scenario.clear
+end
+
+desc 'Run Thermal Storage Scenario'
+task :run_thermal_storage do
+  puts 'Running Thermal Storage Scenario...'
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(thermal_storage_scenario)
+end
+
+desc 'Post Process Thermal Storage Scenario'
+task :post_process_thermal_storage do
+  puts 'Post Processing Thermal Storage Scenario...'
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(thermal_storage_scenario)
+  scenario_result = default_post_processor.run
+  # save scenario reports
+  scenario_result.save
+  # save feature reports
   scenario_result.feature_reports.each do |feature_report|
     feature_report.save_feature_report()
   end
@@ -198,12 +241,12 @@ end
 desc 'Post Process Mixed Scenario'
 task :post_process_mixed do
   puts 'Post Processing Mixed Scenario...'
-  
+
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario)
   scenario_result = default_post_processor.run
   # save scenario reports
   scenario_result.save
-  # save feature reports 
+  # save feature reports
   scenario_result.feature_reports.each do |feature_report|
     feature_report.save_feature_report()
   end
@@ -212,17 +255,17 @@ end
 ### All
 
 desc 'Clear all scenarios'
-task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_mixed] do
+task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_mixed] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task :run_all => [:run_baseline, :run_high_efficiency, :run_mixed] do
+task :run_all => [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_mixed] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_mixed] do
+task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_mixed] do
   # post_process all the scenarios
 end
 
@@ -230,5 +273,5 @@ desc 'Run and post process all scenarios'
 task :update_all => [:run_all, :post_process_all] do
   # run and post_process all the scenarios
 end
-              
+
 task :default => :update_all

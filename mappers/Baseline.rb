@@ -28,7 +28,7 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 # *********************************************************************************
 
-require 'urbanopt/scenario'
+require 'urbanopt/reporting'
 require 'openstudio/common_measures'
 require 'openstudio/model_articulation'
 
@@ -300,6 +300,14 @@ module URBANopt
         feature = features[0]
         feature_id = feature.id
         feature_type = feature.type
+
+        # take the first vertex as the location of the building
+        #feature_location = feature.feature_json[:geometry][:coordinates][0][0].to_s
+
+        # take the centroid of the vertices as the location of the building
+        feature_vertices_coordinates = feature.feature_json[:geometry][:coordinates][0]
+        feature_location = feature.find_feature_center(feature_vertices_coordinates).to_s
+
         feature_name = feature.name
         if feature_names.size == 1
           feature_name = feature_names[0]
@@ -316,9 +324,11 @@ module URBANopt
           building_type = feature.building_type
 
           if residential_building_types.include? building_type
+            debug = false
 
             args = {}
 
+            # Simulation Control
             args[:simulation_control_timestep] = 60
             begin
               args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
@@ -339,6 +349,7 @@ module URBANopt
 
             args[:weather_station_epw_filepath] = feature.weather_filename
 
+            # Geometry
             args[:geometry_num_units] = 1
             case building_type
             when 'Single-Family Detached'
@@ -384,7 +395,7 @@ module URBANopt
               args[:geometry_foundation_height] = 8.0
             end
 
-            args[:geometry_attic_type] = "VentedAttic"
+            args[:geometry_attic_type] = "ConditionedAttic"
             args[:geometry_roof_type] = "flat"
             begin
               case feature.attic_type
@@ -404,72 +415,37 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_num_units]
 
+            # HVAC
             system_type = "Residential - furnace and central air conditioner"
             begin
               system_type = feature.system_type
             rescue
             end
 
-            case system_type
-            when 'Residential - electric resistance and no cooling'
+            args[:heating_system_type] = "none"
+            if system_type.include?('electric resistance')
               args[:heating_system_type] = "ElectricResistance"
-              args[:cooling_system_type] = "none"
-              args[:heat_pump_type] = "none"
-            when 'Residential - electric resistance and central air conditioner'
-              args[:heating_system_type] = "ElectricResistance"
+            elsif system_type.include?('furnace')
+              args[:heating_system_type] = "Furnace"
+            elsif system_type.include?('boiler')
+              args[:heating_system_type] = "Boiler"
+            end
+
+            args[:cooling_system_type] = "none"
+            if system_type.include?('central air conditioner')
               args[:cooling_system_type] = "central air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - electric resistance and room air conditioner'
-              args[:heating_system_type] = "ElectricResistance"
+            elsif system_type.include?('room air conditioner')
               args[:cooling_system_type] = "room air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - electric resistance and evaporative cooler'
-              args[:heating_system_type] = "ElectricResistance"
+            elsif system_type.include?('evaporative cooler')
               args[:cooling_system_type] = "evaporative cooler"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and no cooling'
-              args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "none"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and central air conditioner'
-              args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "central air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and room air conditioner'
-              args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "room air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - furnace and evaporative cooler'
-              args[:heating_system_type] = "Furnace"
-              args[:cooling_system_type] = "evaporative cooler"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and no cooling'
-              args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "none"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and central air conditioner'
-              args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "central air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and room air conditioner'
-              args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "room air conditioner"
-              args[:heat_pump_type] = "none"
-            when 'Residential - boiler and evaporative cooler'
-              args[:heating_system_type] = "Boiler"
-              args[:cooling_system_type] = "evaporative cooler"
-              args[:heat_pump_type] = "none"
-            when 'Residential - air-to-air heat pump'
-              args[:heating_system_type] = "none"
-              args[:cooling_system_type] = "none"
+            end
+
+            args[:heat_pump_type] = "none"
+            if system_type.include?('air-to-air')
               args[:heat_pump_type] = "air-to-air"
-            when 'Residential - mini-split heat pump'
-              args[:heating_system_type] = "none"
-              args[:cooling_system_type] = "none"
+            elsif system_type.include?('mini-split')
               args[:heat_pump_type] = "mini-split"
-            when 'Residential - ground-to-air heat pump'
-              args[:heating_system_type] = "none"
-              args[:cooling_system_type] = "none"
+            elsif system_type.include?('ground-to-air')
               args[:heat_pump_type] = "ground-to-air"
             end
 
@@ -478,6 +454,47 @@ module URBANopt
               args[:heating_system_fuel] = feature.heating_system_fuel_type
             rescue
             end
+
+            if args[:heating_system_type] == "ElectricResistance" or args[:heat_pump_type] != "none" 
+              args[:heating_system_fuel] = "electricity"
+            end
+
+            args[:heating_system_heating_efficiency] = 0.92
+            if args[:heating_system_fuel] == "electricity"
+              args[:heating_system_heating_efficiency] = 1.0
+            end
+
+            if args[:heat_pump_type] == "mini-split"
+              args[:heat_pump_cooling_efficiency_seer] = 19.0
+              args[:heat_pump_heating_efficiency_hspf] = 10.0
+            end
+
+            # Appliances
+            args[:kitchen_fan_present] = true
+            args[:bathroom_fans_present] = true
+            args[:clothes_washer_efficiency_imef] = '2.92'
+            args[:clothes_washer_rated_annual_kwh] = '75'
+            args[:clothes_washer_label_electric_rate] = '0.12'
+            args[:clothes_washer_label_gas_rate] = '1.09'
+            args[:clothes_washer_label_annual_gas_cost] = '7'
+            args[:clothes_washer_label_usage] = '6'
+            args[:clothes_washer_capacity] = '4.5'
+            args[:clothes_dryer_fuel_type] = 'electricity'
+            args[:clothes_dryer_efficiency_cef] = '3.92'
+            args[:clothes_dryer_control_type] = 'timer'
+            args[:dishwasher_efficiency_kwh] = '199'
+            args[:dishwasher_label_electric_rate] = '0.12'
+            args[:dishwasher_label_gas_rate] = '1.09'
+            args[:dishwasher_label_annual_gas_cost] = '18'
+            args[:dishwasher_label_usage] = '4'
+            args[:dishwasher_place_setting_capacity] = '12'
+            args[:refrigerator_rated_annual_kwh] = '400'
+            args[:lighting_fraction_cfl_interior] = 0
+            args[:lighting_fraction_cfl_exterior] = 0
+            args[:lighting_fraction_lfl_interior] = 0
+            args[:lighting_fraction_lfl_exterior] = 0
+            args[:lighting_fraction_led_interior] = 1
+            args[:lighting_fraction_led_exterior] = 1
 
             # Update args with IECC prescriptive values if template points to IECC
             if feature.template.include? 'IECC'
@@ -512,7 +529,7 @@ module URBANopt
               climate_zone = '1A' # FIXME: create a lookup from epw to iecc climate zone
               if iecc.keys.include? climate_zone.to_sym
                 template = iecc[climate_zone.to_sym]
-                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'."
+                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'." if debug
 
                 template.each do |arg, levels|
                   code, year = feature.template.split(' ')
@@ -524,13 +541,21 @@ module URBANopt
                   template.delete(arg)
                 end
 
+                # Determine which surfaces to place insulation on
                 if args[:geometry_foundation_type].include? 'Basement'
                   template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_basement]
+                  template[:floor_assembly_r] = 2.1
                 elsif args[:geometry_foundation_type].include? 'Crawlspace'
                   template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_crawlspace]
+                  template[:floor_assembly_r] = 2.1
                 end
                 template.delete(:foundation_wall_assembly_r_basement)
                 template.delete(:foundation_wall_assembly_r_crawlspace)
+
+                if ["ConditionedAttic"].include?(args[:geometry_attic_type])
+                  template[:roof_assembly_r] = template[:ceiling_assembly_r]
+                  template[:ceiling_assembly_r] = 2.1
+                end
 
                 args.update(template)
               end
@@ -551,13 +576,15 @@ module URBANopt
                   args[arg_name] = arg_default
                 end
               else
-                if arg.elements['default_value']
-                  arg_default = arg.elements['default_value'].text
-                  if args[arg_name] != arg_default
-                    puts "Overriding #{arg_name} default '#{arg_default}' with '#{args[arg_name]}'."
+                if debug
+                  if arg.elements['default_value']
+                    arg_default = arg.elements['default_value'].text
+                    if args[arg_name] != arg_default
+                      puts "Overriding #{arg_name} default '#{arg_default}' with '#{args[arg_name]}'."
+                    end
+                  else
+                    puts "Setting #{arg_name} to '#{args[arg_name]}'."
                   end
-                else
-                  puts "Setting #{arg_name} to '#{args[arg_name]}'."
                 end
               end
 
@@ -876,6 +903,7 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_id', feature_id)
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_name', feature_name)
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_type', feature_type)
+        OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_location', feature_location)
 
         return osw
       end # create_osw
