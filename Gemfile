@@ -49,7 +49,7 @@ elsif allow_local
 else
   #gem 'urbanopt-scenario', '~> 0.3.0'
   # temporary: 
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'gem_split'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 end
 
 if allow_local && File.exists?('../urbanopt-geojson-gem')
@@ -67,5 +67,5 @@ if allow_local && File.exists?('../urbanopt-reporting-gem')
 elsif allow_local
   gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
 else
-  gem 'urbanopt-reporting', '~> 0.1.0'
+  gem 'urbanopt-reporting', '~> 0.1.1'
 end
