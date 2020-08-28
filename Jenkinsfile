@@ -5,6 +5,6 @@
 // Build for PR to develop branch only. 
 if ((env.CHANGE_ID) && (env.CHANGE_TARGET) ) { // check if set
 
-  openstudio_urbanopt_extension_gems()
+  urbanopt_example_geojson_project()
     
 }
