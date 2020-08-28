@@ -24,7 +24,7 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # elsif allow_local
   #gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
-#
+
 
 # if allow_local && File.exist?('../openstudio-common-measures-gem')
 #   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
