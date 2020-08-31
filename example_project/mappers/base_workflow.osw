@@ -120,22 +120,22 @@
         "lighting_power_reduction_percent": 30
       }
     },{
-      "measure_dir_name": "add_ice_storage_to_plant_loop_for_load_flexibility",	
-      "arguments": {	
-        "__SKIP__": true,	
-        "chiller_resize_factor": 0.8,	
-        "discharge_start": "08:00",	
-        "discharge_end": "20:00",	
-        "charge_start": "23:00",	
-        "inter_sp": 46	
-       }	
-    },{	
-      "measure_dir_name": "add_distributed_ice_storage_to_air_loop_for_load_flexibility",	
-      "arguments": {	
-        "__SKIP__": true,	
-        "size_mult": "0.75",	
-        "charge_start": "23:00"	
-      }	
+      "measure_dir_name": "add_ice_storage_to_plant_loop_for_load_flexibility",
+      "arguments": {
+        "__SKIP__": true,
+        "chiller_resize_factor": 0.8,
+        "discharge_start": "08:00",
+        "discharge_end": "20:00",
+        "charge_start": "23:00",
+        "inter_sp": 46
+       }
+    },{
+      "measure_dir_name": "add_distributed_ice_storage_to_air_loop_for_load_flexibility",
+      "arguments": 
+        "__SKIP__": true,
+        "size_mult": "0.75",
+        "charge_start": "23:00"
+      }
     },{
       "measure_dir_name": "default_feature_reports",
       "arguments": {
