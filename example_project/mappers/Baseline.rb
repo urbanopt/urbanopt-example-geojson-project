@@ -295,6 +295,46 @@ module URBANopt
         end
       end
 
+      def get_lookup_tsv(filepath)
+        rows = []
+        headers = []
+        CSV.foreach(filepath, { :col_sep => "\t" }) do |row|
+          if headers.empty?
+            row.each do |header|
+              unless header.include?('Dependency=')
+                header = header.to_sym
+              end
+              headers << header
+            end
+            next
+          end
+          rows << headers.zip(row).to_h
+        end
+        return rows
+      end
+
+      def get_lookup_row(rows, template_vals)
+        rows.each do |row|
+          if row.keys.include?('Dependency=Climate Zone')
+            next if row['Dependency=Climate Zone'] != template_vals[:climate_zone]
+          end
+          if row.keys.include?('Dependency=IECC Year')
+            next if row['Dependency=IECC Year'] != template_vals[:iecc_year]
+          end
+          if row.keys.include?('Dependency=EnergyStar Month')
+            next if row['Dependency=EnergyStar Month'] != template_vals[:estar_month]
+          end
+          if row.keys.include?('Dependency=EnergyStar Year')
+            next if row['Dependency=EnergyStar Year'] != template_vals[:estar_year]
+          end
+          row.delete('Dependency=Climate Zone')
+          row.delete('Dependency=IECC Year')
+          row.delete('Dependency=EnergyStar Month')
+          row.delete('Dependency=EnergyStar Year')
+          return row
+        end
+      end
+
       def create_osw(scenario, features, feature_names)
         
         if features.size != 1
@@ -420,68 +460,34 @@ module URBANopt
             args[:geometry_num_bedrooms] /= args[:geometry_num_units]
 
             # IECC / EnergyStar
-            if feature.template.include? 'IECC'
+            if feature.template.include?('Residential - IECC')
+
+              template_vals = feature.template.match(/Residential - IECC (?<iecc_year>\d+) \/ EnergyStar (?<estar_month>\w+) (?<estar_year>\d+>/)
+              template_vals[:climate_zone] = '1A' # FIXME: create a lookup from epw to iecc climate zone
 
               # ENCLOSURE
 
               enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
-              enclosure = {}
-              arguments = []
-              CSV.foreach(enclosure_filepath, { :col_sep => "\t" }) do |row|
-                if arguments.empty?
-                  arguments = row[2..-1]
-                  next
-                end
-
-                climate_zone = row[0].to_sym
-                year = row[1].to_sym
-                values = row[2..-1]
-
-                arguments.each_with_index do |argument, i|
-                  argument = argument.to_sym
-                  unless enclosure.keys.include? climate_zone
-                    enclosure[climate_zone] = {}
-                  end
-                  unless enclosure[climate_zone].keys.include? argument
-                    enclosure[climate_zone][argument] = {}
-                  end
-                  enclosure[climate_zone][argument][year] = values[i]
-                end
-              end
-
-              # Update args hash with values from template
-              climate_zone = '1A' # FIXME: create a lookup from epw to iecc climate zone
-              if enclosure.keys.include? climate_zone.to_sym
-                template = enclosure[climate_zone.to_sym]
-                puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'." if debug
-
-                template.each do |arg, levels|
-                  code, year = feature.template.split(' ')
-                  level = levels[year.to_sym]
-                  unless level.nil?
-                    template[arg] = level
-                    next
-                  end
-                  template.delete(arg)
-                end
+              enclosure = get_lookup_tsv(enclosure_filepath)
+              row = get_lookup_row(enclosure, template_vals)
 
                 # Determine which surfaces to place insulation on
                 if args[:geometry_foundation_type].include? 'Basement'
-                  template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_basement]
-                  template[:floor_assembly_r] = 2.1
+                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
+                  row[:floor_assembly_r] = 2.1
                 elsif args[:geometry_foundation_type].include? 'Crawlspace'
-                  template[:foundation_wall_assembly_r] = template[:foundation_wall_assembly_r_crawlspace]
-                  template[:floor_assembly_r] = 2.1
+                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
+                  row[:floor_assembly_r] = 2.1
                 end
-                template.delete(:foundation_wall_assembly_r_basement)
-                template.delete(:foundation_wall_assembly_r_crawlspace)
+                row.delete(:foundation_wall_assembly_r_basement)
+                row.delete(:foundation_wall_assembly_r_crawlspace)
 
                 if ["ConditionedAttic"].include?(args[:geometry_attic_type])
-                  template[:roof_assembly_r] = template[:ceiling_assembly_r]
-                  template[:ceiling_assembly_r] = 2.1
+                  row[:roof_assembly_r] = row[:ceiling_assembly_r]
+                  row[:ceiling_assembly_r] = 2.1
                 end
 
-                args.update(template)
+                args.update(row)
               end
 
               # HVAC
@@ -527,72 +533,32 @@ module URBANopt
 
               if args[:heating_system_type] != "none"
                 heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
-                heating_system = {}
-                arguments = []
-                CSV.foreach(heating_system_filepath, { :col_sep => "\t" }) do |row|
-                  # TODO
-                end
+                heating_system = get_lookup_tsv(heating_system_filepath)
+                args.update(get_lookup_row(heating_system, template_vals))
               end
               if args[:cooling_system_type] != "none"
                 cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
-                cooling_system = {}
-                arguments = []
-                CSV.foreach(cooling_system_filepath, { :col_sep => "\t" }) do |row|
-                  # TODO
-                end
+                cooling_system = get_lookup_tsv(cooling_system_filepath)
+                args.update(get_lookup_row(cooling_system, template_vals))
               end
               if args[:heat_pump_type] != "none"
                 heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
-                heat_pump = {}
-                arguments = []
-                CSV.foreach(heat_pump_filepath, { :col_sep => "\t" }) do |row|
-                  # TODO
-                end
+                heat_pump = get_lookup_tsv(heat_pump_filepath)
+                args.update(get_lookup_row(heat_pump, template_vals))
               end
 
               # APPLIANCES
 
               appliances_filepath = File.join(File.dirname(__FILE__), 'residential/appliances.tsv')
-              appliances = {}
-              arguments = []
-              CSV.foreach(appliances_filepath, { :col_sep => "\t" }) do |row|
-                # TODO
-              end
-              args[:kitchen_fan_present] = true
-              args[:bathroom_fans_present] = true
-              args[:clothes_washer_efficiency_imef] = '2.92'
-              args[:clothes_washer_rated_annual_kwh] = '75'
-              args[:clothes_washer_label_electric_rate] = '0.12'
-              args[:clothes_washer_label_gas_rate] = '1.09'
-              args[:clothes_washer_label_annual_gas_cost] = '7'
-              args[:clothes_washer_label_usage] = '6'
-              args[:clothes_washer_capacity] = '4.5'
-              args[:clothes_dryer_fuel_type] = 'electricity'
-              args[:clothes_dryer_efficiency_cef] = '3.92'
-              args[:clothes_dryer_control_type] = 'timer'
-              args[:dishwasher_efficiency_kwh] = '199'
-              args[:dishwasher_label_electric_rate] = '0.12'
-              args[:dishwasher_label_gas_rate] = '1.09'
-              args[:dishwasher_label_annual_gas_cost] = '18'
-              args[:dishwasher_label_usage] = '4'
-              args[:dishwasher_place_setting_capacity] = '12'
-              args[:refrigerator_rated_annual_kwh] = '400'
-              args[:lighting_fraction_cfl_interior] = 0
-              args[:lighting_fraction_cfl_exterior] = 0
-              args[:lighting_fraction_lfl_interior] = 0
-              args[:lighting_fraction_lfl_exterior] = 0
-              args[:lighting_fraction_led_interior] = 1
-              args[:lighting_fraction_led_exterior] = 1
+              appliances = get_lookup_tsv(appliances_filepath)
+              args.update(get_lookup_row(appliances, template_vals))
 
               # WATER HEATER
 
               args[:water_heater_fuel_type] = args[:heating_system_fuel]
               water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
-              water_heater = {}
-              arguments = []
-              CSV.foreach(water_heater_filepath, { :col_sep => "\t" }) do |row|
-                # TODO
-              end
+              water_heater = get_lookup_tsv(water_heater_filepath)
+              args.update(get_lookup_row(water_heater, template_vals))
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults with template values

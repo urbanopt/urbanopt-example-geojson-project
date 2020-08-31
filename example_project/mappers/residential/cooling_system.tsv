@@ -1,4 +1,4 @@
-Climate Zone	Month	Year	cooling_system_type	cooling_system_cooling_efficiency_seer
+Dependency=Climate Zone	Dependency=EnergyStar Month	Dependency=EnergyStar Year	cooling_system_type	cooling_system_cooling_efficiency_seer
 1A	Sep	2020	central air conditioner	15
 1B	Sep	2020	central air conditioner	15
 1C	Sep	2020	central air conditioner	15

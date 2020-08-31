@@ -1,4 +1,4 @@
-Climate Zone	Month	Year	water_heater_fuel_type	water_heater_efficiency_ef
+Dependency=Climate Zone	Dependency=EnergyStar Month	Dependency=EnergyStar Year	water_heater_fuel_type	water_heater_efficiency_ef
 1A	Sep	2020	electricity	0.92
 1B	Sep	2020	electricity	0.92
 1C	Sep	2020	electricity	0.92
