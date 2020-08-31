@@ -1,4 +1,4 @@
-# *********************************************************************************
+#*********************************************************************************
 # URBANopt, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
 # contributors. All rights reserved.
 #
@@ -26,7 +26,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
-# *********************************************************************************
+#*********************************************************************************
 
 require 'urbanopt/reporting'
 require 'openstudio/common_measures'
@@ -68,7 +68,7 @@ module URBANopt
         end
       end
 
-       def lookup_building_type(building_type, template, footprint_area, number_of_stories)
+      def lookup_building_type(building_type, template, footprint_area, number_of_stories)
         if template.include? "DEER"
           case building_type
           when "Education"
