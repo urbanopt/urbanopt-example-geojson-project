@@ -61,7 +61,7 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #if allow_local && File.exist?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 #elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'extend-templates-2'
 #else
 #  gem 'urbanopt-geojson', '~> 0.3.0'
 #end
