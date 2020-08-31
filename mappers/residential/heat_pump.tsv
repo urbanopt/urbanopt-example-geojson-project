@@ -1,0 +1,39 @@
+Climate Zone	Month	Year	heat_pump_type	heat_pump_heating_efficiency_hspf	heat_pump_heating_efficiency_cop	heat_pump_cooling_efficiency_seer	heat_pump_cooling_efficiency_eer	heat_pump_backup_fuel
+1A	Sep	2020	air-to-air	8.2		15		electricity
+1B	Sep	2020	air-to-air	8.2		15		electricity
+1C	Sep	2020	air-to-air	8.2		15		electricity
+2A	Sep	2020	air-to-air	8.2		15		electricity
+2B	Sep	2020	air-to-air	8.2		15		electricity
+2C	Sep	2020	air-to-air	8.2		15		electricity
+3A	Sep	2020	air-to-air	8.2		15		electricity
+3B	Sep	2020	air-to-air	8.2		15		electricity
+3C	Sep	2020	air-to-air	8.2		15		electricity
+4A	Sep	2020	air-to-air	8.5		15		electricity
+4B	Sep	2020	air-to-air	8.5		15		electricity
+4C	Sep	2020	air-to-air	9.25		15		electricity
+5A	Sep	2020	air-to-air	9.25		15		electricity
+5B	Sep	2020	air-to-air	9.25		15		electricity
+5C	Sep	2020	air-to-air	9.25		15		electricity
+6A	Sep	2020	air-to-air	9.5		15		electricity
+6B	Sep	2020	air-to-air	9.5		15		electricity
+6C	Sep	2020	air-to-air	9.5		15		electricity
+1A	Sep	2020	mini-split	10		19		electricity
+1B	Sep	2020	mini-split	10		19		electricity
+1C	Sep	2020	mini-split	10		19		electricity
+2A	Sep	2020	mini-split	10		19		electricity
+2B	Sep	2020	mini-split	10		19		electricity
+2C	Sep	2020	mini-split	10		19		electricity
+3A	Sep	2020	mini-split	10		19		electricity
+3B	Sep	2020	mini-split	10		19		electricity
+3C	Sep	2020	mini-split	10		19		electricity
+4A	Sep	2020	mini-split	10		19		electricity
+4B	Sep	2020	mini-split	10		19		electricity
+4C	Sep	2020	mini-split	10		19		electricity
+5A	Sep	2020	mini-split	10		19		electricity
+5B	Sep	2020	mini-split	10		19		electricity
+5C	Sep	2020	mini-split	10		19		electricity
+6A	Sep	2020	mini-split	10		19		electricity
+6B	Sep	2020	mini-split	10		19		electricity
+6C	Sep	2020	mini-split	10		19		electricity
+7	Sep	2020	ground-to-air		3.6		17.1	
+8	Sep	2020	ground-to-air		3.6		17.1	

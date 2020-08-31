@@ -1,0 +1,181 @@
+Climate Zone	Month	Year	heating_system_type	heating_system_fuel	heating_system_heating_efficiency
+1A	Sep	2020	ElectricResistance	electricity	1
+1B	Sep	2020	ElectricResistance	electricity	1
+1C	Sep	2020	ElectricResistance	electricity	1
+2A	Sep	2020	ElectricResistance	electricity	1
+2B	Sep	2020	ElectricResistance	electricity	1
+2C	Sep	2020	ElectricResistance	electricity	1
+3A	Sep	2020	ElectricResistance	electricity	1
+3B	Sep	2020	ElectricResistance	electricity	1
+3C	Sep	2020	ElectricResistance	electricity	1
+4A	Sep	2020	ElectricResistance	electricity	1
+4B	Sep	2020	ElectricResistance	electricity	1
+4C	Sep	2020	ElectricResistance	electricity	1
+5A	Sep	2020	ElectricResistance	electricity	1
+5B	Sep	2020	ElectricResistance	electricity	1
+5C	Sep	2020	ElectricResistance	electricity	1
+6A	Sep	2020	ElectricResistance	electricity	1
+6B	Sep	2020	ElectricResistance	electricity	1
+6C	Sep	2020	ElectricResistance	electricity	1
+7	Sep	2020	ElectricResistance	electricity	1
+8	Sep	2020	ElectricResistance	electricity	1
+1A	Sep	2020	Furnace	natural gas	0.8
+1B	Sep	2020	Furnace	natural gas	0.8
+1C	Sep	2020	Furnace	natural gas	0.8
+2A	Sep	2020	Furnace	natural gas	0.8
+2B	Sep	2020	Furnace	natural gas	0.8
+2C	Sep	2020	Furnace	natural gas	0.8
+3A	Sep	2020	Furnace	natural gas	0.8
+3B	Sep	2020	Furnace	natural gas	0.8
+3C	Sep	2020	Furnace	natural gas	0.8
+4A	Sep	2020	Furnace	natural gas	0.95
+4B	Sep	2020	Furnace	natural gas	0.95
+4C	Sep	2020	Furnace	natural gas	0.95
+5A	Sep	2020	Furnace	natural gas	0.95
+5B	Sep	2020	Furnace	natural gas	0.95
+5C	Sep	2020	Furnace	natural gas	0.95
+6A	Sep	2020	Furnace	natural gas	0.95
+6B	Sep	2020	Furnace	natural gas	0.95
+6C	Sep	2020	Furnace	natural gas	0.95
+7	Sep	2020	Furnace	natural gas	0.95
+8	Sep	2020	Furnace	natural gas	0.95
+1A	Sep	2020	Furnace	fuel oil	0.8
+1B	Sep	2020	Furnace	fuel oil	0.8
+1C	Sep	2020	Furnace	fuel oil	0.8
+2A	Sep	2020	Furnace	fuel oil	0.8
+2B	Sep	2020	Furnace	fuel oil	0.8
+2C	Sep	2020	Furnace	fuel oil	0.8
+3A	Sep	2020	Furnace	fuel oil	0.8
+3B	Sep	2020	Furnace	fuel oil	0.8
+3C	Sep	2020	Furnace	fuel oil	0.8
+4A	Sep	2020	Furnace	fuel oil	0.85
+4B	Sep	2020	Furnace	fuel oil	0.85
+4C	Sep	2020	Furnace	fuel oil	0.85
+5A	Sep	2020	Furnace	fuel oil	0.85
+5B	Sep	2020	Furnace	fuel oil	0.85
+5C	Sep	2020	Furnace	fuel oil	0.85
+6A	Sep	2020	Furnace	fuel oil	0.85
+6B	Sep	2020	Furnace	fuel oil	0.85
+6C	Sep	2020	Furnace	fuel oil	0.85
+7	Sep	2020	Furnace	fuel oil	0.85
+8	Sep	2020	Furnace	fuel oil	0.85
+1A	Sep	2020	Furnace	propane	0.8
+1B	Sep	2020	Furnace	propane	0.8
+1C	Sep	2020	Furnace	propane	0.8
+2A	Sep	2020	Furnace	propane	0.8
+2B	Sep	2020	Furnace	propane	0.8
+2C	Sep	2020	Furnace	propane	0.8
+3A	Sep	2020	Furnace	propane	0.8
+3B	Sep	2020	Furnace	propane	0.8
+3C	Sep	2020	Furnace	propane	0.8
+4A	Sep	2020	Furnace	propane	0.85
+4B	Sep	2020	Furnace	propane	0.85
+4C	Sep	2020	Furnace	propane	0.85
+5A	Sep	2020	Furnace	propane	0.85
+5B	Sep	2020	Furnace	propane	0.85
+5C	Sep	2020	Furnace	propane	0.85
+6A	Sep	2020	Furnace	propane	0.85
+6B	Sep	2020	Furnace	propane	0.85
+6C	Sep	2020	Furnace	propane	0.85
+7	Sep	2020	Furnace	propane	0.85
+8	Sep	2020	Furnace	propane	0.85
+1A	Sep	2020	Furnace	wood	0.8
+1B	Sep	2020	Furnace	wood	0.8
+1C	Sep	2020	Furnace	wood	0.8
+2A	Sep	2020	Furnace	wood	0.8
+2B	Sep	2020	Furnace	wood	0.8
+2C	Sep	2020	Furnace	wood	0.8
+3A	Sep	2020	Furnace	wood	0.8
+3B	Sep	2020	Furnace	wood	0.8
+3C	Sep	2020	Furnace	wood	0.8
+4A	Sep	2020	Furnace	wood	0.85
+4B	Sep	2020	Furnace	wood	0.85
+4C	Sep	2020	Furnace	wood	0.85
+5A	Sep	2020	Furnace	wood	0.85
+5B	Sep	2020	Furnace	wood	0.85
+5C	Sep	2020	Furnace	wood	0.85
+6A	Sep	2020	Furnace	wood	0.85
+6B	Sep	2020	Furnace	wood	0.85
+6C	Sep	2020	Furnace	wood	0.85
+7	Sep	2020	Furnace	wood	0.85
+8	Sep	2020	Furnace	wood	0.85
+1A	Sep	2020	Boiler	natural gas	0.8
+1B	Sep	2020	Boiler	natural gas	0.8
+1C	Sep	2020	Boiler	natural gas	0.8
+2A	Sep	2020	Boiler	natural gas	0.8
+2B	Sep	2020	Boiler	natural gas	0.8
+2C	Sep	2020	Boiler	natural gas	0.8
+3A	Sep	2020	Boiler	natural gas	0.8
+3B	Sep	2020	Boiler	natural gas	0.8
+3C	Sep	2020	Boiler	natural gas	0.8
+4A	Sep	2020	Boiler	natural gas	0.9
+4B	Sep	2020	Boiler	natural gas	0.9
+4C	Sep	2020	Boiler	natural gas	0.9
+5A	Sep	2020	Boiler	natural gas	0.9
+5B	Sep	2020	Boiler	natural gas	0.9
+5C	Sep	2020	Boiler	natural gas	0.9
+6A	Sep	2020	Boiler	natural gas	0.9
+6B	Sep	2020	Boiler	natural gas	0.9
+6C	Sep	2020	Boiler	natural gas	0.9
+7	Sep	2020	Boiler	natural gas	0.9
+8	Sep	2020	Boiler	natural gas	0.9
+1A	Sep	2020	Boiler	fuel oil	0.8
+1B	Sep	2020	Boiler	fuel oil	0.8
+1C	Sep	2020	Boiler	fuel oil	0.8
+2A	Sep	2020	Boiler	fuel oil	0.8
+2B	Sep	2020	Boiler	fuel oil	0.8
+2C	Sep	2020	Boiler	fuel oil	0.8
+3A	Sep	2020	Boiler	fuel oil	0.8
+3B	Sep	2020	Boiler	fuel oil	0.8
+3C	Sep	2020	Boiler	fuel oil	0.8
+4A	Sep	2020	Boiler	fuel oil	0.86
+4B	Sep	2020	Boiler	fuel oil	0.86
+4C	Sep	2020	Boiler	fuel oil	0.86
+5A	Sep	2020	Boiler	fuel oil	0.86
+5B	Sep	2020	Boiler	fuel oil	0.86
+5C	Sep	2020	Boiler	fuel oil	0.86
+6A	Sep	2020	Boiler	fuel oil	0.86
+6B	Sep	2020	Boiler	fuel oil	0.86
+6C	Sep	2020	Boiler	fuel oil	0.86
+7	Sep	2020	Boiler	fuel oil	0.86
+8	Sep	2020	Boiler	fuel oil	0.86
+1A	Sep	2020	Boiler	propane	0.8
+1B	Sep	2020	Boiler	propane	0.8
+1C	Sep	2020	Boiler	propane	0.8
+2A	Sep	2020	Boiler	propane	0.8
+2B	Sep	2020	Boiler	propane	0.8
+2C	Sep	2020	Boiler	propane	0.8
+3A	Sep	2020	Boiler	propane	0.8
+3B	Sep	2020	Boiler	propane	0.8
+3C	Sep	2020	Boiler	propane	0.8
+4A	Sep	2020	Boiler	propane	0.86
+4B	Sep	2020	Boiler	propane	0.86
+4C	Sep	2020	Boiler	propane	0.86
+5A	Sep	2020	Boiler	propane	0.86
+5B	Sep	2020	Boiler	propane	0.86
+5C	Sep	2020	Boiler	propane	0.86
+6A	Sep	2020	Boiler	propane	0.86
+6B	Sep	2020	Boiler	propane	0.86
+6C	Sep	2020	Boiler	propane	0.86
+7	Sep	2020	Boiler	propane	0.86
+8	Sep	2020	Boiler	propane	0.86
+1A	Sep	2020	Boiler	wood	0.8
+1B	Sep	2020	Boiler	wood	0.8
+1C	Sep	2020	Boiler	wood	0.8
+2A	Sep	2020	Boiler	wood	0.8
+2B	Sep	2020	Boiler	wood	0.8
+2C	Sep	2020	Boiler	wood	0.8
+3A	Sep	2020	Boiler	wood	0.8
+3B	Sep	2020	Boiler	wood	0.8
+3C	Sep	2020	Boiler	wood	0.8
+4A	Sep	2020	Boiler	wood	0.86
+4B	Sep	2020	Boiler	wood	0.86
+4C	Sep	2020	Boiler	wood	0.86
+5A	Sep	2020	Boiler	wood	0.86
+5B	Sep	2020	Boiler	wood	0.86
+5C	Sep	2020	Boiler	wood	0.86
+6A	Sep	2020	Boiler	wood	0.86
+6B	Sep	2020	Boiler	wood	0.86
+6C	Sep	2020	Boiler	wood	0.86
+7	Sep	2020	Boiler	wood	0.86
+8	Sep	2020	Boiler	wood	0.86

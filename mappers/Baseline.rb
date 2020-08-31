@@ -415,95 +415,15 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_num_units]
 
-            # HVAC
-            system_type = "Residential - furnace and central air conditioner"
-            begin
-              system_type = feature.system_type
-            rescue
-            end
-
-            args[:heating_system_type] = "none"
-            if system_type.include?('electric resistance')
-              args[:heating_system_type] = "ElectricResistance"
-            elsif system_type.include?('furnace')
-              args[:heating_system_type] = "Furnace"
-            elsif system_type.include?('boiler')
-              args[:heating_system_type] = "Boiler"
-            end
-
-            args[:cooling_system_type] = "none"
-            if system_type.include?('central air conditioner')
-              args[:cooling_system_type] = "central air conditioner"
-            elsif system_type.include?('room air conditioner')
-              args[:cooling_system_type] = "room air conditioner"
-            elsif system_type.include?('evaporative cooler')
-              args[:cooling_system_type] = "evaporative cooler"
-            end
-
-            args[:heat_pump_type] = "none"
-            if system_type.include?('air-to-air')
-              args[:heat_pump_type] = "air-to-air"
-            elsif system_type.include?('mini-split')
-              args[:heat_pump_type] = "mini-split"
-            elsif system_type.include?('ground-to-air')
-              args[:heat_pump_type] = "ground-to-air"
-            end
-
-            args[:heating_system_fuel] = "natural gas"
-            begin
-              args[:heating_system_fuel] = feature.heating_system_fuel_type
-            rescue
-            end
-
-            if args[:heating_system_type] == "ElectricResistance" or args[:heat_pump_type] != "none" 
-              args[:heating_system_fuel] = "electricity"
-            end
-
-            args[:heating_system_heating_efficiency] = 0.92
-            if args[:heating_system_fuel] == "electricity"
-              args[:heating_system_heating_efficiency] = 1.0
-            end
-
-            if args[:heat_pump_type] == "mini-split"
-              args[:heat_pump_cooling_efficiency_seer] = 19.0
-              args[:heat_pump_heating_efficiency_hspf] = 10.0
-            end
-
-            # Appliances
-            args[:kitchen_fan_present] = true
-            args[:bathroom_fans_present] = true
-            args[:clothes_washer_efficiency_imef] = '2.92'
-            args[:clothes_washer_rated_annual_kwh] = '75'
-            args[:clothes_washer_label_electric_rate] = '0.12'
-            args[:clothes_washer_label_gas_rate] = '1.09'
-            args[:clothes_washer_label_annual_gas_cost] = '7'
-            args[:clothes_washer_label_usage] = '6'
-            args[:clothes_washer_capacity] = '4.5'
-            args[:clothes_dryer_fuel_type] = 'electricity'
-            args[:clothes_dryer_efficiency_cef] = '3.92'
-            args[:clothes_dryer_control_type] = 'timer'
-            args[:dishwasher_efficiency_kwh] = '199'
-            args[:dishwasher_label_electric_rate] = '0.12'
-            args[:dishwasher_label_gas_rate] = '1.09'
-            args[:dishwasher_label_annual_gas_cost] = '18'
-            args[:dishwasher_label_usage] = '4'
-            args[:dishwasher_place_setting_capacity] = '12'
-            args[:refrigerator_rated_annual_kwh] = '400'
-            args[:lighting_fraction_cfl_interior] = 0
-            args[:lighting_fraction_cfl_exterior] = 0
-            args[:lighting_fraction_lfl_interior] = 0
-            args[:lighting_fraction_lfl_exterior] = 0
-            args[:lighting_fraction_led_interior] = 1
-            args[:lighting_fraction_led_exterior] = 1
-
-            # Update args with IECC prescriptive values if template points to IECC
+            # IECC / EnergyStar
             if feature.template.include? 'IECC'
 
-              # Create json from template
-              residential_template_filepath = File.join(File.dirname(__FILE__), 'residential/IECC.tsv')
-              iecc = {}
+              # ENCLOSURE
+
+              enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
+              enclosure = {}
               arguments = []
-              CSV.foreach(residential_template_filepath, { :col_sep => "\t" }) do |row|
+              CSV.foreach(enclosure_filepath, { :col_sep => "\t" }) do |row|
                 if arguments.empty?
                   arguments = row[2..-1]
                   next
@@ -515,20 +435,20 @@ module URBANopt
 
                 arguments.each_with_index do |argument, i|
                   argument = argument.to_sym
-                  unless iecc.keys.include? climate_zone
-                    iecc[climate_zone] = {}
+                  unless enclosure.keys.include? climate_zone
+                    enclosure[climate_zone] = {}
                   end
-                  unless iecc[climate_zone].keys.include? argument
-                    iecc[climate_zone][argument] = {}
+                  unless enclosure[climate_zone].keys.include? argument
+                    enclosure[climate_zone][argument] = {}
                   end
-                  iecc[climate_zone][argument][year] = values[i]
+                  enclosure[climate_zone][argument][year] = values[i]
                 end
               end
 
               # Update args hash with values from template
               climate_zone = '1A' # FIXME: create a lookup from epw to iecc climate zone
-              if iecc.keys.include? climate_zone.to_sym
-                template = iecc[climate_zone.to_sym]
+              if enclosure.keys.include? climate_zone.to_sym
+                template = enclosure[climate_zone.to_sym]
                 puts "Found climate zone '#{climate_zone}' for residential '#{feature.template}'." if debug
 
                 template.each do |arg, levels|
@@ -558,6 +478,119 @@ module URBANopt
                 end
 
                 args.update(template)
+              end
+
+              # HVAC
+
+              system_type = "Residential - furnace and central air conditioner"
+              begin
+                system_type = feature.system_type
+              rescue
+              end
+
+              args[:heating_system_type] = "none"
+              if system_type.include?('electric resistance')
+                args[:heating_system_type] = "ElectricResistance"
+              elsif system_type.include?('furnace')
+                args[:heating_system_type] = "Furnace"
+              elsif system_type.include?('boiler')
+                args[:heating_system_type] = "Boiler"
+              end
+
+              args[:cooling_system_type] = "none"
+              if system_type.include?('central air conditioner')
+                args[:cooling_system_type] = "central air conditioner"
+              elsif system_type.include?('room air conditioner')
+                args[:cooling_system_type] = "room air conditioner"
+              elsif system_type.include?('evaporative cooler')
+                args[:cooling_system_type] = "evaporative cooler"
+              end
+
+              args[:heat_pump_type] = "none"
+              if system_type.include?('air-to-air')
+                args[:heat_pump_type] = "air-to-air"
+              elsif system_type.include?('mini-split')
+                args[:heat_pump_type] = "mini-split"
+              elsif system_type.include?('ground-to-air')
+                args[:heat_pump_type] = "ground-to-air"
+              end
+
+              args[:heating_system_fuel] = "natural gas"
+              begin
+                args[:heating_system_fuel] = feature.heating_system_fuel_type
+              rescue
+              end
+
+              # TODO
+              if args[:heating_system_type] != "none"
+                heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
+                heating_system = {}
+                arguments = []
+                CSV.foreach(heating_system_filepath, { :col_sep => "\t" }) do |row|
+
+                end
+              end
+              if args[:cooling_system_type] != "none"
+                cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
+                cooling_system = {}
+                arguments = []
+                CSV.foreach(cooling_system_filepath, { :col_sep => "\t" }) do |row|
+
+                end
+              end
+              if args[:heat_pump_type] != "none"
+                heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
+                heat_pump = {}
+                arguments = []
+                CSV.foreach(heat_pump_filepath, { :col_sep => "\t" }) do |row|
+
+                end
+              end
+
+              # APPLIANCES
+
+              # TODO
+              appliances_filepath = File.join(File.dirname(__FILE__), 'residential/appliances.tsv')
+              appliances = {}
+              arguments = []
+              CSV.foreach(appliances_filepath, { :col_sep => "\t" }) do |row|
+
+              end
+              args[:kitchen_fan_present] = true
+              args[:bathroom_fans_present] = true
+              args[:clothes_washer_efficiency_imef] = '2.92'
+              args[:clothes_washer_rated_annual_kwh] = '75'
+              args[:clothes_washer_label_electric_rate] = '0.12'
+              args[:clothes_washer_label_gas_rate] = '1.09'
+              args[:clothes_washer_label_annual_gas_cost] = '7'
+              args[:clothes_washer_label_usage] = '6'
+              args[:clothes_washer_capacity] = '4.5'
+              args[:clothes_dryer_fuel_type] = 'electricity'
+              args[:clothes_dryer_efficiency_cef] = '3.92'
+              args[:clothes_dryer_control_type] = 'timer'
+              args[:dishwasher_efficiency_kwh] = '199'
+              args[:dishwasher_label_electric_rate] = '0.12'
+              args[:dishwasher_label_gas_rate] = '1.09'
+              args[:dishwasher_label_annual_gas_cost] = '18'
+              args[:dishwasher_label_usage] = '4'
+              args[:dishwasher_place_setting_capacity] = '12'
+              args[:refrigerator_rated_annual_kwh] = '400'
+              args[:lighting_fraction_cfl_interior] = 0
+              args[:lighting_fraction_cfl_exterior] = 0
+              args[:lighting_fraction_lfl_interior] = 0
+              args[:lighting_fraction_lfl_exterior] = 0
+              args[:lighting_fraction_led_interior] = 1
+              args[:lighting_fraction_led_exterior] = 1
+
+              # WATER HEATER
+
+              args[:water_heater_fuel_type] = args[:heating_system_fuel]
+              # TODO
+              water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
+              water_heater = {}
+              arguments = []
+              CSV.foreach(water_heater_filepath, { :col_sep => "\t" }) do |row|
+
               end
             end
 
