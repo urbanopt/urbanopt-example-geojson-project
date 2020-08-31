@@ -33,7 +33,7 @@ require 'openstudio/common_measures'
 require 'openstudio/model_articulation'
 require 'openstudio/load_flexibility_measures'
 
-require_relative 'Baseline'
+require_relative 'HighEfficiency'
 
 require 'json'
 
