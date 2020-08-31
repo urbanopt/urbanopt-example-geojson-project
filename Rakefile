@@ -221,9 +221,13 @@ end
 ### Thermal Storage
 
 desc 'Clear Thermal Storage Scenario'
-task :clear_thermal_storage do
+task :clear_thermal_storage, [:json, :csv] do |t, args|
   puts 'Clearing Thermal Storage Scenario...'
-  thermal_storage_scenario.clear
+
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'thermal_storage_scenario.csv' if args[:csv].nil?
+
+  thermal_storage_scenario(json, csv).clear
 end
 
 desc 'Run Thermal Storage Scenario'
@@ -236,14 +240,17 @@ task :run_thermal_storage, [:json, :csv] do |t, args|
   configure_project
 
   scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-  scenario_runner.run(thermal_storage_scenario)
+  scenario_runner.run(thermal_storage_scenario(json, csv))
 end
 
 desc 'Post Process Thermal Storage Scenario'
-task :post_process_thermal_storage do
+task :post_process_thermal_storage, [:json, :csv] do |t, args|
   puts 'Post Processing Thermal Storage Scenario...'
 
-  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(thermal_storage_scenario)
+  json = 'example_project.json' if args[:json].nil?
+  csv = 'thermal_storage_scenario.csv' if args[:csv].nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(thermal_storage_scenario(json, csv))
   scenario_result = default_post_processor.run
   # save scenario reports
   scenario_result.save
