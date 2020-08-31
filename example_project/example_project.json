@@ -203,7 +203,7 @@
         "foundation_type": "slab",
         "attic_type": "attic - conditioned",
         "system_type": "Residential - electric resistance and central air conditioner",
-        "template": "IECC 2015"
+        "template": "Residential - IECC 2015 / EnergyStar Sep 2020"
       },
       "geometry": {
         "type": "Polygon",
@@ -249,7 +249,7 @@
         "attic_type": "attic - vented",
         "system_type": "Residential - boiler and room air conditioner",
         "heating_system_fuel_type": "fuel oil",
-        "template": "IECC 2015"
+        "template": "Residential - IECC 2015 / EnergyStar Sep 2020"
       },
       "geometry": {
         "type": "Polygon",
@@ -295,7 +295,7 @@
         "attic_type": "attic - unvented",
         "system_type": "Residential - furnace and evaporative cooler",
         "heating_system_fuel_type": "natural gas",
-        "template": "IECC 2015"
+        "template": "Residential - IECC 2015 / EnergyStar Sep 2020"
       },
       "geometry": {
         "type": "Polygon",

@@ -131,7 +131,7 @@
        }
     },{
       "measure_dir_name": "add_distributed_ice_storage_to_air_loop_for_load_flexibility",
-      "arguments": 
+      "arguments": {
         "__SKIP__": true,
         "size_mult": "0.75",
         "charge_start": "23:00"

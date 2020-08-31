@@ -313,7 +313,7 @@ module URBANopt
         return rows
       end
 
-      def get_lookup_row(rows, template_vals)
+      def get_lookup_row(args, rows, template_vals)
         rows.each do |row|
           if row.keys.include?('Dependency=Climate Zone')
             next if row['Dependency=Climate Zone'] != template_vals[:climate_zone]
@@ -331,8 +331,26 @@ module URBANopt
           row.delete('Dependency=IECC Year')
           row.delete('Dependency=EnergyStar Month')
           row.delete('Dependency=EnergyStar Year')
-          return row
+
+          row.each do |k, v|
+            next unless v.nil?
+
+            row.delete(k)
+          end
+
+          intersection = args.keys & row.keys
+          return row if intersection.empty? # found the correct row
+
+          skip = false
+          intersection.each do |k|
+            if args[k] != row[k]
+              skip = true
+            end
+          end
+
+          return row unless skip
         end
+        return nil
       end
 
       def create_osw(scenario, features, feature_names)
@@ -368,7 +386,7 @@ module URBANopt
           building_type = feature.building_type
 
           if residential_building_types.include? building_type
-            debug = false
+            debug = true
 
             args = {}
 
@@ -462,33 +480,32 @@ module URBANopt
             # IECC / EnergyStar
             if feature.template.include?('Residential - IECC')
 
-              template_vals = feature.template.match(/Residential - IECC (?<iecc_year>\d+) \/ EnergyStar (?<estar_month>\w+) (?<estar_year>\d+>/)
+              captures = feature.template.match(/Residential - IECC (?<iecc_year>\d+) \/ EnergyStar (?<estar_month>\w+) (?<estar_year>\d+)/)
+              template_vals = Hash[captures.names.zip( captures.captures ) ]
+              template_vals = Hash[template_vals.collect{ |k, v| [k.to_sym, v] }]
               template_vals[:climate_zone] = '1A' # FIXME: create a lookup from epw to iecc climate zone
 
               # ENCLOSURE
 
               enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
               enclosure = get_lookup_tsv(enclosure_filepath)
-              row = get_lookup_row(enclosure, template_vals)
+              row = get_lookup_row(args, enclosure, template_vals)
 
-                # Determine which surfaces to place insulation on
-                if args[:geometry_foundation_type].include? 'Basement'
-                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
-                  row[:floor_assembly_r] = 2.1
-                elsif args[:geometry_foundation_type].include? 'Crawlspace'
-                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
-                  row[:floor_assembly_r] = 2.1
-                end
-                row.delete(:foundation_wall_assembly_r_basement)
-                row.delete(:foundation_wall_assembly_r_crawlspace)
-
-                if ["ConditionedAttic"].include?(args[:geometry_attic_type])
-                  row[:roof_assembly_r] = row[:ceiling_assembly_r]
-                  row[:ceiling_assembly_r] = 2.1
-                end
-
-                args.update(row)
+              # Determine which surfaces to place insulation on
+              if args[:geometry_foundation_type].include? 'Basement'
+                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
+                row[:floor_assembly_r] = 2.1
+              elsif args[:geometry_foundation_type].include? 'Crawlspace'
+                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
+                row[:floor_assembly_r] = 2.1
               end
+              row.delete(:foundation_wall_assembly_r_basement)
+              row.delete(:foundation_wall_assembly_r_crawlspace)
+              if ["ConditionedAttic"].include?(args[:geometry_attic_type])
+                row[:roof_assembly_r] = row[:ceiling_assembly_r]
+                row[:ceiling_assembly_r] = 2.1
+              end
+              args.update(row) unless row.nil?
 
               # HVAC
 
@@ -534,31 +551,36 @@ module URBANopt
               if args[:heating_system_type] != "none"
                 heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
                 heating_system = get_lookup_tsv(heating_system_filepath)
-                args.update(get_lookup_row(heating_system, template_vals))
+                row = get_lookup_row(args, heating_system, template_vals)
+                args.update(row) unless row.nil?
               end
               if args[:cooling_system_type] != "none"
                 cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
                 cooling_system = get_lookup_tsv(cooling_system_filepath)
-                args.update(get_lookup_row(cooling_system, template_vals))
+                row = get_lookup_row(args, cooling_system, template_vals)
+                args.update(row) unless row.nil?
               end
               if args[:heat_pump_type] != "none"
                 heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
                 heat_pump = get_lookup_tsv(heat_pump_filepath)
-                args.update(get_lookup_row(heat_pump, template_vals))
+                row = get_lookup_row(args, heat_pump, template_vals)
+                args.update(row) unless row.nil?
               end
 
               # APPLIANCES
 
               appliances_filepath = File.join(File.dirname(__FILE__), 'residential/appliances.tsv')
               appliances = get_lookup_tsv(appliances_filepath)
-              args.update(get_lookup_row(appliances, template_vals))
+              row = get_lookup_row(args, appliances, template_vals)
+              args.update(row) unless row.nil?
 
               # WATER HEATER
 
               args[:water_heater_fuel_type] = args[:heating_system_fuel]
               water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
               water_heater = get_lookup_tsv(water_heater_filepath)
-              args.update(get_lookup_row(water_heater, template_vals))
+              row = get_lookup_row(args, water_heater, template_vals)
+              args.update(row) unless row.nil?
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults with template values
