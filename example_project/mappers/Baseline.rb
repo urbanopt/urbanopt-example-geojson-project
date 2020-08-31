@@ -525,13 +525,12 @@ module URBANopt
               rescue
               end
 
-              # TODO
               if args[:heating_system_type] != "none"
                 heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
                 heating_system = {}
                 arguments = []
                 CSV.foreach(heating_system_filepath, { :col_sep => "\t" }) do |row|
-
+                  # TODO
                 end
               end
               if args[:cooling_system_type] != "none"
@@ -539,7 +538,7 @@ module URBANopt
                 cooling_system = {}
                 arguments = []
                 CSV.foreach(cooling_system_filepath, { :col_sep => "\t" }) do |row|
-
+                  # TODO
                 end
               end
               if args[:heat_pump_type] != "none"
@@ -547,18 +546,17 @@ module URBANopt
                 heat_pump = {}
                 arguments = []
                 CSV.foreach(heat_pump_filepath, { :col_sep => "\t" }) do |row|
-
+                  # TODO
                 end
               end
 
               # APPLIANCES
 
-              # TODO
               appliances_filepath = File.join(File.dirname(__FILE__), 'residential/appliances.tsv')
               appliances = {}
               arguments = []
               CSV.foreach(appliances_filepath, { :col_sep => "\t" }) do |row|
-
+                # TODO
               end
               args[:kitchen_fan_present] = true
               args[:bathroom_fans_present] = true
@@ -589,12 +587,11 @@ module URBANopt
               # WATER HEATER
 
               args[:water_heater_fuel_type] = args[:heating_system_fuel]
-              # TODO
               water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
               water_heater = {}
               arguments = []
               CSV.foreach(water_heater_filepath, { :col_sep => "\t" }) do |row|
-
+                # TODO
               end
             end
 
