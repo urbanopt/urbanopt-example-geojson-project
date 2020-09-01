@@ -47,9 +47,7 @@ module URBANopt
         feature = features[0]
         building_type = feature.building_type
 
-        if residential_building_types.include? building_type
-          # TODO
-        elsif commercial_building_types.include? building_type
+        if commercial_building_types.include? building_type
           OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', '__SKIP__', false)
           OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', 'r_value', 20)
 

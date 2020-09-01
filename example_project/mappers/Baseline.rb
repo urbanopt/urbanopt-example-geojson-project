@@ -353,6 +353,17 @@ module URBANopt
         return nil
       end
 
+      def get_climate_zone_iecc(epw)
+        headers = CSV.open(epw, 'r') { |csv| csv.first }
+        wmo = headers[5]
+        zones_csv = File.join(File.dirname(__FILE__), '../resources/hpxml-measures/HPXMLtoOpenStudio/resources/climate_zones.csv')
+        CSV.foreach(zones_csv) do |row|
+          if row[0].to_s == wmo.to_s
+            return row[6].to_s
+          end
+        end
+      end
+
       def create_osw(scenario, features, feature_names)
         
         if features.size != 1
@@ -386,7 +397,7 @@ module URBANopt
           building_type = feature.building_type
 
           if residential_building_types.include? building_type
-            debug = true
+            debug = false
 
             args = {}
 
@@ -483,7 +494,9 @@ module URBANopt
               captures = feature.template.match(/Residential - IECC (?<iecc_year>\d+) \/ EnergyStar (?<estar_month>\w+) (?<estar_year>\d+)/)
               template_vals = Hash[captures.names.zip( captures.captures ) ]
               template_vals = Hash[template_vals.collect{ |k, v| [k.to_sym, v] }]
-              template_vals[:climate_zone] = '1A' # FIXME: create a lookup from epw to iecc climate zone
+
+              epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
+              template_vals[:climate_zone] = get_climate_zone_iecc(epw)
 
               # ENCLOSURE
 
@@ -546,6 +559,10 @@ module URBANopt
               begin
                 args[:heating_system_fuel] = feature.heating_system_fuel_type
               rescue
+              end
+
+              if args[:heating_system_type] == "ElectricResistance"
+                args[:heating_system_fuel] = "electricity"
               end
 
               if args[:heating_system_type] != "none"
@@ -798,7 +815,7 @@ module URBANopt
                 end
               end
 
-              #set weekday start time
+              # set weekday start time
               begin
                 weekday_start_time = feature.weekday_start_time
                 if !feature.weekday_start_time.empty?
