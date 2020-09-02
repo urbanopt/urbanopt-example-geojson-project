@@ -301,12 +301,17 @@ module URBANopt
         CSV.foreach(filepath, { :col_sep => "\t" }) do |row|
           if headers.empty?
             row.each do |header|
+              next if header == 'Source'
+
               unless header.include?('Dependency=')
                 header = header.to_sym
               end
               headers << header
             end
             next
+          end
+          if headers.length != row.length
+            row = row[0..-2] # leave out Source column
           end
           rows << headers.zip(row).to_h
         end
@@ -321,16 +326,16 @@ module URBANopt
           if row.keys.include?('Dependency=IECC Year')
             next if row['Dependency=IECC Year'] != template_vals[:iecc_year]
           end
-          if row.keys.include?('Dependency=EnergyStar Month')
-            next if row['Dependency=EnergyStar Month'] != template_vals[:estar_month]
+          if row.keys.include?('Dependency=Template Month')
+            next if row['Dependency=Template Month'] != template_vals[:t_month]
           end
-          if row.keys.include?('Dependency=EnergyStar Year')
-            next if row['Dependency=EnergyStar Year'] != template_vals[:estar_year]
+          if row.keys.include?('Dependency=Template Year')
+            next if row['Dependency=Template Year'] != template_vals[:t_year]
           end
           row.delete('Dependency=Climate Zone')
           row.delete('Dependency=IECC Year')
-          row.delete('Dependency=EnergyStar Month')
-          row.delete('Dependency=EnergyStar Year')
+          row.delete('Dependency=Template Month')
+          row.delete('Dependency=Template Year')
 
           row.each do |k, v|
             next unless v.nil?
@@ -488,10 +493,10 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_num_units]
 
-            # IECC / EnergyStar
-            if feature.template.include?('Residential - IECC')
+            # IECC / EnergyStar / Other
+            if feature.template.include?('Residential IECC')
 
-              captures = feature.template.match(/Residential - IECC (?<iecc_year>\d+) \/ EnergyStar (?<estar_month>\w+) (?<estar_year>\d+)/)
+              captures = feature.template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
               template_vals = Hash[captures.names.zip( captures.captures ) ]
               template_vals = Hash[template_vals.collect{ |k, v| [k.to_sym, v] }]
 
@@ -584,9 +589,9 @@ module URBANopt
                 args.update(row) unless row.nil?
               end
 
-              # APPLIANCES
+              # REFRIGERATOR
 
-              appliances_filepath = File.join(File.dirname(__FILE__), 'residential/appliances.tsv')
+              appliances_filepath = File.join(File.dirname(__FILE__), 'residential/refrigerator.tsv')
               appliances = get_lookup_tsv(appliances_filepath)
               row = get_lookup_row(args, appliances, template_vals)
               args.update(row) unless row.nil?
