@@ -69,7 +69,7 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
 #  gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
 #elsif allow_local
-  gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'master'
+  gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'shorter_names'
 #else
 #  gem 'openstudio-load-flexibility-measures', '~> 0.1.2'
 #end
