@@ -59,7 +59,7 @@
         "__SKIP__": true,
         "add_hvac": false,
         "add_refrigeration": false
-      } 
+      }
     },{
       "measure_dir_name": "blended_space_type_from_model",
       "arguments": {
@@ -74,7 +74,7 @@
         "feature_id": "5",
         "surrounding_buildings": "None"
       }
-    },{      
+    },{
       "name": "create_typical_building_from_model 2",
       "measure_dir_name": "create_typical_building_from_model",
       "arguments": {
@@ -92,7 +92,7 @@
         "add_hvac": true,
         "use_upstream_args": false
       }
-    },{  
+    },{
       "measure_dir_name":"PredictedMeanVote",
       "arguments":{  
         "__SKIP__": true,
@@ -106,13 +106,13 @@
       "arguments": {
         "__SKIP__": true,
         "r_value": 10
-      } 
+      }
     },{
       "measure_dir_name": "ReduceElectricEquipmentLoadsByPercentage",
       "arguments": {
         "__SKIP__": true,
         "elecequip_power_reduction_percent": 20
-      } 
+      }
     },{
       "measure_dir_name": "ReduceLightingLoadsByPercentage",
       "arguments": {
@@ -120,12 +120,29 @@
         "lighting_power_reduction_percent": 30
       }
     },{
+      "measure_dir_name": "add_ice_storage_to_plant_loop_for_load_flexibility",
+      "arguments": {
+        "__SKIP__": true,
+        "chiller_resize_factor": 0.8,
+        "discharge_start": "08:00",
+        "discharge_end": "20:00",
+        "charge_start": "23:00",
+        "inter_sp": 46
+       }
+    },{
+      "measure_dir_name": "add_distributed_ice_storage_to_air_loop_for_load_flexibility",
+      "arguments": {
+        "__SKIP__": true,
+        "size_mult": "0.75",
+        "charge_start": "23:00"
+      }
+    },{
       "measure_dir_name": "default_feature_reports",
       "arguments": {
         "feature_id": null,
         "feature_name": null,
         "feature_type": null,
-		"feature_location": null
+        "feature_location": null
       }
     }
   ],

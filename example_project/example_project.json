@@ -193,17 +193,12 @@
       "type": "Feature",
       "properties": {
         "id": "4",
-        "name": "Residential 1",
+        "name": "Restaurant 12",
         "type": "Building",
-        "building_type": "Single-Family Detached",
-        "footprint_area": 10541,
+        "building_type": "Food service",
         "floor_area": 31623,
-        "number_of_stories": 3,
-        "number_of_bedrooms": 5,
-        "foundation_type": "slab",
-        "attic_type": "attic - conditioned",
-        "system_type": "Residential - electric resistance and central air conditioner",
-        "template": "IECC 2015"
+        "footprint_area": 10541,
+        "number_of_stories": 3
       },
       "geometry": {
         "type": "Polygon",
@@ -238,18 +233,12 @@
       "type": "Feature",
       "properties": {
         "id": "5",
-        "name": "Residential 2",
+        "name": "Restaurant 14",
         "type": "Building",
-        "building_type": "Single-Family Detached",
-        "footprint_area": 8804,
+        "building_type": "Food service",
         "floor_area": 8804,
-        "number_of_stories": 1,
-        "number_of_bedrooms": 4,
-        "foundation_type": "crawlspace - vented",
-        "attic_type": "attic - vented",
-        "system_type": "Residential - boiler and room air conditioner",
-        "heating_system_fuel_type": "fuel oil",
-        "template": "IECC 2015"
+        "footprint_area": 8804,
+        "number_of_stories": 1        
       },
       "geometry": {
         "type": "Polygon",
@@ -284,7 +273,7 @@
       "type": "Feature",
       "properties": {
         "id": "6",
-        "name": "Residential 3",
+        "name": "Restaurant 15",
         "type": "Building",
         "footprint_area": 10689,
         "floor_area": 10689,
