@@ -5,24 +5,19 @@
   "file_paths": [],
   "run_directory": null,
   "steps": [
+
     {
-      "measure_dir_name": "BuildResidentialModel",
-      "arguments": {
-        "__SKIP__": true
-      }
-    },{
       "measure_dir_name": "set_run_period",
       "arguments": {
-        "__SKIP__": true,
-        "timesteps_per_hour": null,
-        "begin_date": null,
-        "end_date": null
+        "timesteps_per_hour": 4,
+        "begin_date": "2019-06-01",
+        "end_date": "2019-09-30"
       }
     },{
       "measure_dir_name": "ChangeBuildingLocation",
       "arguments": {
         "__SKIP__": true,
-        "weather_file_name": null,
+        "weather_file_name": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
         "climate_zone": "ASHRAE 169-2013-6A"
       }
     },{
@@ -94,8 +89,8 @@
       }
     },{
       "measure_dir_name":"PredictedMeanVote",
-      "arguments":{  
-        "__SKIP__": true,
+      "arguments":{
+        "__SKIP__":false,
         "comfortWarnings":true,
         "workEfficiencySchedule":"Work Efficiency Schedule",
         "clothingSchedule":"Clothing Schedule",
@@ -120,29 +115,29 @@
         "lighting_power_reduction_percent": 30
       }
     },{
-      "measure_dir_name": "add_ice_storage_to_plant_loop_for_load_flexibility",
-      "arguments": {
-        "__SKIP__": true,
-        "chiller_resize_factor": 0.8,
-        "discharge_start": "08:00",
-        "discharge_end": "20:00",
-        "charge_start": "23:00",
-        "inter_sp": 46
-       }
-    },{
-      "measure_dir_name": "add_distributed_ice_storage_to_air_loop_for_load_flexibility",
-      "arguments": {
-        "__SKIP__": true,
-        "size_mult": "0.75",
-        "charge_start": "23:00"
-      }
-    },{
+      "measure_dir_name": "add_central_ice_storage",
+        "arguments": {
+          "__SKIP__": true,
+          "chiller_resize_factor": 0.8,
+          "discharge_start": "08:00",
+          "discharge_end": "20:00",
+          "charge_start": "23:00",
+          "inter_sp": 46
+        }
+      },{
+        "measure_dir_name": "add_packaged_ice_storage",
+        "arguments": {
+          "__SKIP__": true,
+          "size_mult": "0.75",
+          "charge_start": "23:00"
+        }
+      },{
       "measure_dir_name": "default_feature_reports",
       "arguments": {
         "feature_id": null,
         "feature_name": null,
         "feature_type": null,
-        "feature_location": null
+		"feature_location": null
       }
     }
   ],
