@@ -275,17 +275,10 @@
         "id": "6",
         "name": "Restaurant 15",
         "type": "Building",
-        "footprint_area": 10689,
+        "building_type": "Food service",
         "floor_area": 10689,
-        "number_of_stories": 1,
-        "building_type": "Single-Family Attached",
-        "number_of_bedrooms": 10,
-        "foundation_type": "slab",
-        "attic_type": "attic - unvented",
-        "system_type": "Residential - furnace and evaporative cooler",
-        "heating_system_fuel_type": "natural gas",
-        "number_of_residential_units": 2,
-        "template": "IECC 2015"
+        "footprint_area": 10689,
+        "number_of_stories": 1        
       },
       "geometry": {
         "type": "Polygon",
