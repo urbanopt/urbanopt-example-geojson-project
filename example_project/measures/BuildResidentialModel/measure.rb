@@ -116,7 +116,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
     check_dir_exists(measures_dir, runner)
 
-    unit_models = []
     whole_building_model.getBuildingUnits.each_with_index do |unit, num_unit|
       unit_model = OpenStudio::Model::Model.new
 
@@ -167,6 +166,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
 
+      next if whole_building_model.getBuildingUnits.length == 1
+
       # create building unit object to assign to spaces
       building_unit = OpenStudio::Model::BuildingUnit.new(unit_model)
       building_unit.setName("building_unit_#{num_unit}")
@@ -185,9 +186,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       moodified_unit_path = File.join(unit_dir, 'modified_unit.osm')
       unit_model.save(moodified_unit_path, true)
-
-      # passing modified copy into array, can move earlier if we don't want the modified copy
-      unit_models << unit_model
 
       # run merge merge_spaces_from_external_file to add this unit to original model
       merge_measures_dir = nil
