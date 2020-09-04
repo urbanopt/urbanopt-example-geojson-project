@@ -3,6 +3,11 @@
 
 require 'openstudio'
 
+# require gem for merge measures
+# was able to harvest measure paths from primary osw for meta osw. Remove this once confirm that works
+#require 'openstudio-model-articulation'
+#require 'measures/merge_spaces_from_external_file/measure.rb'
+
 resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
 meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
 require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
@@ -162,19 +167,63 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
 
+      # create building unit object to assign to spaces
+      building_unit = OpenStudio::Model::BuildingUnit.new(unit_model)
+      building_unit.setName("building_unit_#{num_unit}")
+
+      # save modified copy of model for use with merge
+      unit_model.getSpaces.sort.each do |space|
+        space.setYOrigin(60 * (num_unit-1)) # meters
+        space.setBuildingUnit(building_unit)
+      end
+
+      # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
+      unit_model.objects.each do |model_object|
+        next if model_object.name.nil?
+        model_object.setName("unit_#{num_unit} #{model_object.name.to_s}")
+      end
+
+      moodified_unit_path = File.join(unit_dir, 'modified_unit.osm')
+      unit_model.save(moodified_unit_path, true)
+
+      # passing modified copy into array, can move earlier if we don't want the modified copy
       unit_models << unit_model
+
+      # run merge merge_spaces_from_external_file to add this unit to original model
+      merge_measures_dir = nil
+      osw_measure_paths = runner.workflow.measurePaths
+      osw_measure_paths.each do |orig_measure_path|
+        next if not orig_measure_path.to_s.include?('gems/openstudio-model-articulation')
+        merge_measures_dir = orig_measure_path.to_s
+        break
+      end
+      merge_measure_subdir = 'merge_spaces_from_external_file'
+      merge_measures = {}
+      merge_measure_args = {}
+      merge_measures[merge_measure_subdir] = []
+      merge_measure_args[:external_model_name] = moodified_unit_path
+      merge_measure_args[:merge_geometry] = true
+      merge_measure_args[:merge_loads] = true
+      merge_measure_args[:merge_attribute_names] = true
+      merge_measure_args[:add_spaces] = true
+      merge_measure_args[:remove_spaces] = false
+      merge_measure_args[:merge_schedules] = true
+      merge_measure_args[:compact_to_ruleset] = false
+      merge_measure_args[:merge_zones] = true
+      merge_measure_args[:merge_air_loops] = true
+      merge_measure_args[:merge_plant_loops] = true
+      merge_measure_args[:merge_swh] = true
+      merge_measure_args = Hash[merge_measure_args.collect{ |k, v| [k.to_s, v] }]
+      merge_measures[merge_measure_subdir] << merge_measure_args
+
+      # for this instance pass in original model and not unit_model. unit_model path witll be an argument
+      if not apply_measures(merge_measures_dir, merge_measures, runner, model, workflow_json, 'out.osw', true)
+        return false
+      end
+
     end
 
-    # TODO: merge all unit models into a single model
-    model.getBuilding.remove
-    model.getShadowCalculation.remove
-    model.getSimulationControl.remove
-    model.getSite.remove
-    model.getTimestep.remove
-
-    unit_models.each do |unit_model|
-      model.addObjects(unit_model.objects, true)
-    end
+    # TODO: add surface intersection and matching (is don't in measure now but would be better to do once at end, make bool to skip in merge measure)
 
     return true
   end
