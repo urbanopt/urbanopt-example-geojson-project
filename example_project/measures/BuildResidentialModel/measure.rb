@@ -166,7 +166,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
 
-      next if whole_building_model.getBuildingUnits.length == 1
+      if whole_building_model.getBuildingUnits.length == 1
+        model.getBuilding.remove
+        model.getShadowCalculation.remove
+        model.getSimulationControl.remove
+        model.getSite.remove
+        model.getTimestep.remove
+
+        model.addObjects(unit_model.objects, true)
+        next
+      end
 
       # create building unit object to assign to spaces
       building_unit = OpenStudio::Model::BuildingUnit.new(unit_model)

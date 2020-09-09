@@ -13,6 +13,7 @@
     },{
       "measure_dir_name": "set_run_period",
       "arguments": {
+        "__SKIP__": true,
         "timesteps_per_hour": 4,
         "begin_date": "2019-06-01",
         "end_date": "2019-09-30"
@@ -121,12 +122,12 @@
     },{
       "measure_dir_name": "add_central_ice_storage",
       "arguments": {
-          "__SKIP__": true,
-          "chiller_resize_factor": 0.8,
-          "discharge_start": "08:00",
-          "discharge_end": "20:00",
-          "charge_start": "23:00",
-          "inter_sp": 46
+        "__SKIP__": true,
+        "chiller_resize_factor": 0.8,
+        "discharge_start": "08:00",
+        "discharge_end": "20:00",
+        "charge_start": "23:00",
+        "inter_sp": 46
         }
     },{
       "measure_dir_name": "add_packaged_ice_storage",

@@ -440,21 +440,8 @@ module URBANopt
               args[:geometry_unit_type] = "apartment unit"
             end
 
-            args[:geometry_num_floors_above_grade] = feature.number_of_stories
-
-            begin
-              args[:geometry_cfa] = feature.floor_area / args[:geometry_num_units]
-            rescue
-              args[:geometry_cfa] = feature.footprint_area * args[:geometry_num_floors_above_grade] / args[:geometry_num_units]
-            end
-
-            args[:geometry_wall_height] = 8.0
-            begin
-              args[:geometry_wall_height] = feature.maximum_roof_height / args[:geometry_num_floors_above_grade]
-            rescue
-            end
-
             args[:geometry_foundation_type] = "SlabOnGrade"
+            args[:geometry_foundation_height] = 0.0
             case feature.foundation_type
             when 'crawlspace - vented'
               args[:geometry_foundation_type] = "VentedCrawlspace"
@@ -487,6 +474,16 @@ module URBANopt
                 args[:geometry_attic_type] = "ConditionedAttic"
                 args[:geometry_roof_type] = "gable"
               end
+            rescue
+            end
+
+            args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
+
+            args[:geometry_cfa] = feature.floor_area / args[:geometry_num_units]
+
+            args[:geometry_wall_height] = 8.0
+            begin
+              args[:geometry_wall_height] = feature.maximum_roof_height / args[:geometry_num_floors_above_grade]
             rescue
             end
 
