@@ -586,12 +586,26 @@ module URBANopt
                 args.update(row) unless row.nil?
               end
 
-              # REFRIGERATOR
+              # APPLIANCES
 
-              appliances_filepath = File.join(File.dirname(__FILE__), 'residential/refrigerator.tsv')
-              appliances = get_lookup_tsv(appliances_filepath)
-              row = get_lookup_row(args, appliances, template_vals)
+              args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
+              args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
+              ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer'].each do |appliance|
+                appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
+                appliances = get_lookup_tsv(appliances_filepath)
+                row = get_lookup_row(args, appliances, template_vals)
+                args.update(row) unless row.nil?
+              end
+
+              # VENTILATION
+
+              mechvent_filepath = File.join(File.dirname(__FILE__), "residential/mechanical_ventilation.tsv")
+              mechvent = get_lookup_tsv(mechvent_filepath)
+              row = get_lookup_row(args, mechvent, template_vals)
               args.update(row) unless row.nil?
+
+              args[:kitchen_fans_present] = true
+              args[:bathroom_fans_present] = true
 
               # WATER HEATER
 
