@@ -295,14 +295,16 @@ module URBANopt
         end
       end
 
-      def get_lookup_tsv(filepath)
+      def get_lookup_tsv(args, filepath)
         rows = []
         headers = []
         CSV.foreach(filepath, { :col_sep => "\t" }) do |row|
           if headers.empty?
             row.each do |header|
               next if header == 'Source'
-
+              if args.keys.include?(header.gsub('Dependency=', '').to_sym)
+                header = header.gsub('Dependency=', '')
+              end
               unless header.include?('Dependency=')
                 header = header.to_sym
               end
@@ -503,7 +505,7 @@ module URBANopt
               # ENCLOSURE
 
               enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
-              enclosure = get_lookup_tsv(enclosure_filepath)
+              enclosure = get_lookup_tsv(args, enclosure_filepath)
               row = get_lookup_row(args, enclosure, template_vals)
 
               # Determine which surfaces to place insulation on
@@ -569,19 +571,21 @@ module URBANopt
 
               if args[:heating_system_type] != "none"
                 heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
-                heating_system = get_lookup_tsv(heating_system_filepath)
+                heating_system = get_lookup_tsv(args, heating_system_filepath)
                 row = get_lookup_row(args, heating_system, template_vals)
                 args.update(row) unless row.nil?
               end
+
               if args[:cooling_system_type] != "none"
                 cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
-                cooling_system = get_lookup_tsv(cooling_system_filepath)
+                cooling_system = get_lookup_tsv(args, cooling_system_filepath)
                 row = get_lookup_row(args, cooling_system, template_vals)
                 args.update(row) unless row.nil?
               end
+
               if args[:heat_pump_type] != "none"
                 heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
-                heat_pump = get_lookup_tsv(heat_pump_filepath)
+                heat_pump = get_lookup_tsv(args, heat_pump_filepath)
                 row = get_lookup_row(args, heat_pump, template_vals)
                 args.update(row) unless row.nil?
               end
@@ -592,7 +596,7 @@ module URBANopt
               args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
               ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer'].each do |appliance|
                 appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
-                appliances = get_lookup_tsv(appliances_filepath)
+                appliances = get_lookup_tsv(args, appliances_filepath)
                 row = get_lookup_row(args, appliances, template_vals)
                 args.update(row) unless row.nil?
               end
@@ -600,7 +604,7 @@ module URBANopt
               # VENTILATION
 
               mechvent_filepath = File.join(File.dirname(__FILE__), "residential/mechanical_ventilation.tsv")
-              mechvent = get_lookup_tsv(mechvent_filepath)
+              mechvent = get_lookup_tsv(args, mechvent_filepath)
               row = get_lookup_row(args, mechvent, template_vals)
               args.update(row) unless row.nil?
 
@@ -611,7 +615,7 @@ module URBANopt
 
               args[:water_heater_fuel_type] = args[:heating_system_fuel]
               water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
-              water_heater = get_lookup_tsv(water_heater_filepath)
+              water_heater = get_lookup_tsv(args, water_heater_filepath)
               row = get_lookup_row(args, water_heater, template_vals)
               args.update(row) unless row.nil?
             end
