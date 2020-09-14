@@ -141,7 +141,7 @@ task :clear_baseline, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'baseline_scenario.csv' if csv.nil?
 
   baseline_scenario(json, csv).clear
@@ -153,7 +153,7 @@ task :run_baseline, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'baseline_scenario.csv' if csv.nil?
 
   configure_project
@@ -168,7 +168,7 @@ task :post_process_baseline, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'baseline_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario(json, csv))
@@ -189,7 +189,7 @@ task :clear_high_efficiency, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'high_efficiency_scenario.csv' if csv.nil?
 
   high_efficiency_scenario(json, csv).clear
@@ -201,7 +201,7 @@ task :run_high_efficiency, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'high_efficiency_scenario.csv' if csv.nil?
 
   configure_project
@@ -216,7 +216,7 @@ task :post_process_high_efficiency, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'high_efficiency_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario(json, csv))
@@ -237,7 +237,7 @@ task :clear_thermal_storage, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'thermal_storage_scenario.csv' if csv.nil?
 
   thermal_storage_scenario(json, csv).clear
@@ -249,7 +249,7 @@ task :run_thermal_storage, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'thermal_storage_scenario.csv' if csv.nil?
 
   configure_project
@@ -264,7 +264,7 @@ task :post_process_thermal_storage, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'thermal_storage_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(thermal_storage_scenario(json, csv))
@@ -285,7 +285,7 @@ task :clear_mixed, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'mixed_scenario.csv' if csv.nil?
 
   mixed_scenario(json, csv).clear
@@ -297,7 +297,7 @@ task :run_mixed, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'mixed_scenario.csv' if csv.nil?
 
   configure_project
@@ -312,7 +312,7 @@ task :post_process_mixed, [:json, :csv] do |t, args|
 
   json = args[:json]
   csv = args[:csv]
-  json = 'example_project.json' if json.nil?
+  json = 'example_project_combined.json' if json.nil?
   csv = 'mixed_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario(json, csv))
