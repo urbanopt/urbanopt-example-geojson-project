@@ -96,6 +96,40 @@ def high_efficiency_scenario(json, csv)
   return scenario
 end
 
+def thermal_storage_scenario(json, csv)
+  name = 'Thermal Storage Scenario'
+  run_dir = File.join(root_dir, 'run/thermal_storage_scenario/')
+  feature_file_path = File.join(root_dir, json)
+  csv_file = File.join(root_dir, csv)
+  mapper_files_dir = File.join(root_dir, 'mappers/')
+  num_header_rows = 1
+
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def mixed_scenario(json, csv)
+  name = 'Mixed Scenario'
+  run_dir = File.join(root_dir, 'run/mixed_scenario/')
+  feature_file_path = File.join(root_dir, json)
+  csv_file = File.join(root_dir, csv)
+  mapper_files_dir = File.join(root_dir, 'mappers/')
+  num_header_rows = 1
+
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def configure_project
+  # write a runner.conf in project dir
+  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install")}
+  File.open(File.join(root_dir, 'runner.conf'), "w") do |f|
+    f.write(options.to_json)
+  end
+end
+
 def visualize_scenarios
   name = 'Visualize Scenario Results'
   run_dir = File.join(root_dir, 'run')
@@ -129,10 +163,10 @@ def visualize_scenarios
     FileUtils.cp(html_in_path, html_out_path)
     puts "\nDone\n"
   end
-
 end
 
 def visualize_features(scenario_file)
+  name = 'Visualize Feature Results'
   scenario_name = File.basename(scenario_file, File.extname(scenario_file))
   run_dir = File.join(root_dir, 'run', scenario_name.downcase)
   feature_report_exists = false
@@ -145,7 +179,7 @@ def visualize_features(scenario_file)
       feature_report_exists = true
       feature_folders << File.join(run_dir, feature)
     else
-      puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+      puts "\nERROR: Default reports not created for #{feature}. Please use post processing command to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
     end
   end
   if feature_report_exists == true
@@ -165,40 +199,6 @@ def visualize_features(scenario_file)
     html_out_path = File.join(root_dir, 'run', scenario_name, 'feature_comparison.html')
     FileUtils.cp(html_in_path, html_out_path)
     puts "\nDone\n"
-  end
-end
-
-def thermal_storage_scenario(json, csv)
-  name = 'Thermal Storage Scenario'
-  run_dir = File.join(root_dir, 'run/thermal_storage_scenario/')
-  feature_file_path = File.join(root_dir, json)
-  csv_file = File.join(root_dir, csv)
-  mapper_files_dir = File.join(root_dir, 'mappers/')
-  num_header_rows = 1
-
-  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
-  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-  return scenario
-end
-
-def mixed_scenario(json, csv)
-  name = 'Mixed Scenario'
-  run_dir = File.join(root_dir, 'run/mixed_scenario/')
-  feature_file_path = File.join(root_dir, json)
-  csv_file = File.join(root_dir, csv)
-  mapper_files_dir = File.join(root_dir, 'mappers/')
-  num_header_rows = 1
-
-  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
-  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-  return scenario
-end
-
-def configure_project
-  # write a runner.conf in project dir
-  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install")}
-  File.open(File.join(root_dir, 'runner.conf'), "w") do |f|
-    f.write(options.to_json)
   end
 end
 
@@ -290,26 +290,6 @@ task :post_process_high_efficiency, [:json, :csv] do |t, args|
   end
 end
 
-### Visualize scenario results
-
-desc 'Visualize and compare results for all Scenarios'
-task :visualize_scenarios do
-  puts 'Visualizing results for all Scenarios...'
-
-  visualize_scenarios
-end
-
-## Visualize feature results 
-
-desc 'Visualize and Compare results for all Features in a Scenario'
-task :visualize_features, [:scenario_file] do |t, args|
-  puts 'Visualizing results for all Features in the Scenario...'
-
-  scenario_file = 'baseline_scenario.csv' if args[:scenario_file].nil?
-
-  visualize_features(scenario_file)
-end
-
 ### Thermal Storage
 
 desc 'Clear Thermal Storage Scenario'
@@ -392,6 +372,25 @@ task :post_process_mixed, [:json, :csv] do |t, args|
   scenario_result.feature_reports.each do |feature_report|
     feature_report.save_feature_report()
   end
+end
+
+### Visualize scenario results
+
+desc 'Visualize and compare results for all Scenarios'
+task :visualize_scenarios do
+  puts 'Visualizing results for all Scenarios...'
+  visualize_scenarios
+end
+
+## Visualize feature results 
+
+desc 'Visualize and compare results for all Features in a Scenario'
+task :visualize_features, [:scenario_file] do |t, args|
+  puts 'Visualizing results for all Features in the Scenario...'
+  
+  scenario_file = 'baseline_scenario.csv' if args[:scenario_file].nil?
+  
+  visualize_features(scenario_file)
 end
 
 ### All
