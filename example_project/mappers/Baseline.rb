@@ -492,132 +492,142 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_num_units]
 
+            system_type = "Residential - furnace and central air conditioner"
+            begin
+              system_type = feature.system_type
+            rescue
+            end
+
+            args[:heating_system_type] = "none"
+            if system_type.include?('electric resistance')
+              args[:heating_system_type] = "ElectricResistance"
+            elsif system_type.include?('furnace')
+              args[:heating_system_type] = "Furnace"
+            elsif system_type.include?('boiler')
+              args[:heating_system_type] = "Boiler"
+            end
+
+            args[:cooling_system_type] = "none"
+            if system_type.include?('central air conditioner')
+              args[:cooling_system_type] = "central air conditioner"
+            elsif system_type.include?('room air conditioner')
+              args[:cooling_system_type] = "room air conditioner"
+            elsif system_type.include?('evaporative cooler')
+              args[:cooling_system_type] = "evaporative cooler"
+            end
+
+            args[:heat_pump_type] = "none"
+            if system_type.include?('air-to-air')
+              args[:heat_pump_type] = "air-to-air"
+            elsif system_type.include?('mini-split')
+              args[:heat_pump_type] = "mini-split"
+            elsif system_type.include?('ground-to-air')
+              args[:heat_pump_type] = "ground-to-air"
+            end
+
+            args[:heating_system_fuel] = "natural gas"
+            begin
+              args[:heating_system_fuel] = feature.heating_system_fuel_type
+            rescue
+            end
+
+            if args[:heating_system_type] == "ElectricResistance"
+              args[:heating_system_fuel] = "electricity"
+            end
+
+            args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
+            args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
+
+            args[:kitchen_fans_present] = true
+            args[:bathroom_fans_present] = true
+
+            args[:water_heater_fuel_type] = args[:heating_system_fuel]
+
+            template = nil
+            begin
+              template = feature.template
+            rescue
+            end
+
             # IECC / EnergyStar / Other
-            if feature.template.include?('Residential IECC')
+            unless template.nil?
+              if template.include?('Residential IECC')
 
-              captures = feature.template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
-              template_vals = Hash[captures.names.zip( captures.captures ) ]
-              template_vals = Hash[template_vals.collect{ |k, v| [k.to_sym, v] }]
+                captures = template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
+                template_vals = Hash[captures.names.zip( captures.captures ) ]
+                template_vals = Hash[template_vals.collect{ |k, v| [k.to_sym, v] }]
 
-              epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
-              template_vals[:climate_zone] = get_climate_zone_iecc(epw)
+                epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
+                template_vals[:climate_zone] = get_climate_zone_iecc(epw)
 
-              # ENCLOSURE
+                # ENCLOSURE
 
-              enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
-              enclosure = get_lookup_tsv(args, enclosure_filepath)
-              row = get_lookup_row(args, enclosure, template_vals)
+                enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
+                enclosure = get_lookup_tsv(args, enclosure_filepath)
+                row = get_lookup_row(args, enclosure, template_vals)
 
-              # Determine which surfaces to place insulation on
-              if args[:geometry_foundation_type].include? 'Basement'
-                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
-                row[:floor_assembly_r] = 2.1
-              elsif args[:geometry_foundation_type].include? 'Crawlspace'
-                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
-                row[:floor_assembly_r] = 2.1
-              end
-              row.delete(:foundation_wall_assembly_r_basement)
-              row.delete(:foundation_wall_assembly_r_crawlspace)
-              if ["ConditionedAttic"].include?(args[:geometry_attic_type])
-                row[:roof_assembly_r] = row[:ceiling_assembly_r]
-                row[:ceiling_assembly_r] = 2.1
-              end
-              args.update(row) unless row.nil?
+                # Determine which surfaces to place insulation on
+                if args[:geometry_foundation_type].include? 'Basement'
+                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
+                  row[:floor_assembly_r] = 2.1
+                elsif args[:geometry_foundation_type].include? 'Crawlspace'
+                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
+                  row[:floor_assembly_r] = 2.1
+                end
+                row.delete(:foundation_wall_assembly_r_basement)
+                row.delete(:foundation_wall_assembly_r_crawlspace)
+                if ["ConditionedAttic"].include?(args[:geometry_attic_type])
+                  row[:roof_assembly_r] = row[:ceiling_assembly_r]
+                  row[:ceiling_assembly_r] = 2.1
+                end
+                args.update(row) unless row.nil?
 
-              # HVAC
+                # HVAC
 
-              system_type = "Residential - furnace and central air conditioner"
-              begin
-                system_type = feature.system_type
-              rescue
-              end
+                if args[:heating_system_type] != "none"
+                  heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
+                  heating_system = get_lookup_tsv(args, heating_system_filepath)
+                  row = get_lookup_row(args, heating_system, template_vals)
+                  args.update(row) unless row.nil?
+                end
 
-              args[:heating_system_type] = "none"
-              if system_type.include?('electric resistance')
-                args[:heating_system_type] = "ElectricResistance"
-              elsif system_type.include?('furnace')
-                args[:heating_system_type] = "Furnace"
-              elsif system_type.include?('boiler')
-                args[:heating_system_type] = "Boiler"
-              end
+                if args[:cooling_system_type] != "none"
+                  cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
+                  cooling_system = get_lookup_tsv(args, cooling_system_filepath)
+                  row = get_lookup_row(args, cooling_system, template_vals)
+                  args.update(row) unless row.nil?
+                end
 
-              args[:cooling_system_type] = "none"
-              if system_type.include?('central air conditioner')
-                args[:cooling_system_type] = "central air conditioner"
-              elsif system_type.include?('room air conditioner')
-                args[:cooling_system_type] = "room air conditioner"
-              elsif system_type.include?('evaporative cooler')
-                args[:cooling_system_type] = "evaporative cooler"
-              end
+                if args[:heat_pump_type] != "none"
+                  heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
+                  heat_pump = get_lookup_tsv(args, heat_pump_filepath)
+                  row = get_lookup_row(args, heat_pump, template_vals)
+                  args.update(row) unless row.nil?
+                end
 
-              args[:heat_pump_type] = "none"
-              if system_type.include?('air-to-air')
-                args[:heat_pump_type] = "air-to-air"
-              elsif system_type.include?('mini-split')
-                args[:heat_pump_type] = "mini-split"
-              elsif system_type.include?('ground-to-air')
-                args[:heat_pump_type] = "ground-to-air"
-              end
+                # APPLIANCES
 
-              args[:heating_system_fuel] = "natural gas"
-              begin
-                args[:heating_system_fuel] = feature.heating_system_fuel_type
-              rescue
-              end
+                ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer'].each do |appliance|
+                  appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
+                  appliances = get_lookup_tsv(args, appliances_filepath)
+                  row = get_lookup_row(args, appliances, template_vals)
+                  args.update(row) unless row.nil?
+                end
 
-              if args[:heating_system_type] == "ElectricResistance"
-                args[:heating_system_fuel] = "electricity"
-              end
+                # VENTILATION
 
-              if args[:heating_system_type] != "none"
-                heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
-                heating_system = get_lookup_tsv(args, heating_system_filepath)
-                row = get_lookup_row(args, heating_system, template_vals)
+                mechvent_filepath = File.join(File.dirname(__FILE__), "residential/mechanical_ventilation.tsv")
+                mechvent = get_lookup_tsv(args, mechvent_filepath)
+                row = get_lookup_row(args, mechvent, template_vals)
+                args.update(row) unless row.nil?
+
+                # WATER HEATER
+
+                water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
+                water_heater = get_lookup_tsv(args, water_heater_filepath)
+                row = get_lookup_row(args, water_heater, template_vals)
                 args.update(row) unless row.nil?
               end
-
-              if args[:cooling_system_type] != "none"
-                cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
-                cooling_system = get_lookup_tsv(args, cooling_system_filepath)
-                row = get_lookup_row(args, cooling_system, template_vals)
-                args.update(row) unless row.nil?
-              end
-
-              if args[:heat_pump_type] != "none"
-                heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
-                heat_pump = get_lookup_tsv(args, heat_pump_filepath)
-                row = get_lookup_row(args, heat_pump, template_vals)
-                args.update(row) unless row.nil?
-              end
-
-              # APPLIANCES
-
-              args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
-              args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
-              ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer'].each do |appliance|
-                appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
-                appliances = get_lookup_tsv(args, appliances_filepath)
-                row = get_lookup_row(args, appliances, template_vals)
-                args.update(row) unless row.nil?
-              end
-
-              # VENTILATION
-
-              mechvent_filepath = File.join(File.dirname(__FILE__), "residential/mechanical_ventilation.tsv")
-              mechvent = get_lookup_tsv(args, mechvent_filepath)
-              row = get_lookup_row(args, mechvent, template_vals)
-              args.update(row) unless row.nil?
-
-              args[:kitchen_fans_present] = true
-              args[:bathroom_fans_present] = true
-
-              # WATER HEATER
-
-              args[:water_heater_fuel_type] = args[:heating_system_fuel]
-              water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
-              water_heater = get_lookup_tsv(args, water_heater_filepath)
-              row = get_lookup_row(args, water_heater, template_vals)
-              args.update(row) unless row.nil?
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults with template values
