@@ -1,5 +1,5 @@
 #*********************************************************************************
-# URBANopt, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
+# URBANopt™, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
 # contributors. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -126,6 +126,78 @@ def configure_project
   options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install")}
   File.open(File.join(root_dir, 'runner.conf'), "w") do |f|
     f.write(options.to_json)
+  end
+end
+
+def visualize_scenarios
+  name = 'Visualize Scenario Results'
+  run_dir = File.join(root_dir, 'run')
+  scenario_folder_dirs = []
+  scenario_report_exists = false
+  Dir.glob(File.join(run_dir, '/*_scenario')) do |scenario_folder_dir|
+    scenario_report = File.join(scenario_folder_dir, 'default_scenario_report.csv')
+    if File.exist?(scenario_report)
+      scenario_folder_dirs << scenario_folder_dir
+      scenario_report_exists = true
+    else
+      puts "\nERROR: Default reports not created for #{scenario_folder_dir}. Please use post processing command to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder_dir}.\n"
+    end
+  end
+
+  if scenario_report_exists == true
+    puts "\nCreating visualizations for all Scenario results\n"
+    URBANopt::Scenario::ResultVisualization.create_visualization(scenario_folder_dirs, false)
+    vis_file_path = File.join(root_dir, 'visualization')
+    if !File.exists?(vis_file_path)
+      Dir.mkdir File.join(root_dir, 'visualization')
+    end
+    html_in_path = File.join(vis_file_path, 'input_visualization_scenario.html')
+    if !File.exists?(html_in_path)
+      visualization_file = 'https://raw.githubusercontent.com/urbanopt/urbanopt-example-geojson-project/master/example-project/visualization/input_visualization_scenario.html'
+      vis_file_name = File.basename(visualization_file)
+      vis_download = open(visualization_file, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE)
+      IO.copy_stream(vis_download, File.join(vis_file_path, vis_file_name))
+    end
+    html_out_path = File.join(root_dir, 'run', 'scenario_comparison.html')
+    FileUtils.cp(html_in_path, html_out_path)
+    puts "\nDone\n"
+  end
+end
+
+def visualize_features(scenario_file)
+  name = 'Visualize Feature Results'
+  scenario_name = File.basename(scenario_file, File.extname(scenario_file))
+  run_dir = File.join(root_dir, 'run', scenario_name.downcase)
+  feature_report_exists = false
+  feature_id = CSV.read(File.join(root_dir, scenario_file), :headers => true)
+  feature_folders = []
+  # loop through building feature ids from scenario csv
+  feature_id["Feature Id"].each do |feature|
+    feature_report = File.join(run_dir, feature, 'feature_reports')
+    if File.exist?(feature_report)
+      feature_report_exists = true
+      feature_folders << File.join(run_dir, feature)
+    else
+      puts "\nERROR: Default reports not created for #{feature}. Please use post processing command to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+    end
+  end
+  if feature_report_exists == true
+    puts "\nCreating visualizations for Feature results in the Scenario\n"
+    URBANopt::Scenario::ResultVisualization.create_visualization(feature_folders, true)
+    vis_file_path = File.join(root_dir, 'visualization')
+    if !File.exists?(vis_file_path)
+      Dir.mkdir File.join(root_dir, 'visualization')
+    end
+    html_in_path = File.join(vis_file_path, 'input_visualization_feature.html')
+    if !File.exists?(html_in_path)
+      visualization_file = 'https://raw.githubusercontent.com/urbanopt/urbanopt-example-geojson-project/master/example_project/visualization/input_visualization_feature.html'
+      vis_file_name = File.basename(visualization_file)
+      vis_download = open(visualization_file, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE)
+      IO.copy_stream(vis_download, File.join(vis_file_path, vis_file_name))
+    end
+    html_out_path = File.join(root_dir, 'run', scenario_name, 'feature_comparison.html')
+    FileUtils.cp(html_in_path, html_out_path)
+    puts "\nDone\n"
   end
 end
 
@@ -323,6 +395,25 @@ task :post_process_mixed, [:json, :csv] do |t, args|
   scenario_result.feature_reports.each do |feature_report|
     feature_report.save_feature_report()
   end
+end
+
+### Visualize scenario results
+
+desc 'Visualize and compare results for all Scenarios'
+task :visualize_scenarios do
+  puts 'Visualizing results for all Scenarios...'
+  visualize_scenarios
+end
+
+## Visualize feature results 
+
+desc 'Visualize and compare results for all Features in a Scenario'
+task :visualize_features, [:scenario_file] do |t, args|
+  puts 'Visualizing results for all Features in the Scenario...'
+  
+  scenario_file = 'baseline_scenario.csv' if args[:scenario_file].nil?
+  
+  visualize_features(scenario_file)
 end
 
 ### All

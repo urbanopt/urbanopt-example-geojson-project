@@ -1,5 +1,6 @@
-#*********************************************************************************
-# URBANopt™, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
+
+# *********************************************************************************
+# URBANopt, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
 # contributors. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -26,41 +27,33 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
-#*********************************************************************************
+# *********************************************************************************
 
-require 'urbanopt/reporting'
+require 'urbanopt/scenario'
 require 'openstudio/common_measures'
 require 'openstudio/model_articulation'
 
-require_relative 'Baseline'
+require_relative 'CreateBar'
 
 require 'json'
 
 module URBANopt
   module Scenario
-    class HighEfficiencyMapper < BaselineMapper
-
+    class HighEfficiencyCreateBarMapper < CreateBarMapper
       def create_osw(scenario, features, feature_names)
-
         osw = super(scenario, features, feature_names)
 
-        feature = features[0]
-        building_type = feature.building_type
+        OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', '__SKIP__', false)
+        OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', 'r_value', 20)
 
-        if commercial_building_types.include? building_type
-          OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', '__SKIP__', false)
-          OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', 'r_value', 20)
+        OpenStudio::Extension.set_measure_argument(osw, 'ReduceElectricEquipmentLoadsByPercentage', '__SKIP__', false)
+        OpenStudio::Extension.set_measure_argument(osw, 'ReduceElectricEquipmentLoadsByPercentage', 'elecequip_power_reduction_percent', 20)
 
-          OpenStudio::Extension.set_measure_argument(osw, 'ReduceElectricEquipmentLoadsByPercentage', '__SKIP__', false)
-          OpenStudio::Extension.set_measure_argument(osw, 'ReduceElectricEquipmentLoadsByPercentage', 'elecequip_power_reduction_percent', 20)
-
-          OpenStudio::Extension.set_measure_argument(osw, 'ReduceLightingLoadsByPercentage', '__SKIP__', false)
-          OpenStudio::Extension.set_measure_argument(osw, 'ReduceLightingLoadsByPercentage', 'lighting_power_reduction_percent', 10)
-        end
+        OpenStudio::Extension.set_measure_argument(osw, 'ReduceLightingLoadsByPercentage', '__SKIP__', false)
+        OpenStudio::Extension.set_measure_argument(osw, 'ReduceLightingLoadsByPercentage', 'lighting_power_reduction_percent', 10)
 
         return osw
       end
-
     end
   end
 end

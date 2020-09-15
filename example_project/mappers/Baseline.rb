@@ -1,5 +1,5 @@
 #*********************************************************************************
-# URBANopt, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
+# URBANopt™, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
 # contributors. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -938,11 +938,11 @@ module URBANopt
               'blended_space_type_from_model', 'blend_method', 'Building Story')
 
               # create geometry for the desired feature, this will reuse blended space types in the model for each story and remove the bar geometry
-              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', '__SKIP__', false)
-              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'geojson_file', scenario.feature_file.path)
-              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'feature_id', feature_id)
-              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation', 'surrounding_buildings', 'ShadingOnly')
-                            
+              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation_zoning', '__SKIP__', false)
+              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation_zoning', 'geojson_file', scenario.feature_file.path)
+              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation_zoning', 'feature_id', feature_id)
+              OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation_zoning', 'surrounding_buildings', 'ShadingOnly')
+
               # call create typical building a second time, do not touch space types, only add hvac
               OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', '__SKIP__', false)
               OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'system_type', system_type, 'create_typical_building_from_model 2')
