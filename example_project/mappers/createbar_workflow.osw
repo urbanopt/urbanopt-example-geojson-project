@@ -40,6 +40,7 @@
         "num_stories_above_grade": null,
         "num_stories_below_grade": null,
         "building_rotation": 0,
+        "perim_mult": 0,
         "template": "90.1-2004",
         "ns_to_ew_ratio": 0,
         "wwr": 0,
