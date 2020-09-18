@@ -512,9 +512,15 @@ module URBANopt
             geojson_file = scenario.feature_file.path
             all_features = URBANopt::GeoJSON::GeoFile.from_file(geojson_file)
             feature = all_features.get_feature_by_id(feature_id)
-
             aspect_ratio = feature.calculate_aspect_ratio
-            perimeter = feature.calculate_perimeter(feature)
+
+            begin
+              perimeter = feature.footprint_perimeter
+              if perimeter.empty?
+                perimeter = feature.calculate_perimeter(feature)
+              end
+            rescue
+            end
 
             perimeter_multiplier = feature.get_perimeter_multiplier(footprint_area, aspect_ratio, perimeter)
 
