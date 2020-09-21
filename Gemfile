@@ -50,10 +50,12 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'urbanopt-scenario', '~> 0.3.0'
 # end
 
+
+##### Adding this temporarily until the scenario gem gemspec get updated with the new reporting-gem released version. 
 #if allow_local && File.exist?('../urbanopt-reporting-gem')
 #  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 #elsif allow_local
-#  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
+  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
 #else
 #  gem 'urbanopt-reporting', '~> 0.1.0'
 #end
@@ -72,4 +74,14 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
   gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'master'
 #else
 #  gem 'openstudio-load-flexibility-measures', '~> 0.1.2'
+#end
+
+
+#if allow_local && File.exist?('../urbanopt-reopt-gem')
+#  gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
+#elsif github_branch
+#  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
+#else
+  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
+  #gem 'urbanopt-reopt', '0.2.0'
 #end

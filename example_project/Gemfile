@@ -58,10 +58,10 @@ end
 #   gem 'urbanopt-geojson', '~> 0.3.0'
 # end
 
-if allow_local && File.exists?('../urbanopt-reporting-gem')
-  gem 'urbanopt-reporting', path: '../urbanotp-reporting-gem'
-elsif allow_local
+#if allow_local && File.exists?('../urbanopt-reporting-gem')
+#  gem 'urbanopt-reporting', path: '../urbanotp-reporting-gem'
+#elsif allow_local
   gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
-else
-  gem 'urbanopt-reporting', '~> 0.1.1'
-end
+#else
+#  gem 'urbanopt-reporting', '~> 0.1.1'
+#end

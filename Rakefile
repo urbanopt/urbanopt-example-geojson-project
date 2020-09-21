@@ -33,7 +33,7 @@ require 'openstudio/extension/rake_task'
 require 'urbanopt/scenario'
 require 'urbanopt/geojson'
 require 'urbanopt/reopt'
-#require 'urbanopt/reopt_scenario'
+require 'urbanopt/reopt_scenario'
 require_relative 'developer_nrel_key'
 
 module URBANopt
