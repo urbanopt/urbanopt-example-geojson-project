@@ -1,5 +1,5 @@
 #*********************************************************************************
-# URBANopt, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other 
+# URBANopt™, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other 
 # contributors. All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without modification, 
@@ -223,9 +223,9 @@ module URBANopt
             return 'DEER 2017'
           else
             return 'DEER 2020'
-          end        
+          end
         else
-          # ASHRAE    
+          # ASHRAE
           if year_built < 1980
             return 'DOE Ref Pre-1980'
           elsif year_built <= 2004
