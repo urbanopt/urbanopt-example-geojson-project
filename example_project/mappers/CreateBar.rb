@@ -1,5 +1,5 @@
 #*********************************************************************************
-# URBANopt, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other 
+# URBANopt™, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other 
 # contributors. All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without modification, 
@@ -223,9 +223,9 @@ module URBANopt
             return 'DEER 2017'
           else
             return 'DEER 2020'
-          end        
+          end
         else
-          # ASHRAE    
+          # ASHRAE
           if year_built < 1980
             return 'DOE Ref Pre-1980'
           elsif year_built <= 2004
@@ -509,11 +509,26 @@ module URBANopt
             
             # create a bar building, will have spaces tagged with individual space types given the
             # input building types
+            geojson_file = scenario.feature_file.path
+            all_features = URBANopt::GeoJSON::GeoFile.from_file(geojson_file)
+            feature = all_features.get_feature_by_id(feature_id)
+            aspect_ratio = feature.calculate_aspect_ratio
+
+            begin
+              perimeter = feature.footprint_perimeter
+              if perimeter.empty?
+                perimeter = feature.calculate_perimeter(feature)
+              end
+            rescue
+            end
+
+            perimeter_multiplier = feature.get_perimeter_multiplier(footprint_area, aspect_ratio, perimeter)
 
             OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'single_floor_area', footprint_area)
             OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'floor_height', floor_height)
             OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'num_stories_above_grade', number_of_stories_above_ground)
             OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'num_stories_below_grade', number_of_stories_below_ground)
+            OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'perim_mult', perimeter_multiplier)
 
             OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'bldg_type_a', mapped_building_type_1)
 
