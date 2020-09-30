@@ -233,7 +233,7 @@
             height: 320,
             margin: {
               top: 45,
-              right: 16,
+              right: 2,
               bottom: 32,
               left: 64
             },
@@ -280,7 +280,7 @@
             height: 320,
             margin: {
               top: 45,
-              right: 16,
+              right: 2,
               bottom: 32,
               left: 64
             },
@@ -353,9 +353,10 @@
               margin: {
                 top: 8,
                 bottom: 32,
-                left: 175,
-                right: 0
-              }
+                left: 250,
+                right: 10
+              },
+              maxKeyLength: 100
             },
             controls: {
               margin: {
@@ -392,14 +393,13 @@
         $scope.errorText = "No data. This scenario either did not complete successfully or did not include an annual simulation ranging from January 1 to December 31.";
 
         // figure out max total energy use and applicable end uses
-        var total_value = 0;
         _.forEach($scope.scenarios, function (scenario) {
-            console.log("HHHHH. SCENARIO: ", scenario.name);
-
+            console.log("SCENARIO: ", scenario.name);
+            var total_value = 0;
 
           _.forEach(endUseKeys, function (endUseKey) {
             var endUseValue = scenario.annual_values[endUseKey];
-            console.log("endUseKey: ", endUseKey, "endUseValue: ", endUseValue);
+            // console.log("endUseKey: ", endUseKey, "endUseValue: ", endUseValue);
             
             if (endUseValue == 0 || !endUseValue) {
               console.log("no data found for: ", endUseKey);
@@ -423,9 +423,16 @@
             $scope.monthlyFuelChartData[scenario.name] = [];
             _.forEach(datasets, function (dataset) {
               var values = scenario.monthly_values[dataset];
+              if (dataset == 'Electricity:Facility') {
+                var datasetUnit = 'Electricity:Facility(kWh)';
+                } else if (dataset == 'ElectricityProduced:Facility') {
+                  var datasetUnit = 'ElectricityProduced:Facility(kWh)'
+                } else if (dataset == 'Gas:Facility') {
+                  var datasetUnit = 'Gas:Facility(kBtu)'
+                };
 
               $scope.monthlyFuelChartData[scenario.name].push({
-                key: dataset,
+                key: datasetUnit,
                 values: _.map(values, function (value, i) {
                   value;
                   monthlyFuelYMax = _.max([monthlyFuelYMax, value]);
