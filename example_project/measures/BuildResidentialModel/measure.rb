@@ -38,7 +38,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     args = OpenStudio::Measure::OSArgumentVector.new
     measure.arguments(model).each do |arg|
-      next if ['hpxml_path', 'weather_dir'].include? arg.name
+      next if ['hpxml_path'].include? arg.name
       args << arg
     end
 
@@ -128,7 +128,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measures = {}
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../out.xml')
-      measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:software_program_used] = 'URBANopt'
       measure_args[:software_program_version] = '0.3.1'
       if unit.additionalProperties.getFeatureAsString('GeometryLevel').is_initialized
@@ -150,7 +149,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../out.xml')
-      measure_args[:weather_dir] = File.expand_path('../../../../weather')
       measure_args[:output_dir] = File.expand_path('..')
       measure_args[:debug] = true
       measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
