@@ -34,29 +34,28 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'openstudio-common-measures', '~> 0.2.0'
 # end
 
-# if allow_local && File.exist?('../openstudio-model-articulation-gem')
-#   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
-# elsif allow_local
-#   gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
-# else
-#   gem 'openstudio-model-articulation', '~> 0.2.0'
-# end
+if allow_local && File.exist?('../openstudio-model-articulation-gem')
+  gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
+elsif allow_local
+  gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
+else
+  gem 'openstudio-model-articulation', '~> 0.2.0'
+end
 
 if allow_local && File.exist?('../urbanopt-scenario-gem')
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 elsif allow_local
   gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 else
-  gem 'urbanopt-scenario', '~> 0.4.1'
+  gem 'urbanopt-scenario', '~> 0.4.2'
 end
 
-##### Adding this temporarily until the scenario gem gemspec get updated with the new reporting-gem released version. 
 if allow_local && File.exist?('../urbanopt-reporting-gem')
   gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 elsif allow_local
   gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
 else
- gem 'urbanopt-reporting', '~> 0.2.0'
+  gem 'urbanopt-reporting', '~> 0.2.0'
 end
 
 if allow_local && File.exist?('../urbanopt-geojson-gem')

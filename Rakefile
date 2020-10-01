@@ -73,7 +73,8 @@ end
 
 def baseline_scenario(json, csv)
   name = 'Baseline Scenario'
-  run_dir = File.join(root_dir, 'run/baseline_scenario/')
+  scenario = File.basename(csv, '.csv')
+  run_dir = File.join(root_dir, "run/#{scenario}/")
   feature_file_path = File.join(root_dir, json)
   csv_file = File.join(root_dir, csv)
   mapper_files_dir = File.join(root_dir, 'mappers/')
@@ -143,6 +144,78 @@ def configure_project
   end
 end
 
+def visualize_scenarios
+  name = 'Visualize Scenario Results'
+  run_dir = File.join(root_dir, 'run')
+  scenario_folder_dirs = []
+  scenario_report_exists = false
+  Dir.glob(File.join(run_dir, '/*_scenario')) do |scenario_folder_dir|
+    scenario_report = File.join(scenario_folder_dir, 'default_scenario_report.csv')
+    if File.exist?(scenario_report)
+      scenario_folder_dirs << scenario_folder_dir
+      scenario_report_exists = true
+    else
+      puts "\nERROR: Default reports not created for #{scenario_folder_dir}. Please use post processing command to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder_dir}.\n"
+    end
+  end
+
+  if scenario_report_exists == true
+    puts "\nCreating visualizations for all Scenario results\n"
+    URBANopt::Scenario::ResultVisualization.create_visualization(scenario_folder_dirs, false)
+    vis_file_path = File.join(root_dir, 'visualization')
+    if !File.exists?(vis_file_path)
+      Dir.mkdir File.join(root_dir, 'visualization')
+    end
+    html_in_path = File.join(vis_file_path, 'input_visualization_scenario.html')
+    if !File.exists?(html_in_path)
+      visualization_file = 'https://raw.githubusercontent.com/urbanopt/urbanopt-example-geojson-project/master/example-project/visualization/input_visualization_scenario.html'
+      vis_file_name = File.basename(visualization_file)
+      vis_download = open(visualization_file, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE)
+      IO.copy_stream(vis_download, File.join(vis_file_path, vis_file_name))
+    end
+    html_out_path = File.join(root_dir, 'run', 'scenario_comparison.html')
+    FileUtils.cp(html_in_path, html_out_path)
+    puts "\nDone\n"
+  end
+end
+
+def visualize_features(scenario_file)
+  name = 'Visualize Feature Results'
+  scenario_name = File.basename(scenario_file, File.extname(scenario_file))
+  run_dir = File.join(root_dir, 'run', scenario_name.downcase)
+  feature_report_exists = false
+  feature_id = CSV.read(File.join(root_dir, scenario_file), :headers => true)
+  feature_folders = []
+  # loop through building feature ids from scenario csv
+  feature_id["Feature Id"].each do |feature|
+    feature_report = File.join(run_dir, feature, 'feature_reports')
+    if File.exist?(feature_report)
+      feature_report_exists = true
+      feature_folders << File.join(run_dir, feature)
+    else
+      puts "\nERROR: Default reports not created for #{feature}. Please use post processing command to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+    end
+  end
+  if feature_report_exists == true
+    puts "\nCreating visualizations for Feature results in the Scenario\n"
+    URBANopt::Scenario::ResultVisualization.create_visualization(feature_folders, true)
+    vis_file_path = File.join(root_dir, 'visualization')
+    if !File.exists?(vis_file_path)
+      Dir.mkdir File.join(root_dir, 'visualization')
+    end
+    html_in_path = File.join(vis_file_path, 'input_visualization_feature.html')
+    if !File.exists?(html_in_path)
+      visualization_file = 'https://raw.githubusercontent.com/urbanopt/urbanopt-example-geojson-project/master/example_project/visualization/input_visualization_feature.html'
+      vis_file_name = File.basename(visualization_file)
+      vis_download = open(visualization_file, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE)
+      IO.copy_stream(vis_download, File.join(vis_file_path, vis_file_name))
+    end
+    html_out_path = File.join(root_dir, 'run', scenario_name, 'feature_comparison.html')
+    FileUtils.cp(html_in_path, html_out_path)
+    puts "\nDone\n"
+  end
+end
+
 # Load in the rake tasks from the base extension gem
 rake_task = OpenStudio::Extension::RakeTask.new
 rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONProject)
@@ -153,8 +226,10 @@ desc 'Clear Baseline Scenario'
 task :clear_baseline, [:json, :csv] do |t, args|
   puts 'Clearing Baseline Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'baseline_scenario.csv' if csv.nil?
 
   baseline_scenario(json, csv).clear
 end
@@ -163,8 +238,10 @@ desc 'Run Baseline Scenario'
 task :run_baseline, [:json, :csv] do |t, args|
   puts 'Running Baseline Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'baseline_scenario.csv' if csv.nil?
 
   configure_project
 
@@ -176,8 +253,10 @@ desc 'Post Process Baseline Scenario'
 task :post_process_baseline, [:json, :csv] do |t, args|
   puts 'Post Processing Baseline Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'baseline_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'baseline_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(baseline_scenario(json, csv))
   scenario_result = default_post_processor.run
@@ -195,8 +274,10 @@ desc 'Clear High Efficiency Scenario'
 task :clear_high_efficiency, [:json, :csv] do |t, args|
   puts 'Clearing High Efficiency Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'high_efficiency_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'high_efficiency_scenario.csv' if csv.nil?
 
   high_efficiency_scenario(json, csv).clear
 end
@@ -205,8 +286,10 @@ desc 'Run High Efficiency Scenario'
 task :run_high_efficiency, [:json, :csv] do |t, args|
   puts 'Running High Efficiency Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'high_efficiency_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'high_efficiency_scenario.csv' if csv.nil?
 
   configure_project
 
@@ -218,8 +301,10 @@ desc 'Post Process High Efficiency Scenario'
 task :post_process_high_efficiency, [:json, :csv] do |t, args|
   puts 'Post Processing High Efficiency Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'high_efficiency_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'high_efficiency_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(high_efficiency_scenario(json, csv))
   scenario_result = default_post_processor.run
@@ -237,8 +322,10 @@ desc 'Clear Thermal Storage Scenario'
 task :clear_thermal_storage, [:json, :csv] do |t, args|
   puts 'Clearing Thermal Storage Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'thermal_storage_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'thermal_storage_scenario.csv' if csv.nil?
 
   thermal_storage_scenario(json, csv).clear
 end
@@ -247,8 +334,10 @@ desc 'Run Thermal Storage Scenario'
 task :run_thermal_storage, [:json, :csv] do |t, args|
   puts 'Running Thermal Storage Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'thermal_storage_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'thermal_storage_scenario.csv' if csv.nil?
 
   configure_project
 
@@ -260,8 +349,10 @@ desc 'Post Process Thermal Storage Scenario'
 task :post_process_thermal_storage, [:json, :csv] do |t, args|
   puts 'Post Processing Thermal Storage Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'thermal_storage_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'thermal_storage_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(thermal_storage_scenario(json, csv))
   scenario_result = default_post_processor.run
@@ -331,8 +422,10 @@ desc 'Clear Mixed Scenario'
 task :clear_mixed, [:json, :csv] do |t, args|
   puts 'Clearing Mixed Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'mixed_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'mixed_scenario.csv' if csv.nil?
 
   mixed_scenario(json, csv).clear
 end
@@ -341,8 +434,10 @@ desc 'Run Mixed Scenario'
 task :run_mixed, [:json, :csv] do |t, args|
   puts 'Running Mixed Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'mixed_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'mixed_scenario.csv' if csv.nil?
 
   configure_project
 
@@ -354,8 +449,10 @@ desc 'Post Process Mixed Scenario'
 task :post_process_mixed, [:json, :csv] do |t, args|
   puts 'Post Processing Mixed Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
-  csv = 'mixed_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'mixed_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(mixed_scenario(json, csv))
   scenario_result = default_post_processor.run
@@ -365,6 +462,25 @@ task :post_process_mixed, [:json, :csv] do |t, args|
   scenario_result.feature_reports.each do |feature_report|
     feature_report.save_feature_report()
   end
+end
+
+### Visualize scenario results
+
+desc 'Visualize and compare results for all Scenarios'
+task :visualize_scenarios do
+  puts 'Visualizing results for all Scenarios...'
+  visualize_scenarios
+end
+
+## Visualize feature results 
+
+desc 'Visualize and compare results for all Features in a Scenario'
+task :visualize_features, [:scenario_file] do |t, args|
+  puts 'Visualizing results for all Features in the Scenario...'
+  
+  scenario_file = 'baseline_scenario.csv' if args[:scenario_file].nil?
+  
+  visualize_features(scenario_file)
 end
 
 ### All
