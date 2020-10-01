@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # see the URL below for information on how to write OpenStudio measures
 # http://nrel.github.io/OpenStudio-user-documentation/reference/measure_writing_guide/
 
@@ -19,7 +21,6 @@ require_relative '../HPXMLtoOpenStudio/resources/schedules'
 require_relative '../HPXMLtoOpenStudio/resources/unit_conversions'
 require_relative '../HPXMLtoOpenStudio/resources/validator'
 require_relative '../HPXMLtoOpenStudio/resources/version'
-require_relative '../HPXMLtoOpenStudio/resources/weather'
 require_relative '../HPXMLtoOpenStudio/resources/xmlhelper'
 
 # start the measure
@@ -46,12 +47,6 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
     arg = OpenStudio::Measure::OSArgument.makeStringArgument('hpxml_path', true)
     arg.setDisplayName('HPXML File Path')
     arg.setDescription('Absolute/relative path of the HPXML file.')
-    args << arg
-
-    arg = OpenStudio::Measure::OSArgument.makeStringArgument('weather_dir', true)
-    arg.setDisplayName('Weather Directory')
-    arg.setDescription('Absolute/relative path of the weather directory.')
-    arg.setDefaultValue('weather')
     args << arg
 
     arg = OpenStudio::Measure::OSArgument.makeStringArgument('software_program_used', false)
@@ -94,6 +89,12 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
     arg.setDescription('This numeric field should contain the ending day of the ending month (must be valid for month) for the annual run period desired.')
     args << arg
 
+    arg = OpenStudio::Measure::OSArgument::makeIntegerArgument('simulation_control_run_period_calendar_year', false)
+    arg.setDisplayName('Simulation Control: Run Period Calendar Year')
+    arg.setUnits('year')
+    arg.setDescription('This numeric field should contain the calendar year that determines the start day of week. If you are running simulations using AMY weather files, the value entered for calendar year will not be used; it will be overridden by the actual year found in the AMY weather file.')
+    args << arg
+
     arg = OpenStudio::Measure::OSArgument::makeBoolArgument('simulation_control_daylight_saving_enabled', false)
     arg.setDisplayName('Simulation Control: Daylight Saving Enabled')
     arg.setDescription('Whether to use daylight saving.')
@@ -125,7 +126,7 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
 
     arg = OpenStudio::Measure::OSArgument.makeStringArgument('weather_station_epw_filepath', true)
     arg.setDisplayName('EnergyPlus Weather (EPW) Filepath')
-    arg.setDescription('Name of the EPW file.')
+    arg.setDescription('Path of the EPW file.')
     arg.setDefaultValue('USA_CO_Denver.Intl.AP.725650_TMY3.epw')
     args << arg
 
@@ -1411,6 +1412,114 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
     arg.setDefaultValue(30)
     args << arg
 
+    arg = OpenStudio::Measure::OSArgument::makeBoolArgument('mech_vent_is_shared_system', true)
+    arg.setDisplayName('Mechanical Ventilation: Is Shared System')
+    arg.setDescription('Whether the mechanical ventilation is a shared system. If true, assumed to serve all the units in the building.')
+    arg.setDefaultValue(false)
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('shared_mech_vent_in_unit_flow_rate', false)
+    arg.setDisplayName('Shared Mechanical Ventilation: In-Unit Flow Rate')
+    arg.setDescription('The flow rate delivered to the dwelling unit. This is required for a shared mechanical ventilation system.')
+    arg.setUnits('CFM')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('shared_mech_vent_frac_recirculation', false)
+    arg.setDisplayName('Shared Mechanical Ventilation: Fraction Recirculation')
+    arg.setDescription('Fraction of the total supply air that is recirculated, with the remainder assumed to be outdoor air. The value must be 0 for exhaust only systems. This is required for a shared mechanical ventilation system.')
+    arg.setUnits('Frac')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeChoiceArgument('shared_mech_vent_preheating_fuel', heating_system_fuel_choices, false)
+    arg.setDisplayName('Shared Mechanical Ventilation: Preheating Fuel')
+    arg.setDescription('Fuel type of the preconditioning heating equipment.')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('shared_mech_vent_preheating_efficiency', false)
+    arg.setDisplayName('Shared Mechanical Ventilation: Preheating Efficiency')
+    arg.setDescription('Efficiency of the preconditioning heating equipment.')
+    arg.setUnits('COP')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('shared_mech_vent_preheating_fraction_heat_load_served', false)
+    arg.setDisplayName('Shared Mechanical Ventilation: Preheating Fraction Ventilation Heat Load Served')
+    arg.setDescription('Fraction of heating load introduced by the shared ventilation system that is met by the preconditioning heating equipment.')
+    arg.setUnits('Frac')
+    args << arg
+
+    cooling_system_fuel_choices = OpenStudio::StringVector.new
+    cooling_system_fuel_choices << HPXML::FuelTypeElectricity
+
+    arg = OpenStudio::Measure::OSArgument::makeChoiceArgument('shared_mech_vent_precooling_fuel', cooling_system_fuel_choices, false)
+    arg.setDisplayName('Shared Mechanical Ventilation: Precooling Fuel')
+    arg.setDescription('Fuel type of the preconditioning cooling equipment.')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('shared_mech_vent_precooling_efficiency', false)
+    arg.setDisplayName('Shared Mechanical Ventilation: Precooling Efficiency')
+    arg.setDescription('Efficiency of the preconditioning cooling equipment.')
+    arg.setUnits('COP')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('shared_mech_vent_precooling_fraction_cool_load_served', false)
+    arg.setDisplayName('Shared Mechanical Ventilation: Precooling Fraction Ventilation Cool Load Served')
+    arg.setDescription('Fraction of cooling load introduced by the shared ventilation system that is met by the preconditioning cooling equipment.')
+    arg.setUnits('Frac')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeChoiceArgument('mech_vent_fan_type_2', mech_vent_fan_type_choices, true)
+    arg.setDisplayName('Mechanical Ventilation 2: Fan Type')
+    arg.setDescription("The type of the second mechanical ventilation. Use 'none' if there is no second mechanical ventilation system.")
+    arg.setDefaultValue('none')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('mech_vent_flow_rate_2', true)
+    arg.setDisplayName('Mechanical Ventilation 2: Flow Rate')
+    arg.setDescription('The flow rate of the second mechanical ventilation.')
+    arg.setUnits('CFM')
+    arg.setDefaultValue(110)
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('mech_vent_hours_in_operation_2', true)
+    arg.setDisplayName('Mechanical Ventilation 2: Hours In Operation')
+    arg.setDescription('The hours in operation of the second mechanical ventilation.')
+    arg.setUnits('hrs')
+    arg.setDefaultValue(24)
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeChoiceArgument('mech_vent_total_recovery_efficiency_type_2', mech_vent_recovery_efficiency_type_choices, true)
+    arg.setDisplayName('Mechanical Ventilation 2: Total Recovery Efficiency Type')
+    arg.setDescription('The total recovery efficiency type of the second mechanical ventilation.')
+    arg.setDefaultValue('Unadjusted')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('mech_vent_total_recovery_efficiency_2', true)
+    arg.setDisplayName('Mechanical Ventilation 2: Total Recovery Efficiency')
+    arg.setDescription('The Unadjusted or Adjusted total recovery efficiency of the second mechanical ventilation.')
+    arg.setUnits('Frac')
+    arg.setDefaultValue(0.48)
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeChoiceArgument('mech_vent_sensible_recovery_efficiency_type_2', mech_vent_recovery_efficiency_type_choices, true)
+    arg.setDisplayName('Mechanical Ventilation 2: Sensible Recovery Efficiency Type')
+    arg.setDescription('The sensible recovery efficiency type of the second mechanical ventilation.')
+    arg.setDefaultValue('Unadjusted')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('mech_vent_sensible_recovery_efficiency_2', true)
+    arg.setDisplayName('Mechanical Ventilation 2: Sensible Recovery Efficiency')
+    arg.setDescription('The Unadjusted or Adjusted sensible recovery efficiency of the second mechanical ventilation.')
+    arg.setUnits('Frac')
+    arg.setDefaultValue(0.72)
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('mech_vent_fan_power_2', true)
+    arg.setDisplayName('Mechanical Ventilation 2: Fan Power')
+    arg.setDescription('The fan power of the second mechanical ventilation.')
+    arg.setUnits('W')
+    arg.setDefaultValue(30)
+    args << arg
+
     arg = OpenStudio::Measure::OSArgument::makeBoolArgument('kitchen_fans_present', true)
     arg.setDisplayName('Kitchen Fans: Present')
     arg.setDescription('Whether there are kitchen fans.')
@@ -2331,6 +2440,13 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
     arg.setDefaultValue(Constants.Auto)
     args << arg
 
+    arg = OpenStudio::Measure::OSArgument::makeStringArgument('clothes_dryer_vented_flow_rate', true)
+    arg.setDisplayName('Clothes Dryer: Vented Flow Rate')
+    arg.setDescription('The exhaust flow rate of the vented clothes dryer.')
+    arg.setUnits('CFM')
+    arg.setDefaultValue(Constants.Auto)
+    args << arg
+
     arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('clothes_dryer_usage_multiplier', true)
     arg.setDisplayName('Clothes Dryer: Usage Multiplier')
     arg.setDescription('Multiplier on the clothes dryer energy usage that can reflect, e.g., high/low usage occupants.')
@@ -3123,7 +3239,6 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
     # assign the user inputs to variables
     args = get_argument_values(runner, user_arguments)
     args[:hpxml_path] = runner.getStringArgumentValue('hpxml_path', user_arguments)
-    args[:weather_dir] = runner.getStringArgumentValue('weather_dir', user_arguments)
     args[:software_program_used] = runner.getOptionalStringArgumentValue('software_program_used', user_arguments)
     args[:software_program_version] = runner.getOptionalStringArgumentValue('software_program_version', user_arguments)
     args[:geometry_roof_pitch] = { '1:12' => 1.0 / 12.0, '2:12' => 2.0 / 12.0, '3:12' => 3.0 / 12.0, '4:12' => 4.0 / 12.0, '5:12' => 5.0 / 12.0, '6:12' => 6.0 / 12.0, '7:12' => 7.0 / 12.0, '8:12' => 8.0 / 12.0, '9:12' => 9.0 / 12.0, '10:12' => 10.0 / 12.0, '11:12' => 11.0 / 12.0, '12:12' => 12.0 / 12.0 }[args[:geometry_roof_pitch]]
@@ -3142,32 +3257,19 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
       return false
     end
 
-    # Get weather object
-    weather_dir = args[:weather_dir]
-    unless (Pathname.new weather_dir).absolute?
-      weather_dir = File.expand_path(File.join(File.dirname(__FILE__), '..', weather_dir))
+    # Create EpwFile object
+    epw_path = args[:weather_station_epw_filepath]
+    if not File.exist? epw_path
+      epw_path = File.join(File.expand_path(File.join(File.dirname(__FILE__), '..', 'weather')), epw_path) # a filename was entered for weather_station_epw_filepath
     end
-    epw_path = File.join(weather_dir, args[:weather_station_epw_filepath])
-    if not File.exist?(epw_path)
+    if not File.exist? epw_path
       runner.registerError("Could not find EPW file at '#{epw_path}'.")
       return false
     end
-    cache_path = epw_path.gsub('.epw', '-cache.csv')
-    if not File.exist?(cache_path)
-      # Process weather file to create cache .csv
-      runner.registerWarning("'#{cache_path}' could not be found; regenerating it.")
-      epw_file = OpenStudio::EpwFile.new(epw_path)
-      OpenStudio::Model::WeatherFile.setWeatherFile(model, epw_file)
-      weather = WeatherProcess.new(model, runner)
-      File.open(cache_path, 'wb') do |file|
-        weather.dump_to_csv(file)
-      end
-    else
-      weather = WeatherProcess.new(nil, nil, cache_path)
-    end
+    epw_file = OpenStudio::EpwFile.new(epw_path)
 
     # Create HPXML file
-    hpxml_doc = HPXMLFile.create(runner, model, args, weather)
+    hpxml_doc = HPXMLFile.create(runner, model, args, epw_file)
     if not hpxml_doc
       runner.registerError('Unsuccessful creation of HPXML file.')
       return false
@@ -3196,6 +3298,7 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
              simulation_control_run_period_begin_day_of_month: runner.getOptionalIntegerArgumentValue('simulation_control_run_period_begin_day_of_month', user_arguments),
              simulation_control_run_period_end_month: runner.getOptionalIntegerArgumentValue('simulation_control_run_period_end_month', user_arguments),
              simulation_control_run_period_end_day_of_month: runner.getOptionalIntegerArgumentValue('simulation_control_run_period_end_day_of_month', user_arguments),
+             simulation_control_run_period_calendar_year: runner.getOptionalIntegerArgumentValue('simulation_control_run_period_calendar_year', user_arguments),
              simulation_control_daylight_saving_enabled: runner.getOptionalStringArgumentValue('simulation_control_daylight_saving_enabled', user_arguments),
              simulation_control_daylight_saving_begin_month: runner.getOptionalIntegerArgumentValue('simulation_control_daylight_saving_begin_month', user_arguments),
              simulation_control_daylight_saving_begin_day_of_month: runner.getOptionalIntegerArgumentValue('simulation_control_daylight_saving_begin_day_of_month', user_arguments),
@@ -3369,6 +3472,23 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
              mech_vent_sensible_recovery_efficiency_type: runner.getStringArgumentValue('mech_vent_sensible_recovery_efficiency_type', user_arguments),
              mech_vent_sensible_recovery_efficiency: runner.getDoubleArgumentValue('mech_vent_sensible_recovery_efficiency', user_arguments),
              mech_vent_fan_power: runner.getDoubleArgumentValue('mech_vent_fan_power', user_arguments),
+             mech_vent_is_shared_system: runner.getBoolArgumentValue('mech_vent_is_shared_system', user_arguments),
+             shared_mech_vent_in_unit_flow_rate: runner.getOptionalDoubleArgumentValue('shared_mech_vent_in_unit_flow_rate', user_arguments),
+             shared_mech_vent_frac_recirculation: runner.getOptionalDoubleArgumentValue('shared_mech_vent_frac_recirculation', user_arguments),
+             shared_mech_vent_preheating_fuel: runner.getOptionalStringArgumentValue('shared_mech_vent_preheating_fuel', user_arguments),
+             shared_mech_vent_preheating_efficiency: runner.getOptionalDoubleArgumentValue('shared_mech_vent_preheating_efficiency', user_arguments),
+             shared_mech_vent_preheating_fraction_heat_load_served: runner.getOptionalDoubleArgumentValue('shared_mech_vent_preheating_fraction_heat_load_served', user_arguments),
+             shared_mech_vent_precooling_fuel: runner.getOptionalStringArgumentValue('shared_mech_vent_precooling_fuel', user_arguments),
+             shared_mech_vent_precooling_efficiency: runner.getOptionalDoubleArgumentValue('shared_mech_vent_precooling_efficiency', user_arguments),
+             shared_mech_vent_precooling_fraction_cool_load_served: runner.getOptionalDoubleArgumentValue('shared_mech_vent_precooling_fraction_cool_load_served', user_arguments),
+             mech_vent_fan_type_2: runner.getStringArgumentValue('mech_vent_fan_type_2', user_arguments),
+             mech_vent_flow_rate_2: runner.getDoubleArgumentValue('mech_vent_flow_rate_2', user_arguments),
+             mech_vent_hours_in_operation_2: runner.getDoubleArgumentValue('mech_vent_hours_in_operation_2', user_arguments),
+             mech_vent_total_recovery_efficiency_type_2: runner.getStringArgumentValue('mech_vent_total_recovery_efficiency_type_2', user_arguments),
+             mech_vent_total_recovery_efficiency_2: runner.getDoubleArgumentValue('mech_vent_total_recovery_efficiency_2', user_arguments),
+             mech_vent_sensible_recovery_efficiency_type_2: runner.getStringArgumentValue('mech_vent_sensible_recovery_efficiency_type_2', user_arguments),
+             mech_vent_sensible_recovery_efficiency_2: runner.getDoubleArgumentValue('mech_vent_sensible_recovery_efficiency_2', user_arguments),
+             mech_vent_fan_power_2: runner.getDoubleArgumentValue('mech_vent_fan_power_2', user_arguments),
              kitchen_fans_present: runner.getBoolArgumentValue('kitchen_fans_present', user_arguments),
              kitchen_fans_quantity: runner.getOptionalIntegerArgumentValue('kitchen_fans_quantity', user_arguments),
              kitchen_fans_flow_rate: runner.getOptionalDoubleArgumentValue('kitchen_fans_flow_rate', user_arguments),
@@ -3495,6 +3615,7 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
              clothes_dryer_efficiency_ef: runner.getDoubleArgumentValue('clothes_dryer_efficiency_ef', user_arguments),
              clothes_dryer_efficiency_cef: runner.getStringArgumentValue('clothes_dryer_efficiency_cef', user_arguments),
              clothes_dryer_control_type: runner.getStringArgumentValue('clothes_dryer_control_type', user_arguments),
+             clothes_dryer_vented_flow_rate: runner.getStringArgumentValue('clothes_dryer_vented_flow_rate', user_arguments),
              clothes_dryer_usage_multiplier: runner.getDoubleArgumentValue('clothes_dryer_usage_multiplier', user_arguments),
              dishwasher_present: runner.getBoolArgumentValue('dishwasher_present', user_arguments),
              dishwasher_location: runner.getStringArgumentValue('dishwasher_location', user_arguments),
@@ -3740,7 +3861,7 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
 end
 
 class HPXMLFile
-  def self.create(runner, model, args, weather)
+  def self.create(runner, model, args, epw_file)
     model_geometry = OpenStudio::Model::Model.new
 
     success = create_geometry_envelope(runner, model_geometry, args)
@@ -3753,7 +3874,7 @@ class HPXMLFile
     set_neighbor_buildings(hpxml, runner, args)
     set_building_occupancy(hpxml, runner, args)
     set_building_construction(hpxml, runner, args)
-    set_climate_and_risk_zones(hpxml, runner, args, weather)
+    set_climate_and_risk_zones(hpxml, runner, args, epw_file)
     set_air_infiltration_measurements(hpxml, runner, args)
     set_attics(hpxml, runner, model_geometry, args)
     set_foundations(hpxml, runner, model_geometry, args)
@@ -3775,8 +3896,8 @@ class HPXMLFile
     set_water_heating_systems(hpxml, runner, args)
     set_hot_water_distribution(hpxml, runner, args)
     set_water_fixtures(hpxml, runner, args)
-    set_solar_thermal(hpxml, runner, args, weather)
-    set_pv_systems(hpxml, runner, args, weather)
+    set_solar_thermal(hpxml, runner, args, epw_file)
+    set_pv_systems(hpxml, runner, args, epw_file)
     set_lighting(hpxml, runner, args)
     set_dehumidifier(hpxml, runner, args)
     set_clothes_washer(hpxml, runner, args)
@@ -3860,6 +3981,9 @@ class HPXMLFile
     end
     if args[:simulation_control_run_period_end_day_of_month].is_initialized
       hpxml.header.sim_end_day_of_month = args[:simulation_control_run_period_end_day_of_month].get
+    end
+    if args[:simulation_control_run_period_calendar_year].is_initialized
+      hpxml.header.sim_calendar_year = args[:simulation_control_run_period_calendar_year].get
     end
 
     if args[:simulation_control_daylight_saving_enabled].is_initialized
@@ -3956,15 +4080,16 @@ class HPXMLFile
     end
   end
 
-  def self.set_climate_and_risk_zones(hpxml, runner, args, weather)
+  def self.set_climate_and_risk_zones(hpxml, runner, args, epw_file)
     hpxml.climate_and_risk_zones.weather_station_id = 'WeatherStation'
-    iecc_zone = Location.get_climate_zone_iecc(weather.header.Station)
+    iecc_zone = Location.get_climate_zone_iecc(epw_file.wmoNumber)
 
     unless iecc_zone.nil?
       hpxml.climate_and_risk_zones.iecc_year = 2006
       hpxml.climate_and_risk_zones.iecc_zone = iecc_zone
     end
-    hpxml.climate_and_risk_zones.weather_station_name = args[:weather_station_epw_filepath].gsub('.epw', '')
+    weather_station_name = File.basename(args[:weather_station_epw_filepath]).gsub('.epw', '')
+    hpxml.climate_and_risk_zones.weather_station_name = weather_station_name
     hpxml.climate_and_risk_zones.weather_station_epw_filepath = args[:weather_station_epw_filepath]
   end
 
@@ -4745,6 +4870,22 @@ class HPXMLFile
         end
       end
 
+      if args[:mech_vent_is_shared_system]
+        is_shared_system = args[:mech_vent_is_shared_system]
+        in_unit_flow_rate = args[:shared_mech_vent_in_unit_flow_rate].get
+        fraction_recirculation = args[:shared_mech_vent_frac_recirculation].get
+        if args[:shared_mech_vent_preheating_fuel].is_initialized && args[:shared_mech_vent_preheating_efficiency].is_initialized && args[:shared_mech_vent_preheating_fraction_heat_load_served].is_initialized
+          preheating_fuel = args[:shared_mech_vent_preheating_fuel].get
+          preheating_efficiency_cop = args[:shared_mech_vent_preheating_efficiency].get
+          preheating_fraction_load_served = args[:shared_mech_vent_preheating_fraction_heat_load_served].get
+        end
+        if args[:shared_mech_vent_precooling_fuel].is_initialized && args[:shared_mech_vent_precooling_efficiency].is_initialized && args[:shared_mech_vent_precooling_fraction_cool_load_served].is_initialized
+          precooling_fuel = args[:shared_mech_vent_precooling_fuel].get
+          precooling_efficiency_cop = args[:shared_mech_vent_precooling_efficiency].get
+          precooling_fraction_load_served = args[:shared_mech_vent_precooling_fraction_cool_load_served].get
+        end
+      end
+
       hpxml.ventilation_fans.add(id: 'MechanicalVentilation',
                                  fan_type: args[:mech_vent_fan_type],
                                  rated_flow_rate: args[:mech_vent_flow_rate],
@@ -4755,6 +4896,59 @@ class HPXMLFile
                                  sensible_recovery_efficiency: sensible_recovery_efficiency,
                                  sensible_recovery_efficiency_adjusted: sensible_recovery_efficiency_adjusted,
                                  fan_power: args[:mech_vent_fan_power],
+                                 distribution_system_idref: distribution_system_idref,
+                                 is_shared_system: is_shared_system,
+                                 in_unit_flow_rate: in_unit_flow_rate,
+                                 fraction_recirculation: fraction_recirculation,
+                                 preheating_fuel: preheating_fuel,
+                                 preheating_efficiency_cop: preheating_efficiency_cop,
+                                 preheating_fraction_load_served: preheating_fraction_load_served,
+                                 precooling_fuel: precooling_fuel,
+                                 precooling_efficiency_cop: precooling_efficiency_cop,
+                                 precooling_fraction_load_served: precooling_fraction_load_served)
+    end
+
+    if args[:mech_vent_fan_type_2] != 'none'
+
+      if args[:mech_vent_fan_type_2].include? 'recovery ventilator'
+
+        if args[:mech_vent_fan_type_2].include? 'energy'
+
+          if args[:mech_vent_total_recovery_efficiency_type_2] == 'Unadjusted'
+            total_recovery_efficiency = args[:mech_vent_total_recovery_efficiency_2]
+          elsif args[:mech_vent_total_recovery_efficiency_type_2] == 'Adjusted'
+            total_recovery_efficiency_adjusted = args[:mech_vent_total_recovery_efficiency_2]
+          end
+
+        end
+
+        if args[:mech_vent_sensible_recovery_efficiency_type_2] == 'Unadjusted'
+          sensible_recovery_efficiency = args[:mech_vent_sensible_recovery_efficiency_2]
+        elsif args[:mech_vent_sensible_recovery_efficiency_type_2] == 'Adjusted'
+          sensible_recovery_efficiency_adjusted = args[:mech_vent_sensible_recovery_efficiency_2]
+        end
+
+      end
+
+      distribution_system_idref = nil
+      if args[:mech_vent_fan_type_2] == HPXML::MechVentTypeCFIS
+        hpxml.hvac_distributions.each do |hvac_distribution|
+          next unless hvac_distribution.distribution_system_type == HPXML::HVACDistributionTypeAir
+
+          distribution_system_idref = hvac_distribution.id
+        end
+      end
+
+      hpxml.ventilation_fans.add(id: 'SecondMechanicalVentilation',
+                                 fan_type: args[:mech_vent_fan_type_2],
+                                 rated_flow_rate: args[:mech_vent_flow_rate_2],
+                                 hours_in_operation: args[:mech_vent_hours_in_operation_2],
+                                 used_for_whole_building_ventilation: true,
+                                 total_recovery_efficiency: total_recovery_efficiency,
+                                 total_recovery_efficiency_adjusted: total_recovery_efficiency_adjusted,
+                                 sensible_recovery_efficiency: sensible_recovery_efficiency,
+                                 sensible_recovery_efficiency_adjusted: sensible_recovery_efficiency_adjusted,
+                                 fan_power: args[:mech_vent_fan_power_2],
                                  distribution_system_idref: distribution_system_idref)
     end
 
@@ -4991,19 +5185,19 @@ class HPXMLFile
     end
   end
 
-  def self.get_absolute_tilt(tilt_str, roof_pitch, weather)
+  def self.get_absolute_tilt(tilt_str, roof_pitch, epw_file)
     tilt_str = tilt_str.downcase
     if tilt_str.start_with? 'roofpitch'
       roof_angle = Math.atan(roof_pitch / 12.0) * 180.0 / Math::PI
       return Float(eval(tilt_str.gsub('roofpitch', roof_angle.to_s)))
     elsif tilt_str.start_with? 'latitude'
-      return Float(eval(tilt_str.gsub('latitude', weather.header.Latitude.to_s)))
+      return Float(eval(tilt_str.gsub('latitude', epw_file.latitude.to_s)))
     else
       return Float(tilt_str)
     end
   end
 
-  def self.set_solar_thermal(hpxml, runner, args, weather)
+  def self.set_solar_thermal(hpxml, runner, args, epw_file)
     return if args[:solar_thermal_system_type] == 'none'
 
     if args[:solar_thermal_solar_fraction] > 0
@@ -5013,7 +5207,7 @@ class HPXMLFile
       collector_loop_type = args[:solar_thermal_collector_loop_type]
       collector_type = args[:solar_thermal_collector_type]
       collector_azimuth = args[:solar_thermal_collector_azimuth]
-      collector_tilt = get_absolute_tilt(args[:solar_thermal_collector_tilt], hpxml.roofs[-1].pitch, weather)
+      collector_tilt = get_absolute_tilt(args[:solar_thermal_collector_tilt], hpxml.roofs[-1].pitch, epw_file)
       collector_frta = args[:solar_thermal_collector_rated_optical_efficiency]
       collector_frul = args[:solar_thermal_collector_rated_thermal_losses]
 
@@ -5040,7 +5234,7 @@ class HPXMLFile
                                     solar_fraction: solar_fraction)
   end
 
-  def self.set_pv_systems(hpxml, runner, args, weather)
+  def self.set_pv_systems(hpxml, runner, args, epw_file)
     [args[:pv_system_module_type_1], args[:pv_system_module_type_2]].each_with_index do |module_type, i|
       next if module_type == 'none'
 
@@ -5064,7 +5258,7 @@ class HPXMLFile
                            module_type: module_type,
                            tracking: [args[:pv_system_tracking_1], args[:pv_system_tracking_2]][i],
                            array_azimuth: [args[:pv_system_array_azimuth_1], args[:pv_system_array_azimuth_2]][i],
-                           array_tilt: get_absolute_tilt([args[:pv_system_array_tilt_1], args[:pv_system_array_tilt_2]][i], hpxml.roofs[-1].pitch, weather),
+                           array_tilt: get_absolute_tilt([args[:pv_system_array_tilt_1], args[:pv_system_array_tilt_2]][i], hpxml.roofs[-1].pitch, epw_file),
                            max_power_output: max_power_output,
                            inverter_efficiency: inverter_efficiency,
                            system_losses_fraction: system_losses_fraction,
@@ -5291,6 +5485,14 @@ class HPXMLFile
       control_type = args[:clothes_dryer_control_type]
     end
 
+    if args[:clothes_dryer_vented_flow_rate] != Constants.Auto
+      is_vented = false
+      if Float(args[:clothes_dryer_vented_flow_rate]) > 0
+        is_vented = true
+        vented_flow_rate = args[:clothes_dryer_vented_flow_rate]
+      end
+    end
+
     if args[:clothes_dryer_usage_multiplier] != 1.0
       usage_multiplier = args[:clothes_dryer_usage_multiplier]
     end
@@ -5301,6 +5503,8 @@ class HPXMLFile
                              energy_factor: energy_factor,
                              combined_energy_factor: combined_energy_factor,
                              control_type: control_type,
+                             is_vented: is_vented,
+                             vented_flow_rate: vented_flow_rate,
                              usage_multiplier: usage_multiplier)
   end
 
