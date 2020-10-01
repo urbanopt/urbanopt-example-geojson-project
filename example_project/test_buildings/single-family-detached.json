@@ -1,0 +1,993 @@
+{
+  "type": "FeatureCollection",
+  "project": {
+    "id": "28a26b89-7036-4d24-9a2e-4c586d4c3c98",
+    "name": "New Project",
+    "surface_elevation": 359,
+    "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
+    "tariff_filename": null,
+    "climate_zone": null,
+    "cec_climate_zone": null,
+    "timesteps_per_hour": 1,
+    "begin_date": null,
+    "end_date": null,
+    "default_template": "Residential IECC 2015 - Customizable Template Sep 2020",
+    "import_surrounding_buildings_as_shading": false,
+    "thermalVisible": true,
+    "electricalVisible": true,
+    "roadsVisible": true,
+    "siteColor": "#fcec83",
+    "buildingColor": "#117733",
+    "districtSystemColor": "#0072B2",
+    "thJunctionColor": "#af002c",
+    "thConnectorColor": "#f42156",
+    "eJunctionColor": "#11c4c4",
+    "eConnectorColor": "#03f1e8"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "89387c02-ecc0-42eb-8eee-32f0110fb3be",
+        "name": "Site Origin",
+        "type": "Site Origin",
+        "surface_elevation": 359,
+        "import_surrounding_buildings_as_shading": false,
+        "timesteps_per_hour": null,
+        "begin_date": null,
+        "end_date": null,
+        "climate_zone": null,
+        "cec_climate_zone": null,
+        "default_template": null,
+        "weather_filename": null,
+        "tariff_filename": null
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -78.84948467732348,
+          42.81677154451123
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "1",
+        "geometryType": "Rectangle",
+        "name": "New Building_1",
+        "type": "Building",
+        "floor_area": 2820,
+        "footprint_area": 2820,
+        "footprint_perimeter": 214,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 3,
+        "foundation_type": "slab",
+        "attic_type": "attic - vented",
+        "heating_system_fuel_type": "electricity"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84896993549774,
+              42.81358774313321
+            ],
+            [
+              -78.84896993549774,
+              42.81371366842052
+            ],
+            [
+              -78.84874105453491,
+              42.81371366842052
+            ],
+            [
+              -78.84874105453491,
+              42.81358774313321
+            ],
+            [
+              -78.84896993549774,
+              42.81358774313321
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "2",
+        "geometryType": "Rectangle",
+        "name": "New Building_2",
+        "type": "Building",
+        "floor_area": 2424,
+        "footprint_area": 2424,
+        "footprint_perimeter": 199,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 4,
+        "foundation_type": "slab",
+        "attic_type": "attic - vented",
+        "system_type": "Residential - furnace and central air conditioner"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.8479113574431,
+              42.81402848051698
+            ],
+            [
+              -78.8479113574431,
+              42.81391304992127
+            ],
+            [
+              -78.84769678072189,
+              42.81391304992127
+            ],
+            [
+              -78.84769678072189,
+              42.81402848051698
+            ],
+            [
+              -78.8479113574431,
+              42.81402848051698
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "3",
+        "geometryType": "Rectangle",
+        "name": "New Building_3",
+        "type": "Building",
+        "floor_area": 4466,
+        "footprint_area": 2233,
+        "footprint_perimeter": 207,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 2,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 2,
+        "foundation_type": "slab",
+        "attic_type": "attic - conditioned",
+        "system_type": "Residential - furnace and room air conditioner",
+        "heating_system_fuel_type": "fuel oil"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84915590242599,
+              42.81409144274397
+            ],
+            [
+              -78.84915590242599,
+              42.81400749341398
+            ],
+            [
+              -78.84888410480926,
+              42.81400749341398
+            ],
+            [
+              -78.84888410480926,
+              42.81409144274397
+            ],
+            [
+              -78.84915590242599,
+              42.81409144274397
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "4",
+        "geometryType": "Rectangle",
+        "name": "New Building_4",
+        "type": "Building",
+        "floor_area": 4964,
+        "footprint_area": 2482,
+        "footprint_perimeter": 199,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 2,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 3,
+        "foundation_type": "crawlspace - vented",
+        "attic_type": "attic - conditioned",
+        "system_type": "Residential - furnace and evaporative cooler"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84808301882004,
+              42.814458721283958
+            ],
+            [
+              -78.84808301882004,
+              42.81432230401475
+            ],
+            [
+              -78.84789705189178,
+              42.81432230401475
+            ],
+            [
+              -78.84789705189178,
+              42.814458721283958
+            ],
+            [
+              -78.84808301882004,
+              42.814458721283958
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "5",
+        "geometryType": "Rectangle",
+        "name": "New Building_5",
+        "type": "Building",
+        "floor_area": 2776,
+        "footprint_area": 2776,
+        "footprint_perimeter": 230,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 4,
+        "foundation_type": "crawlspace - unvented",
+        "attic_type": "flat roof",
+        "system_type": "Residential - furnace and no cooling",
+        "template": "Residential IECC 2018 - Customizable Template Sep 2020",
+        "heating_system_fuel_type": "propane"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84941339449142,
+              42.81452168307291
+            ],
+            [
+              -78.84941339449142,
+              42.814427240365407
+            ],
+            [
+              -78.84911298708176,
+              42.814427240365407
+            ],
+            [
+              -78.84911298708176,
+              42.81452168307291
+            ],
+            [
+              -78.84941339449142,
+              42.81452168307291
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "6",
+        "geometryType": "Rectangle",
+        "name": "New Building_6",
+        "type": "Building",
+        "floor_area": 6346,
+        "footprint_area": 3173,
+        "footprint_perimeter": 253,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 2,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 5,
+        "foundation_type": "slab",
+        "attic_type": "attic - conditioned",
+        "system_type": "Residential - electric resistance and no cooling",
+        "heating_system_fuel_type": "natural gas"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84834051088547,
+              42.814867971766407
+            ],
+            [
+              -78.84834051088547,
+              42.81477352958777
+            ],
+            [
+              -78.84799718813155,
+              42.81477352958777
+            ],
+            [
+              -78.84799718813155,
+              42.814867971766407
+            ],
+            [
+              -78.84834051088547,
+              42.814867971766407
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "7",
+        "geometryType": "Rectangle",
+        "name": "New Building_7",
+        "type": "Building",
+        "floor_area": 2262,
+        "footprint_area": 2262,
+        "footprint_perimeter": 191,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 4,
+        "foundation_type": "basement - unconditioned",
+        "attic_type": "attic - unvented",
+        "system_type": "Residential - electric resistance and central air conditioner"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84972810745239,
+              42.81519327158003
+            ],
+            [
+              -78.84972810745239,
+              42.81504636231489
+            ],
+            [
+              -78.84957075031707,
+              42.81504636231489
+            ],
+            [
+              -78.84957075031707,
+              42.81519327158003
+            ],
+            [
+              -78.84972810745239,
+              42.81519327158003
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "8",
+        "geometryType": "Rectangle",
+        "name": "New Building_8",
+        "type": "Building",
+        "floor_area": 2116,
+        "footprint_area": 1058,
+        "footprint_perimeter": 138,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 2,
+        "number_of_stories": 3,
+        "number_of_bedrooms": 2,
+        "foundation_type": "basement - conditioned",
+        "attic_type": "attic - conditioned",
+        "system_type": "Residential - electric resistance and room air conditioner",
+        "heating_system_fuel_type": "wood"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84855508760666,
+              42.81547659576023
+            ],
+            [
+              -78.84855508760666,
+              42.815350674062617
+            ],
+            [
+              -78.84846925691818,
+              42.815350674062617
+            ],
+            [
+              -78.84846925691818,
+              42.81547659576023
+            ],
+            [
+              -78.84855508760666,
+              42.81547659576023
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "9",
+        "geometryType": "Rectangle",
+        "name": "New Building_9",
+        "type": "Building",
+        "floor_area": 1542,
+        "footprint_area": 1542,
+        "footprint_perimeter": 168,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 3,
+        "foundation_type": "ambient",
+        "attic_type": "flat roof",
+        "system_type": "Residential - electric resistance and evaporative cooler",
+        "template": "Residential IECC 2012 - Customizable Template Sep 2020"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84884118946502,
+              42.815770412137599
+            ],
+            [
+              -78.84884118946502,
+              42.8156969581141
+            ],
+            [
+              -78.84862661274383,
+              42.8156969581141
+            ],
+            [
+              -78.84862661274383,
+              42.815770412137599
+            ],
+            [
+              -78.84884118946502,
+              42.815770412137599
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "10",
+        "geometryType": "Rectangle",
+        "name": "New Building_10",
+        "type": "Building",
+        "floor_area": 2115,
+        "footprint_area": 2115,
+        "footprint_perimeter": 230,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 4,
+        "foundation_type": "slab",
+        "attic_type": "attic - vented",
+        "system_type": "Residential - boiler and no cooling"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84997129396654,
+              42.815518569682527
+            ],
+            [
+              -78.84997129396654,
+              42.81545560890851
+            ],
+            [
+              -78.84962797121261,
+              42.81545560890851
+            ],
+            [
+              -78.84962797121261,
+              42.815518569682527
+            ],
+            [
+              -78.84997129396654,
+              42.815518569682527
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "11",
+        "geometryType": "Rectangle",
+        "name": "New Building_11",
+        "type": "Building",
+        "floor_area": 4700,
+        "footprint_area": 2350,
+        "footprint_perimeter": 199,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 2,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 4,
+        "foundation_type": "crawlspace - vented",
+        "attic_type": "attic - unvented",
+        "system_type": "Residential - boiler and central air conditioner"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.85011434555054,
+              42.81587534603108
+            ],
+            [
+              -78.85011434555054,
+              42.815770412137599
+            ],
+            [
+              -78.84988546327804,
+              42.815770412137599
+            ],
+            [
+              -78.84988546327804,
+              42.81587534603108
+            ],
+            [
+              -78.85011434555054,
+              42.81587534603108
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "12",
+        "geometryType": "Rectangle",
+        "name": "New Building_12",
+        "type": "Building",
+        "floor_area": 3878,
+        "footprint_area": 1939,
+        "footprint_perimeter": 176,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 2,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 3,
+        "foundation_type": "crawlspace - unvented",
+        "attic_type": "attic - conditioned",
+        "system_type": "Residential - boiler and room air conditioner",
+        "template": "Residential IECC 2009 - Customizable Template Sep 2020"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84898424104903,
+              42.816095706964009
+            ],
+            [
+              -78.84898424104903,
+              42.815969786527038
+            ],
+            [
+              -78.84882688522339,
+              42.815969786527038
+            ],
+            [
+              -78.84882688522339,
+              42.816095706964009
+            ],
+            [
+              -78.84898424104903,
+              42.816095706964009
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "13",
+        "geometryType": "Rectangle",
+        "name": "New Building_13",
+        "type": "Building",
+        "floor_area": 3393,
+        "footprint_area": 3393,
+        "footprint_perimeter": 245,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 2,
+        "foundation_type": "basement - unconditioned",
+        "attic_type": "flat roof",
+        "system_type": "Residential - boiler and evaporative cooler",
+        "heating_system_fuel_type": "natural gas"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.85050058364868,
+              42.81623212056141
+            ],
+            [
+              -78.85050058364868,
+              42.816116693838697
+            ],
+            [
+              -78.85020017623902,
+              42.816116693838697
+            ],
+            [
+              -78.85020017623902,
+              42.81623212056141
+            ],
+            [
+              -78.85050058364868,
+              42.81623212056141
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "14",
+        "geometryType": "Rectangle",
+        "name": "New Building_14",
+        "type": "Building",
+        "floor_area": 2056,
+        "footprint_area": 2056,
+        "footprint_perimeter": 184,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 5,
+        "foundation_type": "basement - conditioned",
+        "attic_type": "attic - vented",
+        "system_type": "Residential - air-to-air heat pump"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84939908894012,
+              42.816473466736429
+            ],
+            [
+              -78.84939908894012,
+              42.81636853385791
+            ],
+            [
+              -78.84919881777023,
+              42.81636853385791
+            ],
+            [
+              -78.84919881777023,
+              42.816473466736429
+            ],
+            [
+              -78.84939908894012,
+              42.816473466736429
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "15",
+        "geometryType": "Rectangle",
+        "name": "New Building_15",
+        "type": "Building",
+        "floor_area": 5302,
+        "footprint_area": 5302,
+        "footprint_perimeter": 291,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 4,
+        "foundation_type": "ambient",
+        "attic_type": "attic - unvented",
+        "system_type": "Residential - mini-split heat pump",
+        "template": "Residential IECC 2006 - Customizable Template Sep 2020",
+        "heating_system_fuel_type": "natural gas"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84968519210816,
+              42.81689319719041
+            ],
+            [
+              -78.84968519210816,
+              42.81669382553795
+            ],
+            [
+              -78.84941339449142,
+              42.81669382553795
+            ],
+            [
+              -78.84941339449142,
+              42.81689319719041
+            ],
+            [
+              -78.84968519210816,
+              42.81689319719041
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "16",
+        "geometryType": "Rectangle",
+        "name": "New Building_16",
+        "type": "Building",
+        "floor_area": 2056,
+        "footprint_area": 2056,
+        "footprint_perimeter": 207,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 3,
+        "foundation_type": "slab",
+        "attic_type": "flat roof",
+        "system_type": "Residential - ground-to-air heat pump"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.85071516036988,
+              42.816662345757269
+            ],
+            [
+              -78.85071516036988,
+              42.816588893033387
+            ],
+            [
+              -78.85042905720184,
+              42.816588893033387
+            ],
+            [
+              -78.85042905720184,
+              42.816662345757269
+            ],
+            [
+              -78.85071516036988,
+              42.816662345757269
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "17",
+        "geometryType": "Rectangle",
+        "name": "New Building_17",
+        "type": "Building",
+        "floor_area": 2350,
+        "footprint_area": 2350,
+        "footprint_perimeter": 214,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 3,
+        "foundation_type": "crawlspace - vented",
+        "attic_type": "attic - vented",
+        "system_type": "Residential - furnace and central air conditioner"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84987115772674,
+              42.81720799310125
+            ],
+            [
+              -78.84987115772674,
+              42.81712404776175
+            ],
+            [
+              -78.84958505586838,
+              42.81712404776175
+            ],
+            [
+              -78.84958505586838,
+              42.81720799310125
+            ],
+            [
+              -78.84987115772674,
+              42.81720799310125
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "18",
+        "geometryType": "Rectangle",
+        "name": "New Building_18",
+        "type": "Building",
+        "floor_area": 2908,
+        "footprint_area": 2908,
+        "footprint_perimeter": 237,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 4,
+        "foundation_type": "crawlspace - unvented",
+        "attic_type": "attic - unvented",
+        "system_type": "Residential - boiler and central air conditioner",
+        "template": "Residential IECC 2015 - Customizable Template Sep 2020"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.850958346884,
+              42.81705059534613
+            ],
+            [
+              -78.850958346884,
+              42.816956156500797
+            ],
+            [
+              -78.85064363392303,
+              42.816956156500797
+            ],
+            [
+              -78.85064363392303,
+              42.81705059534613
+            ],
+            [
+              -78.850958346884,
+              42.81705059534613
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "19",
+        "geometryType": "Rectangle",
+        "name": "New Building_19",
+        "type": "Building",
+        "floor_area": 2482,
+        "footprint_area": 2482,
+        "footprint_perimeter": 199,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 2,
+        "foundation_type": "basement - unconditioned",
+        "attic_type": "flat roof",
+        "system_type": "Residential - air-to-air heat pump"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.85100126222824,
+              42.81738637677938
+            ],
+            [
+              -78.85100126222824,
+              42.81724996584833
+            ],
+            [
+              -78.85081529529997,
+              42.81724996584833
+            ],
+            [
+              -78.85081529529997,
+              42.81738637677938
+            ],
+            [
+              -78.85100126222824,
+              42.81738637677938
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "20",
+        "geometryType": "Rectangle",
+        "name": "New Building_20",
+        "type": "Building",
+        "floor_area": 1234,
+        "footprint_area": 1234,
+        "footprint_perimeter": 153,
+        "building_type": "Single-Family Detached",
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 2,
+        "number_of_bedrooms": 3,
+        "foundation_type": "basement - conditioned",
+        "attic_type": "attic - vented",
+        "system_type": "Residential - electric resistance and central air conditioner"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84997129396654,
+              42.81758574607886
+            ],
+            [
+              -78.84997129396654,
+              42.81743884249738
+            ],
+            [
+              -78.84988546327804,
+              42.81743884249738
+            ],
+            [
+              -78.84988546327804,
+              42.81758574607886
+            ],
+            [
+              -78.84997129396654,
+              42.81758574607886
+            ]
+          ]
+        ]
+      }
+    }
+  ],
+  "mappers": [],
+  "scenarios": [
+    {
+      "feature_mappings": [],
+      "id": "72301739-c6c3-4dd7-bf1a-f37c8eff40db",
+      "name": "New Scenario"
+    }
+  ]
+}
