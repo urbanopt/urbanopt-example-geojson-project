@@ -438,15 +438,15 @@ module URBANopt
             args[:weather_station_epw_filepath] = "../../../weather/#{feature.weather_filename}"
 
             # Geometry
-            args[:geometry_num_units] = 1
+            args[:geometry_building_num_units] = 1
             case building_type
             when 'Single-Family Detached'
               args[:geometry_unit_type] = "single-family detached"
             when 'Single-Family Attached'
-              args[:geometry_num_units] = feature.number_of_residential_units
+              args[:geometry_building_num_units] = feature.number_of_residential_units
               args[:geometry_unit_type] = "single-family attached"
             when 'Multifamily'
-              args[:geometry_num_units] = feature.number_of_residential_units
+              args[:geometry_building_num_units] = feature.number_of_residential_units
               args[:geometry_unit_type] = "apartment unit"
             end
 
@@ -489,7 +489,7 @@ module URBANopt
 
             args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
 
-            args[:geometry_cfa] = feature.floor_area / args[:geometry_num_units]
+            args[:geometry_cfa] = feature.floor_area / args[:geometry_building_num_units]
 
             args[:geometry_wall_height] = 8.0
             begin
@@ -498,7 +498,7 @@ module URBANopt
             end
 
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
-            args[:geometry_num_bedrooms] /= args[:geometry_num_units]
+            args[:geometry_num_bedrooms] /= args[:geometry_building_num_units]
 
             system_type = "Residential - furnace and central air conditioner"
             begin
@@ -639,6 +639,7 @@ module URBANopt
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults with template values
+            default_args = {}
             OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', '__SKIP__', false)
             measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/hpxml-measures'))
             measure_xml = File.read(File.join(measures_dir, 'BuildResidentialHPXML', 'measure.xml'))
@@ -647,15 +648,27 @@ module URBANopt
               arg_name = arg.elements['name'].text.to_sym
               next if [:hpxml_path].include? arg_name
 
-              if not args.keys.include? arg_name # argument has not been set and so gets the default value
-                if arg.elements['default_value']
-                  arg_default = arg.elements['default_value'].text
-                  args[arg_name] = arg_default
-                end
+              default_args[arg_name] = nil
+              if arg.elements['default_value']
+                arg_default = arg.elements['default_value'].text
+                default_args[arg_name] = arg_default
+              end
+            end
+
+            args.keys.each do |arg_name|
+              unless default_args.keys.include? arg_name
+                puts "Argument '#{arg_name}' is unknown."
+              end
+            end
+
+            default_args.each do |arg_name, arg_default|
+              next if arg_default.nil?
+
+              if not args.keys.include? arg_name
+                args[arg_name] = arg_default
               else
                 if debug
-                  if arg.elements['default_value']
-                    arg_default = arg.elements['default_value'].text
+                  if not arg_default.nil?
                     if args[arg_name] != arg_default
                       puts "Overriding #{arg_name} default '#{arg_default}' with '#{args[arg_name]}'."
                     end
@@ -664,10 +677,10 @@ module URBANopt
                   end
                 end
               end
+            end
 
-              if args.keys.include? arg_name
-                OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg_name, args[arg_name])
-              end
+            args.keys.each do |arg_name|
+              OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg_name, args[arg_name])
             end
 
           elsif commercial_building_types.include? building_type
