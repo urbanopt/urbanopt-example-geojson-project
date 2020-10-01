@@ -421,19 +421,21 @@ module URBANopt
             rescue
             end
 
-            args[:simulation_control_begin_month] = 1
-            args[:simulation_control_begin_day_of_month] = 1
-            args[:simulation_control_end_month] = 12
-            args[:simulation_control_end_day_of_month] = 31
+            args[:simulation_control_run_period_begin_month] = 1
+            args[:simulation_control_run_period_begin_day_of_month] = 1
+            args[:simulation_control_run_period_end_month] = 12
+            args[:simulation_control_run_period_end_day_of_month] = 31
+            args[:simulation_control_run_period_calendar_year] = 2007
             begin
-              args[:simulation_control_begin_month] = feature.begin_date[5, 2].to_i
-              args[:simulation_control_begin_day_of_month] = feature.begin_date[8, 2].to_i
-              args[:simulation_control_end_month] = feature.end_date[5, 2].to_i
-              args[:simulation_control_end_day_of_month] = feature.end_date[8, 2].to_i
+              args[:simulation_control_run_period_begin_month] = feature.begin_date[5, 2].to_i
+              args[:simulation_control_run_period_begin_day_of_month] = feature.begin_date[8, 2].to_i
+              args[:simulation_control_run_period_end_month] = feature.end_date[5, 2].to_i
+              args[:simulation_control_run_period_end_day_of_month] = feature.end_date[8, 2].to_i
+              args[:simulation_control_run_period_calendar_year] = feature.begin_date[0, 4].to_i
             rescue
             end
 
-            args[:weather_station_epw_filepath] = feature.weather_filename
+            args[:weather_station_epw_filepath] = "../../../weather/#{feature.weather_filename}"
 
             # Geometry
             args[:geometry_num_units] = 1
@@ -643,7 +645,7 @@ module URBANopt
             measure = REXML::Document.new(measure_xml).root
             measure.elements.each('arguments/argument') do |arg|
               arg_name = arg.elements['name'].text.to_sym
-              next if [:hpxml_path, :weather_dir].include? arg_name
+              next if [:hpxml_path].include? arg_name
 
               if not args.keys.include? arg_name # argument has not been set and so gets the default value
                 if arg.elements['default_value']
