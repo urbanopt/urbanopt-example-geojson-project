@@ -423,6 +423,7 @@
             $scope.monthlyFuelChartData[scenario.name] = [];
             _.forEach(datasets, function (dataset) {
               var values = scenario.monthly_values[dataset];
+
               if (dataset == 'Electricity:Facility') {
                 var datasetUnit = 'Electricity:Facility(kWh)';
                 } else if (dataset == 'ElectricityProduced:Facility') {
@@ -454,6 +455,7 @@
             $scope.monthlyNetChartData[scenario.name].push({
               key: 'Net Energy Use',
               values: _.map(months, function (month, i) {
+
                 var value = scenario.monthly_values['Electricity:Facility'][i] - scenario.monthly_values['ElectricityProduced:Facility'][i] + (scenario.monthly_values['Gas:Facility'][i]*0.293); //kBtu to kWh
                 value;
                 $scope.annualNetChartData[scenario.name] += value;
