@@ -380,7 +380,7 @@ desc 'Run REopt Scenario'
 task :run_reopt, [:json, :csv] do |t, args|
   puts 'Running REopt Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
+  json = 'example_project_combined.json' if args[:json].nil?
   csv = 'reopt_scenario.csv' if args[:csv].nil?
 
   configure_project
