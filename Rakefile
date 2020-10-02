@@ -370,7 +370,7 @@ desc 'Clear REopt Scenario'
 task :clear_reopt, [:json, :csv] do |t, args|
   puts 'Clearing REopt Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
+  json = 'example_project_combined.json' if args[:json].nil?
   csv = 'reopt_scenario.csv' if args[:csv].nil?
 
   reopt_scenario(json, csv).clear
@@ -393,7 +393,7 @@ desc 'Post Process REopt Scenario'
 task :post_process_reopt, [:json, :csv] do |t, args|
   puts 'Post Processing REopt Scenario...'
 
-  json = 'example_project.json' if args[:json].nil?
+  json = 'example_project_combined.json' if args[:json].nil?
   csv = 'reopt_scenario.csv' if args[:csv].nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(reopt_scenario(json, csv))
