@@ -32,6 +32,9 @@ require 'openstudio/extension'
 require 'openstudio/extension/rake_task'
 require 'urbanopt/scenario'
 require 'urbanopt/geojson'
+require 'urbanopt/reopt'
+require 'urbanopt/reopt_scenario'
+require_relative 'developer_nrel_key'
 
 module URBANopt
   module ExampleGeoJSONProject
@@ -76,7 +79,6 @@ def baseline_scenario(json, csv)
   csv_file = File.join(root_dir, csv)
   mapper_files_dir = File.join(root_dir, 'mappers/')
   num_header_rows = 1
-
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
@@ -89,7 +91,6 @@ def high_efficiency_scenario(json, csv)
   csv_file = File.join(root_dir, csv)
   mapper_files_dir = File.join(root_dir, 'mappers/')
   num_header_rows = 1
-
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
@@ -102,7 +103,6 @@ def thermal_storage_scenario(json, csv)
   csv_file = File.join(root_dir, csv)
   mapper_files_dir = File.join(root_dir, 'mappers/')
   num_header_rows = 1
-
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
   return scenario
@@ -118,6 +118,21 @@ def mixed_scenario(json, csv)
 
   feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
   scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def reopt_scenario(json, csv)
+  name = 'REopt Scenario'
+  run_dir = File.join(root_dir, 'run/reopt_scenario/')
+  feature_file_path = File.join(root_dir, json)
+  csv_file = File.join(root_dir, csv)
+  mapper_files_dir = File.join(root_dir, 'mappers/')
+  reopt_files_dir = File.join(root_dir, 'reopt/')
+  scenario_reopt_assumptions_file_name = 'base_assumptions.json'
+  num_header_rows = 1
+
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::REoptScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows, reopt_files_dir, scenario_reopt_assumptions_file_name)
   return scenario
 end
 
@@ -349,6 +364,58 @@ task :post_process_thermal_storage, [:json, :csv] do |t, args|
   end
 end
 
+### REopt
+
+desc 'Clear REopt Scenario'
+task :clear_reopt, [:json, :csv] do |t, args|
+  puts 'Clearing REopt Scenario...'
+
+  json = 'example_project_combined.json' if args[:json].nil?
+  csv = 'reopt_scenario.csv' if args[:csv].nil?
+
+  reopt_scenario(json, csv).clear
+end
+
+desc 'Run REopt Scenario'
+task :run_reopt, [:json, :csv] do |t, args|
+  puts 'Running REopt Scenario...'
+
+  json = 'example_project_combined.json' if args[:json].nil?
+  csv = 'reopt_scenario.csv' if args[:csv].nil?
+
+  configure_project
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(reopt_scenario(json, csv))
+end
+
+desc 'Post Process REopt Scenario'
+task :post_process_reopt, [:json, :csv] do |t, args|
+  puts 'Post Processing REopt Scenario...'
+
+  json = 'example_project_combined.json' if args[:json].nil?
+  csv = 'reopt_scenario.csv' if args[:csv].nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(reopt_scenario(json, csv))
+  scenario_report = default_post_processor.run
+  # save scenario reports
+  scenario_report.save
+  # save feature reports
+  scenario_report.feature_reports.each do |feature_report|
+    feature_report.save_feature_report()
+  end
+  
+  scenario_base = default_post_processor.scenario_base
+  reopt_post_processor = URBANopt::REopt::REoptPostProcessor.new(scenario_report, scenario_base.scenario_reopt_assumptions_file, scenario_base.reopt_feature_assumptions, DEVELOPER_NREL_KEY)
+
+  # Run Aggregate Scenario
+  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization')
+
+  # Run features individually - this is an alternative approach to the previous step, in your analysis depending on project ojectives you maye only need to run one
+  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt']* scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization')
+end
+
+
 ### Mixed
 
 desc 'Clear Mixed Scenario'
@@ -419,17 +486,17 @@ end
 ### All
 
 desc 'Clear all scenarios'
-task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_mixed] do
+task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_reopt, :clear_mixed] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task :run_all => [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_mixed] do
+task :run_all => [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_reopt, :run_mixed] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_mixed] do
+task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_reopt, :post_process_mixed] do
   # post_process all the scenarios
 end
 
