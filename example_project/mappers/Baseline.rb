@@ -500,6 +500,12 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_building_num_units]
 
+            # SCHEDULES
+
+            args[:schedules_type] = 'stochastic'
+
+            # HVAC
+
             system_type = "Residential - furnace and central air conditioner"
             begin
               system_type = feature.system_type
@@ -543,8 +549,12 @@ module URBANopt
               args[:heating_system_fuel] = "electricity"
             end
 
+            # APPLIANCES
+
             args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
             args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
+
+            # VENTILATION
 
             args[:kitchen_fans_present] = true
             args[:bathroom_fans_present] = true
