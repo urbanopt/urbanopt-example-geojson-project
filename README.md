@@ -104,6 +104,26 @@ bundle exec rake post_process_thermal_storage[json,csv]
 
 Where, `json` is the `example_project.json` FeatureFile and `csv` is the name of a scenario file for this feature file.
 
+**Visualizing post-processing results**
+
+After running the post processing commands, the results of the post-processing can be visualized in
+an html file.
+
+*To visualize and compare features in a scenario*
+
+```ruby
+bundle exec rake visualize_features[scenario_file]
+```
+Where `scenario_file` is the name of the csv and dictates the scenario for which feature results are
+visualized.
+
+*To visualize and compare scenarios*
+
+```ruby
+bundle exec rake visualize_scenarios
+```
+
+
 **Clearing the projects**
 
 *To clear all projects and scenarios*
