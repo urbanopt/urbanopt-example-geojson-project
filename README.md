@@ -21,7 +21,7 @@ include:
   part of the OpenStudio SDK.
 
 The
-example project has different projects based on the geometry creation methods for 
+example project has different projects based on the geometry method used to create 
 buildings, such as the
 `default project`, `createbar project` and the `floorspace project`.
 There are commands to run, post process and delete these project described as
