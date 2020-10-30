@@ -129,7 +129,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../out.xml')
       measure_args[:software_program_used] = 'URBANopt'
-      measure_args[:software_program_version] = '0.3.1'
+      measure_args[:software_program_version] = '0.4.0'
       if unit.additionalProperties.getFeatureAsString('GeometryLevel').is_initialized
         measure_args[:geometry_level] = unit.additionalProperties.getFeatureAsString('GeometryLevel').get
       end
