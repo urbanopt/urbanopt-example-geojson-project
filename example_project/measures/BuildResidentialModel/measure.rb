@@ -158,6 +158,20 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         return false
       end
 
+      case args[:geometry_unit_type]
+      when 'single-family detached'
+        building_type = 'Single-Family Detached'
+      when 'single-family attached'
+        building_type = 'Single-Family Attached'
+      when 'multifamily'
+        building_type = 'Multifamily'
+      end
+
+      unit_model.getSpaceTypes.each do |space_type|
+        next unless space_type.standardsSpaceType.is_initialized
+        space_type.setStandardsBuildingType(building_type)
+      end
+
       unit_dir = File.expand_path("../unit #{num_unit+1}")
       Dir.mkdir(unit_dir)
       FileUtils.cp(File.expand_path('../out.xml'), unit_dir) # this is the raw hpxml file
