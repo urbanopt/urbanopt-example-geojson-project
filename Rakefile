@@ -398,8 +398,8 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   # save scenario reports
   scenario_report.save
   # save feature reports
-  scenario_result.feature_reports.each(&:save_json_report)
-  scenario_result.feature_reports.each(&:save_csv_report)
+  scenario_report.feature_reports.each(&:save_json_report)
+  scenario_report.feature_reports.each(&:save_csv_report)
   
   scenario_base = default_post_processor.scenario_base
   reopt_post_processor = URBANopt::REopt::REoptPostProcessor.new(scenario_report, scenario_base.scenario_reopt_assumptions_file, scenario_base.reopt_feature_assumptions, DEVELOPER_NREL_KEY)
