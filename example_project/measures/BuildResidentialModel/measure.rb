@@ -128,8 +128,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measures = {}
       measures[measure_subdir] = []
       measure_args[:hpxml_path] = File.expand_path('../out.xml')
-      measure_args[:software_program_used] = 'URBANopt'
-      measure_args[:software_program_version] = '0.4.0'
+      begin
+        measure_args[:software_program_used] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
+      rescue
+      end
+      begin
+        version_rb File.absolute_path(File.join(File.dirname(__FILE__), '../../../lib/uo_cli/version.rb'))
+        require version_rb
+        measure_args[:software_program_version] = URBANopt::CLI::VERSION
+      rescue
+      end
       if unit.additionalProperties.getFeatureAsString('GeometryLevel').is_initialized
         measure_args[:geometry_level] = unit.additionalProperties.getFeatureAsString('GeometryLevel').get
       end
