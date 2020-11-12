@@ -73,10 +73,10 @@ else
   gem 'openstudio-load-flexibility-measures', '~> 0.1.3'
 end
 
-#if allow_local && File.exist?('../urbanopt-reopt-gem')
-#  gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
-#elsif allow_local
+if allow_local && File.exist?('../urbanopt-reopt-gem')
+  gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
+elsif allow_local
   gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
-#else
-#  gem 'urbanopt-reopt', '0.4.1'
-#end
+else
+  gem 'urbanopt-reopt', '0.4.1'
+end
