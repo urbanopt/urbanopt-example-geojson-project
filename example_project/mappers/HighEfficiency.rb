@@ -47,7 +47,32 @@ module URBANopt
         feature = features[0]
         building_type = feature.building_type
 
-        if commercial_building_types.include? building_type
+        if residential_building_types.include? building_type
+          args = {}
+          osw[:steps].each do |step|
+            next if step[:measure_dir_name] != 'BuildResidentialModel'
+
+            step[:arguments].each do |arg_name, arg_val|
+              args[arg_name] = arg_val
+            end
+          end
+
+          args[:wall_assembly_r] = Float(args[:wall_assembly_r]) * 1.2 # 20% increase
+          args[:plug_loads_television_usage_multiplier] = Float(args[:plug_loads_television_usage_multiplier]) * 0.9 # 10% reduction
+          args[:plug_loads_other_usage_multiplier] = Float(args[:plug_loads_other_usage_multiplier]) * 0.9 # 10% reduction
+          args[:lighting_usage_multiplier_interior] = Float(args[:lighting_usage_multiplier_interior]) * 0.9 # 10% reduction
+          args[:lighting_usage_multiplier_exterior] = Float(args[:lighting_usage_multiplier_exterior]) * 0.9 # 10% reduction
+          args[:clothes_washer_usage_multiplier] = Float(args[:clothes_washer_usage_multiplier]) * 0.9 # 10% reduction
+          args[:clothes_dryer_usage_multiplier] = Float(args[:clothes_dryer_usage_multiplier]) * 0.9 # 10% reduction
+          args[:dishwasher_usage_multiplier] = Float(args[:dishwasher_usage_multiplier]) * 0.9 # 10% reduction
+          args[:refrigerator_usage_multiplier] = Float(args[:refrigerator_usage_multiplier]) * 0.9 # 10% reduction
+          args[:cooking_range_oven_usage_multiplier] = Float(args[:cooking_range_oven_usage_multiplier]) * 0.9 # 10% reduction
+          args[:water_fixtures_usage_multiplier] = Float(args[:water_fixtures_usage_multiplier]) * 0.9 # 10% reduction
+
+          args.each do |arg_name, arg_val|
+            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg_name, arg_val)
+          end
+        elsif commercial_building_types.include? building_type
           OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', '__SKIP__', false)
           OpenStudio::Extension.set_measure_argument(osw, 'IncreaseInsulationRValueForExteriorWalls', 'r_value', 20)
 
