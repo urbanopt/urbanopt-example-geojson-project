@@ -137,7 +137,7 @@
         "charge_start": "23:00"
       }
     },{
-      "measure_dir_name": "cooling_setpoints_daily_adjusted_by_degrees",
+      "measure_dir_name": "cooling_setpoints_hourly_adjusted_by_degrees",
       "arguments": {
         "__SKIP__": true,
         "cooling_setpoint": "26.6",
