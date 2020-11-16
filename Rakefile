@@ -458,8 +458,8 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   # save scenario reports
   scenario_report.save
   # save feature reports
-  scenario_result.feature_reports.each(&:save_json_report)
-  scenario_result.feature_reports.each(&:save_csv_report)
+  scenario_report.feature_reports.each(&:save_json_report)
+  scenario_report.feature_reports.each(&:save_csv_report)
   
   scenario_base = default_post_processor.scenario_base
   reopt_post_processor = URBANopt::REopt::REoptPostProcessor.new(scenario_report, scenario_base.scenario_reopt_assumptions_file, scenario_base.reopt_feature_assumptions, DEVELOPER_NREL_KEY)
@@ -530,12 +530,12 @@ end
 ## Visualize feature results 
 
 desc 'Visualize and compare results for all Features in a Scenario'
-task :visualize_features, [:scenario_file] do |t, args|
+task :visualize_features, [:csv] do |t, args|
   puts 'Visualizing results for all Features in the Scenario...'
   
-  scenario_file = 'baseline_scenario.csv' if args[:scenario_file].nil?
+  csv = 'baseline_scenario.csv' if args[:csv].nil?
   
-  visualize_features(scenario_file)
+  visualize_features(csv)
 end
 
 ### All

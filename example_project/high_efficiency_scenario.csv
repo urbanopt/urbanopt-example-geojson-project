@@ -12,3 +12,6 @@ Feature Id,Feature Name,Mapper Class
 11,Restaurant 13,URBANopt::Scenario::HighEfficiencyMapper
 12,Mall 1,URBANopt::Scenario::HighEfficiencyMapper
 13,Hotel 1,URBANopt::Scenario::HighEfficiencyMapper
+14,Residential 1,URBANopt::Scenario::HighEfficiencyMapper
+15,Residential 2,URBANopt::Scenario::HighEfficiencyMapper
+16,Residential 3,URBANopt::Scenario::HighEfficiencyMapper
