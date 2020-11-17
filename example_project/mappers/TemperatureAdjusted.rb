@@ -48,9 +48,9 @@ module URBANopt
         building_type = feature.building_type
 
         
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'cooling_setpoint', 25.8)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'hour_of_the_day', 17)
+		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_daily_adjusted_by_degreess', '__SKIP__', false)
+		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_daily_adjusted_by_degrees', 'cooling_setpoint', 25.8)
+		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_daily_adjusted_by_degrees', 'hour_of_the_day', 17)
 
 
 	
