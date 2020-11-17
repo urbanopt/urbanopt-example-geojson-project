@@ -14,16 +14,16 @@
       "measure_dir_name": "set_run_period",
       "arguments": {
         "__SKIP__": true,
-        "timesteps_per_hour": 4,
-        "begin_date": "2019-06-01",
-        "end_date": "2019-09-30"
+        "timesteps_per_hour": 1,
+        "begin_date": "2019-09-01",
+        "end_date": "2019-09-05"
       }
     },{
       "measure_dir_name": "ChangeBuildingLocation",
       "arguments": {
         "__SKIP__": true,
-        "weather_file_name": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
-        "climate_zone": "ASHRAE 169-2013-6A"
+        "weather_file_name": "USA_TX_Houston-Bush.Intercontinental.AP.722430_TMY3.epw",
+        "climate_zone": "ASHRAE 169-2013-2A"
       }
     },{
       "measure_dir_name": "create_bar_from_building_type_ratios",
