@@ -108,18 +108,6 @@ def thermal_storage_scenario(json, csv)
   return scenario
 end
 
-def Tepmerature_Adjusted_scenario(json, csv)
-  name = 'Temperature Adjusted Scenario'
-  run_dir = File.join(root_dir, 'run/Tepmerature_Adjusted_scenario/')
-  feature_file_path = File.join(root_dir, json)
-  csv_file = File.join(root_dir, csv)
-  mapper_files_dir = File.join(root_dir, 'mappers/')
-  num_header_rows = 1
-  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
-  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
-  return scenario
-end
-
 def mixed_scenario(json, csv)
   name = 'Mixed Scenario'
   run_dir = File.join(root_dir, 'run/mixed_scenario/')
@@ -372,54 +360,6 @@ task :post_process_thermal_storage, [:json, :csv] do |t, args|
   scenario_result.feature_reports.each(&:save_json_report)
   scenario_result.feature_reports.each(&:save_csv_report)
 end
-
-### Temperature Adjusted
-
-desc 'Clear Temperature Adjusted Scenario'
-task :clear_Temperature_Adjusted, [:json, :csv] do |t, args|
-  puts 'Clearing Temperature Adjusted Scenario...'
-
-  json = args[:json]
-  csv = args[:csv]
-  json = 'example_project_combined.json' if json.nil?
-  csv = 'Temperature_Adjusted_scenario.csv' if csv.nil?
-
-  Tepmerature_Adjusted_scenario(json, csv).clear
-end
-
-desc 'Run Temperature Adjusted Scenario'
-task :run_Temperature_Adjusted, [:json, :csv] do |t, args|
-  puts 'Running Temperature Adjusted Scenario...'
-
-  json = args[:json]
-  csv = args[:csv]
-  json = 'example_project_combined.json' if json.nil?
-  csv = 'Temperature_Adjusted_scenario.csv' if csv.nil?
-
-  configure_project
-
-  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
-  scenario_runner.run(Tepmerature_Adjusted_scenario(json, csv))
-end
-
-desc 'Post Process Temperature Adjusted Scenario'
-task :post_process_Temperature_Adjusted, [:json, :csv] do |t, args|
-  puts 'Post Processing Temperature Adjusted Scenario...'
-
-  json = args[:json]
-  csv = args[:csv]
-  json = 'example_project_combined.json' if json.nil?
-  csv = 'Temperature_Adjusted_scenario.csv' if csv.nil?
-
-  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(Tepmerature_Adjusted_scenario(json, csv))
-  scenario_result = default_post_processor.run
-  # save scenario reports
-  scenario_result.save
-  # save feature reports
-  scenario_result.feature_reports.each(&:save_json_report)
-  scenario_result.feature_reports.each(&:save_csv_report)
-end
-
 
 ### REopt
 

@@ -1,7 +1,7 @@
 {
   "seed_file": null,
   "weather_file": null,
-  "measure_paths": ["C:\measure_UO"],
+  "measure_paths": [],
   "file_paths": [],
   "run_directory": null,
   "steps": [
@@ -136,13 +136,6 @@
         "size_mult": "0.75",
         "charge_start": "23:00"
       }
-    },{
-      "measure_dir_name": "cooling_setpoints_daily_adjusted_by_degrees",
-      "arguments": {
-        "__SKIP__": true,
-        "cooling_setpoint": "26.6",
-        "hour_of_the_day": "16"
-      }	  
     },{
       "measure_dir_name": "default_feature_reports",
       "arguments": {
