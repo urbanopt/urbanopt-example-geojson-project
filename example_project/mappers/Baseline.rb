@@ -422,9 +422,9 @@ module URBANopt
             end
 
             args[:simulation_control_run_period_begin_month] = 1
-            args[:simulation_control_run_period_begin_day_of_month] = 1
-            args[:simulation_control_run_period_end_month] = 12
-            args[:simulation_control_run_period_end_day_of_month] = 31
+            args[:simulation_control_run_period_begin_day_of_month] = 9
+            args[:simulation_control_run_period_end_month] = 5
+            args[:simulation_control_run_period_end_day_of_month] = 9
             args[:simulation_control_run_period_calendar_year] = 2007
             begin
               args[:simulation_control_run_period_begin_month] = feature.begin_date[5, 2].to_i
