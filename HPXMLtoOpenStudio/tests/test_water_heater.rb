@@ -2,7 +2,7 @@
 
 require_relative '../resources/minitest_helper'
 require 'openstudio'
-require 'openstudio/ruleset/ShowRunnerOutput'
+require 'openstudio/measure/ShowRunnerOutput'
 require 'minitest/autorun'
 require 'fileutils'
 require_relative '../measure.rb'
@@ -25,7 +25,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(7.88, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 0.773
@@ -42,6 +42,69 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(0.64, wh.offCycleLossFractiontoThermalZone)
+  end
+
+  def test_tank_gas_med_fhr_uef
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tank-gas-med-fhr-uef.xml'))
+    model, hpxml = _test_measure(args_hash)
+
+    # Get HPXML values
+    water_heating_system = hpxml.water_heating_systems[0]
+
+    # Expected value
+    tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
+    cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    ua = UnitConversions.convert(6.476, 'Btu/(hr*F)', 'W/K')
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
+    ther_eff = 0.762
+    loc = water_heating_system.location
+
+    # Check water heater
+    assert_equal(1, model.getWaterHeaterMixeds.size)
+    wh = model.getWaterHeaterMixeds[0]
+    assert_equal(fuel, wh.heaterFuelType)
+    assert_equal(loc, wh.ambientTemperatureThermalZone.get.name.get)
+    assert_in_epsilon(tank_volume, wh.tankVolume.get, 0.001)
+    assert_in_epsilon(cap, wh.heaterMaximumCapacity.get, 0.001)
+    assert_in_epsilon(ua, wh.onCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
+    assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(0.64, wh.offCycleLossFractiontoThermalZone)
+  end
+
+  def test_tank_gas_high_fhr_uef
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tank-gas-high-fhr-uef.xml'))
+    model, hpxml = _test_measure(args_hash)
+
+    # Get HPXML values
+    water_heating_system = hpxml.water_heating_systems[0]
+
+    # Expected value
+    tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
+    cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    ua = UnitConversions.convert(5.09, 'Btu/(hr*F)', 'W/K')
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
+    ther_eff = 0.794
+    loc = water_heating_system.location
+
+    # Check water heater
+    assert_equal(1, model.getWaterHeaterMixeds.size)
+    wh = model.getWaterHeaterMixeds[0]
+    assert_equal(fuel, wh.heaterFuelType)
+    assert_equal(loc, wh.ambientTemperatureThermalZone.get.name.get)
+    assert_in_epsilon(tank_volume, wh.tankVolume.get, 0.001)
+    assert_in_epsilon(cap, wh.heaterMaximumCapacity.get, 0.001)
+    assert_in_epsilon(ua, wh.onCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
+    assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(0.64, wh.offCycleLossFractiontoThermalZone)
   end
 
   def test_tank_oil
@@ -55,7 +118,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(7.88, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 0.773
@@ -72,6 +135,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(0.64, wh.offCycleLossFractiontoThermalZone)
   end
 
   def test_tank_wood
@@ -85,7 +149,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(7.88, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 0.773
@@ -102,6 +166,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(0.64, wh.offCycleLossFractiontoThermalZone)
   end
 
   def test_tank_coal
@@ -115,7 +180,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(7.88, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 0.773
@@ -132,6 +197,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(0.64, wh.offCycleLossFractiontoThermalZone)
   end
 
   def test_tank_electric
@@ -145,7 +211,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 1.0
@@ -162,9 +228,41 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
   end
 
-  def test_tankless
+  def test_tank_electric_low_fhr_uef
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tank-elec-low-fhr-uef.xml'))
+    model, hpxml = _test_measure(args_hash)
+
+    # Get HPXML values
+    water_heating_system = hpxml.water_heating_systems[0]
+
+    # Expected value
+    tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
+    cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    ua = UnitConversions.convert(1.503, 'Btu/(hr*F)', 'W/K')
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
+    ther_eff = 1.0
+    loc = water_heating_system.location
+
+    # Check water heater
+    assert_equal(1, model.getWaterHeaterMixeds.size)
+    wh = model.getWaterHeaterMixeds[0]
+    assert_equal(fuel, wh.heaterFuelType)
+    assert_equal(loc, wh.ambientTemperatureThermalZone.get.name.get)
+    assert_in_epsilon(tank_volume, wh.tankVolume.get, 0.001)
+    assert_in_epsilon(cap, wh.heaterMaximumCapacity.get, 0.001)
+    assert_in_epsilon(ua, wh.onCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
+    assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
+  end
+
+  def test_tankless_electric
     args_hash = {}
     args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tankless-electric.xml'))
     model, hpxml = _test_measure(args_hash)
@@ -175,7 +273,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(1.0, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(100000000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = 0.0
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C')
     ther_eff = 0.9108
@@ -192,23 +290,24 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
   end
 
-  def test_uef
+  def test_tankless_electric_uef
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-uef.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tankless-electric-uef.xml'))
     model, hpxml = _test_measure(args_hash)
 
     # Get HPXML values
     water_heating_system = hpxml.water_heating_systems[0]
 
     # Expected value
-    tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
-    cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
-    ua = UnitConversions.convert(1.327, 'Btu/(hr*F)', 'W/K')
-    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
-    ther_eff = 1.0
+    tank_volume = UnitConversions.convert(1.0, 'gal', 'm^3') # convert to actual volume
+    cap = UnitConversions.convert(100000000.0, 'kBtu/hr', 'W')
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    ua = 0.0
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C')
+    ther_eff = 0.9212
     loc = water_heating_system.location
 
     # Check water heater
@@ -222,6 +321,38 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
+  end
+
+  def test_tankless_gas_uef
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tankless-gas-uef.xml'))
+    model, hpxml = _test_measure(args_hash)
+
+    # Get HPXML values
+    water_heating_system = hpxml.water_heating_systems[0]
+
+    # Expected value
+    tank_volume = UnitConversions.convert(1.0, 'gal', 'm^3') # convert to actual volume
+    cap = UnitConversions.convert(100000000.0, 'kBtu/hr', 'W')
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    ua = 0.0
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C')
+    ther_eff = 0.8742
+    loc = water_heating_system.location
+
+    # Check water heater
+    assert_equal(1, model.getWaterHeaterMixeds.size)
+    wh = model.getWaterHeaterMixeds[0]
+    assert_equal(fuel, wh.heaterFuelType)
+    assert_equal(loc, wh.ambientTemperatureThermalZone.get.name.get)
+    assert_in_epsilon(tank_volume, wh.tankVolume.get, 0.001)
+    assert_in_epsilon(cap, wh.heaterMaximumCapacity.get, 0.001)
+    assert_in_epsilon(ua, wh.onCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
+    assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
   end
 
   def test_tank_outside
@@ -235,7 +366,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(7.88, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 0.773
@@ -264,7 +395,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -281,6 +412,8 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
+
     # Check desuperheater
     assert_equal(1, model.getCoilWaterHeatingDesuperheaters.size)
     preheat_tank = model.getWaterHeaterMixeds.select { |wh| wh.name.get.include? 'storage tank' }[0]
@@ -300,7 +433,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -317,6 +450,8 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
+
     # Check desuperheater
     assert_equal(1, model.getCoilWaterHeatingDesuperheaters.size)
     preheat_tank = model.getWaterHeaterMixeds.select { |wh| wh.name.get.include? 'storage tank' }[0]
@@ -336,7 +471,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -353,6 +488,8 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
+
     # Check desuperheater
     assert_equal(1, model.getCoilWaterHeatingDesuperheaters.size)
     preheat_tank = model.getWaterHeaterMixeds.select { |wh| wh.name.get.include? 'storage tank' }[0]
@@ -373,7 +510,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -400,6 +537,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
 
     # Check solar thermal system
     assert_equal(1, model.getSolarCollectorFlatPlateWaters.size)
@@ -445,7 +583,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -472,6 +610,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
 
     # Check solar thermal system
     assert_equal(1, model.getSolarCollectorFlatPlateWaters.size)
@@ -517,7 +656,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -544,6 +683,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
 
     # Check solar thermal system
     assert_equal(1, model.getSolarCollectorFlatPlateWaters.size)
@@ -589,7 +729,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -616,6 +756,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
 
     # Check solar thermal system
     assert_equal(1, model.getSolarCollectorFlatPlateWaters.size)
@@ -661,7 +802,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     loc = water_heating_system.location
@@ -686,6 +827,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
 
     # Check solar thermal system
     assert_equal(1, model.getSolarCollectorIntegralCollectorStorages.size)
@@ -727,7 +869,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K') * 0.35
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 1.0
@@ -744,6 +886,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
   end
 
   def test_tank_indirect
@@ -770,6 +913,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.onCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
 
     # Heat exchanger
     assert_equal(1, model.getHeatExchangerFluidToFluids.size)
@@ -804,7 +948,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     tank_volume = UnitConversions.convert(1, 'gal', 'm^3') # convert to actual volume
     cap = 0.0
     ua = 0.0
-    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') # setpoint + 1/2 deadband
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C')
     loc = water_heating_system.location
 
     # Check water heater
@@ -817,6 +961,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.onCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
 
     # Heat exchanger
     assert_equal(1, model.getHeatExchangerFluidToFluids.size)
@@ -849,12 +994,123 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
 
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     u =  0.925
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') - 9
     ther_eff = 1.0
     cop = 2.820
     tank_height = 1.598
+
+    # Check water heater
+    assert_equal(1, model.getWaterHeaterHeatPumpWrappedCondensers.size)
+    assert_equal(1, model.getWaterHeaterStratifieds.size)
+    hpwh = model.getWaterHeaterHeatPumpWrappedCondensers[0]
+    wh = hpwh.tank.to_WaterHeaterStratified.get
+    coil = hpwh.dXCoil.to_CoilWaterHeatingAirToWaterHeatPumpWrapped.get
+    assert_equal(fuel, wh.heaterFuelType)
+    assert_equal('Schedule', wh.ambientTemperatureIndicator)
+    assert_in_epsilon(tank_volume, wh.tankVolume.get, 0.001)
+    assert_in_epsilon(tank_height, wh.tankHeight.get, 0.001)
+    assert_in_epsilon(4500.0, wh.heater1Capacity.get, 0.001)
+    assert_in_epsilon(4500.0, wh.heater2Capacity, 0.001)
+    assert_in_epsilon(u, wh.uniformSkinLossCoefficientperUnitAreatoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(t_set, wh.heater1SetpointTemperatureSchedule.to_ScheduleConstant.get.value, 0.001)
+    assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency, 0.001)
+
+    # Check heat pump cooling coil cop
+    assert_in_epsilon(cop, coil.ratedCOP, 0.001)
+  end
+
+  def test_tank_heat_pump_uef_low_fhr
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tank-heat-pump-uef-low-fhr.xml'))
+    model, hpxml = _test_measure(args_hash)
+
+    # Get HPXML values
+    water_heating_system = hpxml.water_heating_systems[0]
+
+    # Expected value
+    tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    u =  1.245
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') - 9
+    ther_eff = 1.0
+    cop = 3.673
+    tank_height = 0.8455
+
+    # Check water heater
+    assert_equal(1, model.getWaterHeaterHeatPumpWrappedCondensers.size)
+    assert_equal(1, model.getWaterHeaterStratifieds.size)
+    hpwh = model.getWaterHeaterHeatPumpWrappedCondensers[0]
+    wh = hpwh.tank.to_WaterHeaterStratified.get
+    coil = hpwh.dXCoil.to_CoilWaterHeatingAirToWaterHeatPumpWrapped.get
+    assert_equal(fuel, wh.heaterFuelType)
+    assert_equal('Schedule', wh.ambientTemperatureIndicator)
+    assert_in_epsilon(tank_volume, wh.tankVolume.get, 0.001)
+    assert_in_epsilon(tank_height, wh.tankHeight.get, 0.001)
+    assert_in_epsilon(4500.0, wh.heater1Capacity.get, 0.001)
+    assert_in_epsilon(4500.0, wh.heater2Capacity, 0.001)
+    assert_in_epsilon(u, wh.uniformSkinLossCoefficientperUnitAreatoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(t_set, wh.heater1SetpointTemperatureSchedule.to_ScheduleConstant.get.value, 0.001)
+    assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency, 0.001)
+
+    # Check heat pump cooling coil cop
+    assert_in_epsilon(cop, coil.ratedCOP, 0.001)
+  end
+
+  def test_tank_heat_pump_uef_medium_fhr
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tank-heat-pump-uef-medium-fhr.xml'))
+    model, hpxml = _test_measure(args_hash)
+
+    # Get HPXML values
+    water_heating_system = hpxml.water_heating_systems[0]
+
+    # Expected value
+    tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    u =  1.045
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') - 9
+    ther_eff = 1.0
+    cop = 4.004
+    tank_height = 1.0335
+
+    # Check water heater
+    assert_equal(1, model.getWaterHeaterHeatPumpWrappedCondensers.size)
+    assert_equal(1, model.getWaterHeaterStratifieds.size)
+    hpwh = model.getWaterHeaterHeatPumpWrappedCondensers[0]
+    wh = hpwh.tank.to_WaterHeaterStratified.get
+    coil = hpwh.dXCoil.to_CoilWaterHeatingAirToWaterHeatPumpWrapped.get
+    assert_equal(fuel, wh.heaterFuelType)
+    assert_equal('Schedule', wh.ambientTemperatureIndicator)
+    assert_in_epsilon(tank_volume, wh.tankVolume.get, 0.001)
+    assert_in_epsilon(tank_height, wh.tankHeight.get, 0.001)
+    assert_in_epsilon(4500.0, wh.heater1Capacity.get, 0.001)
+    assert_in_epsilon(4500.0, wh.heater2Capacity, 0.001)
+    assert_in_epsilon(u, wh.uniformSkinLossCoefficientperUnitAreatoAmbientTemperature.get, 0.001)
+    assert_in_epsilon(t_set, wh.heater1SetpointTemperatureSchedule.to_ScheduleConstant.get.value, 0.001)
+    assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency, 0.001)
+
+    # Check heat pump cooling coil cop
+    assert_in_epsilon(cop, coil.ratedCOP, 0.001)
+  end
+
+  def test_tank_heat_pump_uef_high_fhr
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-dhw-tank-heat-pump-uef-high-fhr.xml'))
+    model, hpxml = _test_measure(args_hash)
+
+    # Get HPXML values
+    water_heating_system = hpxml.water_heating_systems[0]
+
+    # Expected value
+    tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
+    u =  0.925
+    t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') - 9
+    ther_eff = 1.0
+    cop = 4.045
+    tank_height = 1.5975
 
     # Check water heater
     assert_equal(1, model.getWaterHeaterHeatPumpWrappedCondensers.size)
@@ -887,7 +1143,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.9, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(0.6415, 'Btu/(hr*F)', 'W/K')
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 1.0
@@ -904,6 +1160,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     assert_in_epsilon(ua, wh.offCycleLossCoefficienttoAmbientTemperature.get, 0.001)
     assert_in_epsilon(t_set, wh.setpointTemperatureSchedule.get.to_ScheduleConstant.get.value, 0.001)
     assert_in_epsilon(ther_eff, wh.heaterThermalEfficiency.get, 0.001)
+    assert_equal(1.0, wh.offCycleLossFractiontoThermalZone)
   end
 
   def test_shared_water_heater
@@ -917,7 +1174,7 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
     # Expected value
     tank_volume = UnitConversions.convert(water_heating_system.tank_volume * 0.95, 'gal', 'm^3') # convert to actual volume
     cap = UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')
-    fuel = EPlus.input_fuel_map(water_heating_system.fuel_type)
+    fuel = EPlus.fuel_type(water_heating_system.fuel_type)
     ua = UnitConversions.convert(7.88, 'Btu/(hr*F)', 'W/K') / water_heating_system.number_of_units_served
     t_set = UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1 # setpoint + 1/2 deadband
     ther_eff = 0.773
@@ -950,8 +1207,8 @@ class HPXMLtoOpenStudioWaterHeaterTest < MiniTest::Test
                     UnitConversions.convert(shared_water_heating_system.tank_volume * 0.9, 'gal', 'm^3')] # convert to actual volume
     caps = [UnitConversions.convert(water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W'),
             UnitConversions.convert(shared_water_heating_system.heating_capacity / 1000.0, 'kBtu/hr', 'W')]
-    fuels = [EPlus.input_fuel_map(water_heating_system.fuel_type),
-             EPlus.input_fuel_map(shared_water_heating_system.fuel_type)]
+    fuels = [EPlus.fuel_type(water_heating_system.fuel_type),
+             EPlus.fuel_type(shared_water_heating_system.fuel_type)]
     uas = [UnitConversions.convert(1.335, 'Btu/(hr*F)', 'W/K'),
            UnitConversions.convert(1.335 / shared_water_heating_system.number_of_units_served, 'Btu/(hr*F)', 'W/K')]
     t_sets = [UnitConversions.convert(water_heating_system.temperature, 'F', 'C') + 1,

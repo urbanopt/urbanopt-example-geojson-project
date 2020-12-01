@@ -3,7 +3,6 @@
 # Require all gems up front; this is much faster than multiple resource
 # files lazy loading as needed, as it prevents multiple lookups for the
 # same gem.
-require 'openstudio'
 require 'pathname'
 require 'csv'
 require 'oga'
@@ -68,7 +67,7 @@ class HPXMLtoOpenStudio < OpenStudio::Measure::ModelMeasure
 
     arg = OpenStudio::Measure::OSArgument.makeBoolArgument('debug', false)
     arg.setDisplayName('Debug Mode?')
-    arg.setDescription('If enabled: 1) Writes in.osm file, 2) Writes in.xml HPXML file with defaults populated, and 3) Generates additional log output. Any files written will be in the output path specified above.')
+    arg.setDescription('If enabled: 1) Writes in.osm file, 2) Writes in.xml HPXML file with defaults populated, 3) Generates additional log output, and 4) Creates all EnergyPlus output files. Any files written will be in the output path specified above.')
     arg.setDefaultValue(false)
     args << arg
 
@@ -145,18 +144,16 @@ class HPXMLtoOpenStudio < OpenStudio::Measure::ModelMeasure
 
     is_valid = true
 
-    # Validate input HPXML against schema
-    XMLHelper.validate(hpxml.doc.to_xml, File.join(schemas_dir, 'HPXML.xsd'), runner).each do |error|
-      runner.registerError("#{hpxml_path}: #{error}")
-      is_valid = false
-    end
-
-    # Validate input HPXML against EnergyPlus Use Case
-    stron_path = File.join(File.dirname(__FILE__), 'resources', 'EPvalidator.xml')
-    errors = Validator.run_validator(hpxml.doc, stron_path)
+    # Validate input HPXML against schematron docs
+    stron_paths = [File.join(File.dirname(__FILE__), 'resources', 'HPXMLvalidator.xml'),
+                   File.join(File.dirname(__FILE__), 'resources', 'EPvalidator.xml')]
+    errors, warnings = Validator.run_validators(hpxml.doc, stron_paths)
     errors.each do |error|
       runner.registerError("#{hpxml_path}: #{error}")
       is_valid = false
+    end
+    warnings.each do |warning|
+      runner.registerWarning("#{warning}")
     end
 
     # Check for additional errors
@@ -178,6 +175,10 @@ class HPXMLtoOpenStudio < OpenStudio::Measure::ModelMeasure
     end
     if not File.exist? epw_path
       test_epw_path = File.join(File.dirname(__FILE__), '..', 'weather', epw_path)
+      epw_path = test_epw_path if File.exist? test_epw_path
+    end
+    if not File.exist? epw_path
+      test_epw_path = File.join(File.dirname(__FILE__), '..', '..', 'weather', epw_path)
       epw_path = test_epw_path if File.exist? test_epw_path
     end
     if not File.exist?(epw_path)
@@ -216,18 +217,18 @@ class OSModel
     @apply_ashrae140_assumptions = @hpxml.header.apply_ashrae140_assumptions # Hidden feature
     @apply_ashrae140_assumptions = false if @apply_ashrae140_assumptions.nil?
 
-    @schedules_file = nil
-    if not @hpxml.header.schedules_path.nil?
-      @schedules_file = SchedulesFile.new(runner: runner, model: model, schedules_path: @hpxml.header.schedules_path, col_names: ScheduleGenerator.col_names)
-    end
-
     # Init
 
     weather, epw_file = Location.apply_weather_file(model, runner, epw_path, cache_path)
     check_for_errors()
     set_defaults_and_globals(runner, output_dir, epw_file)
-    weather = Location.apply(model, runner, weather, epw_file, @hpxml)
+    Location.apply(model, runner, weather, epw_file, @hpxml)
     add_simulation_params(model)
+
+    @schedules_file = nil
+    if not @hpxml.header.schedules_path.nil?
+      @schedules_file = SchedulesFile.new(runner: runner, model: model, schedules_path: @hpxml.header.schedules_path, col_names: ScheduleGenerator.col_names)
+    end
 
     # Conditioned space/zone
 
@@ -281,10 +282,15 @@ class OSModel
 
     add_airflow(runner, model, weather, spaces)
     add_hvac_sizing(runner, model, weather, spaces)
-    add_furnace_eae(runner, model)
     add_photovoltaics(runner, model)
     add_additional_properties(runner, model, hpxml_path)
+
+    # Output
+
     add_component_loads_output(runner, model, spaces)
+    add_output_control_files(runner, model)
+    # Uncomment to debug EMS
+    # add_ems_debug_output(runner, model)
 
     # Vacancy
     set_vacancy(runner, model)
@@ -294,12 +300,6 @@ class OSModel
       File.write(osm_output_path, model.to_s)
       runner.registerInfo("Wrote file: #{osm_output_path}")
     end
-
-    # Uncomment to debug EMS
-    # oems = model.getOutputEnergyManagementSystem
-    # oems.setActuatorAvailabilityDictionaryReporting('Verbose')
-    # oems.setInternalVariableAvailabilityDictionaryReporting('Verbose')
-    # oems.setEMSRuntimeLanguageDebugOutputLevel('Verbose')
   end
 
   private
@@ -368,6 +368,13 @@ class OSModel
         fail "There must be at least one floor adjacent to #{location}."
       end
     end
+
+    # Error-checking from RESNET Pub 002: Number of bedrooms
+    nbeds = @hpxml.building_construction.number_of_bedrooms
+    nbeds_limit = (@hpxml.building_construction.conditioned_floor_area - 120.0) / 70.0
+    if nbeds > nbeds_limit
+      fail "Number of bedrooms (#{nbeds}) exceeds limit of (CFA-120)/70=#{nbeds_limit.round(1)}."
+    end
   end
 
   def self.set_defaults_and_globals(runner, output_dir, epw_file)
@@ -434,10 +441,15 @@ class OSModel
       roofs = @hpxml.roofs.select { |r| r.interior_adjacent_to == space_type }
       avg_pitch = roofs.map { |r| r.pitch }.sum(0.0) / roofs.size
 
-      # Assume square hip roof for volume calculations; energy results are very insensitive to actual volume
-      length = floor_area**0.5
-      height = 0.5 * Math.sin(Math.atan(avg_pitch / 12.0)) * length
-      volume = [floor_area * height / 3.0, 0.01].max
+      if @apply_ashrae140_assumptions
+        # Hardcode the attic volume to match ASHRAE 140 Table 7-2 specification
+        volume = 3463
+      else
+        # Assume square hip roof for volume calculations; energy results are very insensitive to actual volume
+        length = floor_area**0.5
+        height = 0.5 * Math.sin(Math.atan(avg_pitch / 12.0)) * length
+        volume = [floor_area * height / 3.0, 0.01].max
+      end
 
       spaces[space_type].thermalZone.get.setVolume(UnitConversions.convert(volume, 'ft^3', 'm^3'))
     end
@@ -669,7 +681,7 @@ class OSModel
         else
           vf = vf_map_cb[from_surface][to_surface]
         end
-        next if vf < 0.01
+        next if vf < 0.05 # Skip small view factors to reduce runtime
 
         os_vf = OpenStudio::Model::ViewFactor.new(from_surface, to_surface, vf.round(10))
         zone_prop.addViewFactor(os_vf)
@@ -1003,6 +1015,7 @@ class OSModel
       if has_radiant_barrier
         radiant_barrier_grade = roof.radiant_barrier_grade
       end
+      # FUTURE: Create Constructions.get_air_film(surface) method; use in measure.rb and hpxml_translator_test.rb
       inside_film = Material.AirFilmRoof(Geometry.get_roof_pitch([surfaces[0]]))
       outside_film = Material.AirFilmOutside
       mat_roofing = Material.RoofMaterial(roof.roof_type, emitt, solar_abs)
@@ -1593,7 +1606,8 @@ class OSModel
     sum_cfa = 0.0
     @hpxml.frame_floors.each do |frame_floor|
       next unless frame_floor.is_floor
-      next unless frame_floor.interior_adjacent_to == HPXML::LocationLivingSpace
+      next unless [HPXML::LocationLivingSpace, HPXML::LocationBasementConditioned].include?(frame_floor.interior_adjacent_to) ||
+                  [HPXML::LocationLivingSpace, HPXML::LocationBasementConditioned].include?(frame_floor.exterior_adjacent_to)
 
       sum_cfa += frame_floor.area
     end
@@ -1604,7 +1618,12 @@ class OSModel
     end
 
     addtl_cfa = @cfa - sum_cfa
-    return unless addtl_cfa > 0.1
+
+    if addtl_cfa < -0.1 # Allow some rounding
+      fail "Sum of floor/slab area adjacent to conditioned space (#{sum_cfa.round(1)}) is greater than conditioned floor area (#{@cfa.round(1)})."
+    end
+
+    return unless addtl_cfa > 0.1 # Allow some rounding
 
     floor_width = Math::sqrt(addtl_cfa)
     floor_length = addtl_cfa / floor_width
@@ -1646,13 +1665,13 @@ class OSModel
     if @apply_ashrae140_assumptions
       # 1024 ft2 of interior partition wall mass, no furniture mass
       drywall_thick_in = 0.5
-      partition_frac_of_cfa = 1024.0 / @cfa # Ratio of partition wall area to conditioned floor area
+      partition_frac_of_cfa = (1024.0 * 2) / @cfa # Ratio of exposed partition wall area (both sides) to conditioned floor area
       basement_frac_of_cfa = cfa_basement / @cfa
       Constructions.apply_partition_walls(runner, model, 'PartitionWallConstruction', drywall_thick_in, partition_frac_of_cfa,
                                           basement_frac_of_cfa, @cond_bsmnt_surfaces, spaces[HPXML::LocationLivingSpace])
     else
       drywall_thick_in = 0.5
-      partition_frac_of_cfa = 1.0 # Ratio of partition wall area to conditioned floor area
+      partition_frac_of_cfa = 1.0 # Ratio of exposed partition wall area (both sides) to conditioned floor area
       basement_frac_of_cfa = cfa_basement / @cfa
       Constructions.apply_partition_walls(runner, model, 'PartitionWallConstruction', drywall_thick_in, partition_frac_of_cfa,
                                           basement_frac_of_cfa, @cond_bsmnt_surfaces, spaces[HPXML::LocationLivingSpace])
@@ -1692,6 +1711,10 @@ class OSModel
   def self.add_interior_shading_schedule(runner, model, weather)
     heating_season, cooling_season = HVAC.get_default_heating_and_cooling_seasons(weather)
     @clg_season_sch = MonthWeekdayWeekendSchedule.new(model, 'cooling season schedule', Array.new(24, 1), Array.new(24, 1), cooling_season, Constants.ScheduleTypeLimitsFraction)
+
+    # Create heating season as opposite of cooling season (i.e., with overlap months)
+    non_cooling_season = cooling_season.map { |m| (m - 1).abs }
+    @htg_season_sch = MonthWeekdayWeekendSchedule.new(model, 'heating season schedule', Array.new(24, 1), Array.new(24, 1), non_cooling_season, Constants.ScheduleTypeLimitsFraction)
 
     @clg_ssn_sensor = OpenStudio::Model::EnergyManagementSystemSensor.new(model, 'Schedule Value')
     @clg_ssn_sensor.setName('cool_season')
@@ -1754,9 +1777,8 @@ class OSModel
         # Apply construction
         cool_shade_mult = window.interior_shading_factor_summer
         heat_shade_mult = window.interior_shading_factor_winter
-        Constructions.apply_window(runner, model, [sub_surface],
-                                   'WindowConstruction',
-                                   weather, @clg_season_sch, window.ufactor, window.shgc,
+        Constructions.apply_window(runner, model, sub_surface, 'WindowConstruction',
+                                   weather, @htg_season_sch, @clg_season_sch, window.ufactor, window.shgc,
                                    heat_shade_mult, cool_shade_mult)
       else
         # Window is on an interior surface, which E+ does not allow. Model
@@ -1785,7 +1807,9 @@ class OSModel
         surfaces << surface
 
         # Apply construction
-        Constructions.apply_door(runner, model, [sub_surface], 'Window', window.ufactor)
+        inside_film = Material.AirFilmVertical
+        outside_film = Material.AirFilmVertical
+        Constructions.apply_door(runner, model, [sub_surface], 'Window', window.ufactor, inside_film, outside_film)
       end
     end
 
@@ -1826,9 +1850,8 @@ class OSModel
       shgc = skylight.shgc
       cool_shade_mult = skylight.interior_shading_factor_summer
       heat_shade_mult = skylight.interior_shading_factor_winter
-      Constructions.apply_skylight(runner, model, [sub_surface],
-                                   'SkylightConstruction',
-                                   weather, @clg_season_sch, ufactor, shgc,
+      Constructions.apply_skylight(runner, model, sub_surface, 'SkylightConstruction',
+                                   weather, @htg_season_sch, @clg_season_sch, ufactor, shgc,
                                    heat_shade_mult, cool_shade_mult)
     end
 
@@ -1865,7 +1888,13 @@ class OSModel
 
       # Apply construction
       ufactor = 1.0 / door.r_value
-      Constructions.apply_door(runner, model, [sub_surface], 'Door', ufactor)
+      inside_film = Material.AirFilmVertical
+      if door.wall.is_exterior
+        outside_film = Material.AirFilmOutside
+      else
+        outside_film = Material.AirFilmVertical
+      end
+      Constructions.apply_door(runner, model, [sub_surface], 'Door', ufactor, inside_film, outside_film)
     end
 
     apply_adiabatic_construction(runner, model, surfaces, 'wall')
@@ -1901,25 +1930,6 @@ class OSModel
   end
 
   def self.add_hot_water_and_appliances(runner, model, weather, spaces)
-    if @hpxml.clothes_washers.empty?
-      runner.registerWarning('No clothes washer specified, the model will not include clothes washer energy use.')
-    end
-    if @hpxml.clothes_dryers.empty?
-      runner.registerWarning('No clothes dryer specified, the model will not include clothes dryer energy use.')
-    end
-    if @hpxml.dishwashers.empty?
-      runner.registerWarning('No dishwasher specified, the model will not include dishwasher energy use.')
-    end
-    if @hpxml.refrigerators.empty?
-      runner.registerWarning('No refrigerator specified, the model will not include refrigerator energy use.')
-    end
-    if @hpxml.cooking_ranges.empty?
-      runner.registerWarning('No cooking range specified, the model will not include cooking range/oven energy use.')
-    end
-    if @hpxml.water_heating_systems.empty?
-      runner.registerWarning('No water heater specified, the model will not include water heating energy use.')
-    end
-
     # Assign spaces
     @hpxml.clothes_washers.each do |clothes_washer|
       clothes_washer.additional_properties.space = get_space_from_location(clothes_washer.location, 'ClothesWasher', model, spaces)
@@ -2235,8 +2245,9 @@ class OSModel
 
     hvac_control = @hpxml.hvac_controls[0]
     living_zone = spaces[HPXML::LocationLivingSpace].thermalZone.get
+    has_ceiling_fan = (@hpxml.ceiling_fans.size > 0)
 
-    HVAC.apply_setpoints(model, runner, weather, hvac_control, living_zone)
+    HVAC.apply_setpoints(model, runner, weather, hvac_control, living_zone, has_ceiling_fan)
   end
 
   def self.add_ceiling_fans(runner, model, weather, spaces)
@@ -2292,13 +2303,7 @@ class OSModel
       end
       modeled_mels << plug_load.plug_load_type
 
-      MiscLoads.apply_plug(model, plug_load, obj_name, spaces[HPXML::LocationLivingSpace], @schedules_file)
-    end
-    if not modeled_mels.include? HPXML::PlugLoadTypeOther
-      runner.registerWarning("No '#{HPXML::PlugLoadTypeOther}' plug loads specified, the model will not include misc plug load energy use.")
-    end
-    if not modeled_mels.include? HPXML::PlugLoadTypeTelevision
-      runner.registerWarning("No '#{HPXML::PlugLoadTypeTelevision}' plug loads specified, the model will not include television plug load energy use.")
+      MiscLoads.apply_plug(model, plug_load, obj_name, spaces[HPXML::LocationLivingSpace], @apply_ashrae140_assumptions, @schedules_file)
     end
   end
 
@@ -2499,19 +2504,6 @@ class OSModel
     HVACSizing.apply(model, runner, weather, spaces, @hpxml, @infil_volume, @nbeds, @min_neighbor_distance, @debug)
   end
 
-  def self.add_furnace_eae(runner, model)
-    # Needs to come after HVAC sizing (needs heating capacity and airflow rate)
-    # FUTURE: Could remove this method and simplify everything if we could autosize via the HPXML file
-
-    @hpxml.heating_systems.each do |heating_system|
-      next unless heating_system.fraction_heat_load_served > 0
-      next unless [HPXML::HVACTypeFurnace, HPXML::HVACTypeWallFurnace, HPXML::HVACTypeFloorFurnace, HPXML::HVACTypeStove].include? heating_system.heating_system_type
-      next unless heating_system.heating_system_fuel != HPXML::FuelTypeElectricity
-
-      HVAC.apply_eae_to_heating_fan(runner, @hvac_map[heating_system.id], heating_system)
-    end
-  end
-
   def self.add_photovoltaics(runner, model)
     @hpxml.pv_systems.each do |pv_system|
       PV.apply(model, @nbeds, pv_system)
@@ -2704,9 +2696,7 @@ class OSModel
 
     infil_flow_actuators = []
     natvent_flow_actuators = []
-    mechvent_flow_actuators = []
     whf_flow_actuators = []
-    cd_flow_actuators = []
 
     model.getEnergyManagementSystemActuators.each do |actuator|
       next unless (actuator.actuatedComponentType == 'Zone Infiltration') && (actuator.actuatedComponentControlType == 'Air Exchange Flow Rate')
@@ -2717,18 +2707,15 @@ class OSModel
         natvent_flow_actuators << actuator
       elsif actuator.name.to_s.start_with? Constants.ObjectNameWholeHouseFan.gsub(' ', '_')
         whf_flow_actuators << actuator
-      elsif actuator.name.to_s.start_with? Constants.ObjectNameClothesDryerExhaust.gsub(' ', '_')
-        cd_flow_actuators << actuator
       end
     end
-    if (infil_flow_actuators.size != 1) || (natvent_flow_actuators.size != 1) || (whf_flow_actuators.size != 1) || (cd_flow_actuators.size != 1)
+    if (infil_flow_actuators.size != 1) || (natvent_flow_actuators.size != 1) || (whf_flow_actuators.size != 1)
       fail 'Could not find actuator for component loads.'
     end
 
     infil_flow_actuator = infil_flow_actuators[0]
     natvent_flow_actuator = natvent_flow_actuators[0]
     whf_flow_actuator = whf_flow_actuators[0]
-    cd_flow_actuator = cd_flow_actuators[0]
 
     # EMS Sensors: Ducts
 
@@ -2906,7 +2893,7 @@ class OSModel
       intgains_dhw_sensors[dhw_sensor] = [offcycle_loss, oncycle_loss, dhw_rtf_sensor]
     end
 
-    nonsurf_names = ['intgains', 'infil', 'mechvent', 'natvent', 'whf', 'ducts', 'cd']
+    nonsurf_names = ['intgains', 'infil', 'mechvent', 'natvent', 'whf', 'ducts']
 
     # EMS program
     program = OpenStudio::Model::EnergyManagementSystemProgram.new(model)
@@ -2946,18 +2933,16 @@ class OSModel
     end
 
     # EMS program: Infiltration, Natural Ventilation, Mechanical Ventilation, Ducts
-    program.addLine("Set hr_airflow_rate = #{infil_flow_actuator.name} + #{natvent_flow_actuator.name} + #{whf_flow_actuator.name} + #{cd_flow_actuator.name}")
+    program.addLine("Set hr_airflow_rate = #{infil_flow_actuator.name} + #{natvent_flow_actuator.name} + #{whf_flow_actuator.name}")
     program.addLine('If hr_airflow_rate > 0')
     program.addLine("  Set hr_infil = (#{air_loss_sensor.name} - #{air_gain_sensor.name}) * #{infil_flow_actuator.name} / hr_airflow_rate") # Airflow heat attributed to infiltration
     program.addLine("  Set hr_natvent = (#{air_loss_sensor.name} - #{air_gain_sensor.name}) * #{natvent_flow_actuator.name} / hr_airflow_rate") # Airflow heat attributed to natural ventilation
     program.addLine("  Set hr_whf = (#{air_loss_sensor.name} - #{air_gain_sensor.name}) * #{whf_flow_actuator.name} / hr_airflow_rate") # Airflow heat attributed to whole house fan
-    program.addLine("  Set hr_cd = ((#{air_loss_sensor.name} - #{air_gain_sensor.name}) * #{cd_flow_actuator.name} / hr_airflow_rate)") # Airflow heat attributed to clothes dryer exhaust
     program.addLine('Else')
     program.addLine('  Set hr_infil = 0')
     program.addLine('  Set hr_natvent = 0')
     program.addLine('  Set hr_whf = 0')
     program.addLine('  Set hr_mechvent = 0')
-    program.addLine('  Set hr_cd = 0')
     program.addLine('EndIf')
     program.addLine('Set hr_mechvent = 0')
     mechvent_sensors.each do |sensor|
@@ -3034,6 +3019,30 @@ class OSModel
     return if @schedules_file.nil?
 
     @schedules_file.set_vacancy(col_names: ScheduleGenerator.col_names)
+  end
+
+  def self.add_output_control_files(runner, model)
+    return if @debug
+
+    # Disable various output files
+    ocf = model.getOutputControlFiles
+    ocf.setOutputAUDIT(false)
+    ocf.setOutputBND(false)
+    ocf.setOutputEIO(false)
+    ocf.setOutputESO(false)
+    ocf.setOutputMDD(false)
+    ocf.setOutputMTD(false)
+    ocf.setOutputMTR(false)
+    ocf.setOutputRDD(false)
+    ocf.setOutputSHD(false)
+    ocf.setOutputTabular(false)
+  end
+
+  def self.add_ems_debug_output(runner, model)
+    oems = model.getOutputEnergyManagementSystem
+    oems.setActuatorAvailabilityDictionaryReporting('Verbose')
+    oems.setInternalVariableAvailabilityDictionaryReporting('Verbose')
+    oems.setEMSRuntimeLanguageDebugOutputLevel('Verbose')
   end
 
   # FUTURE: Move all of these construction methods to constructions.rb
@@ -3462,8 +3471,7 @@ class OSModel
       # Create E+ other side coefficient object
       otherside_object = OpenStudio::Model::SurfacePropertyOtherSideCoefficients.new(model)
       otherside_object.setName(exterior_adjacent_to)
-      # Refer to: https://www.sciencedirect.com/science/article/pii/B9780123972705000066 6.1.2 Part: Wall and roof transfer functions
-      otherside_object.setCombinedConvectiveRadiativeFilmCoefficient(8.3)
+      otherside_object.setCombinedConvectiveRadiativeFilmCoefficient(UnitConversions.convert(1.0 / Material.AirFilmVertical.rvalue, 'Btu/(hr*ft^2*F)', 'W/(m^2*K)'))
       # Schedule of space temperature, can be shared with water heater/ducts
       sch = get_space_temperature_schedule(model, exterior_adjacent_to, spaces)
       otherside_object.setConstantTemperatureSchedule(sch)
@@ -3523,7 +3531,7 @@ class OSModel
       sensor_gnd.setName('ground_temp')
     end
 
-    actuator = OpenStudio::Model::EnergyManagementSystemActuator.new(sch, 'Schedule:Constant', 'Schedule Value')
+    actuator = OpenStudio::Model::EnergyManagementSystemActuator.new(sch, *EPlus::EMSActuatorScheduleConstantValue)
     actuator.setName("#{location.gsub(' ', '_').gsub('-', '_')}_temp_sch")
 
     # EMS to actuate schedule
