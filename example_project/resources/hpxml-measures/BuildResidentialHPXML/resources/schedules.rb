@@ -8,12 +8,13 @@ class ScheduleGenerator
   def initialize(runner:,
                  model:,
                  epw_file:,
-                 building_id: nil)
-
+                 building_id: nil,
+                 random_seed: nil)
     @runner = runner
     @model = model
     @epw_file = epw_file
     @building_id = building_id
+    @random_seed = random_seed
   end
 
   def get_simulation_parameters
@@ -21,6 +22,7 @@ class ScheduleGenerator
     if @model.getSimulationControl.timestep.is_initialized
       @minutes_per_step = 60 / @model.getSimulationControl.timestep.get.numberOfTimestepsPerHour
     end
+
     @steps_in_day = 24 * 60 / @minutes_per_step
 
     @mkc_ts_per_day = 96
@@ -29,20 +31,15 @@ class ScheduleGenerator
     @model.getYearDescription.isLeapYear ? @total_days_in_year = 366 : @total_days_in_year = 365
   end
 
-  def get_building_id
-    if @building_id.nil?
-      building_id = @model.getBuilding.additionalProperties.getFeatureAsInteger('Building ID') # this becomes the seed
-      if building_id.is_initialized
-        building_id = building_id.get
-      else
-        @runner.registerWarning('Unable to retrieve the Building ID (seed for schedule generator); setting it to 1.')
-        building_id = 1
-      end
+  def get_random_seed
+    if @random_seed.nil?
+      @runner.registerInfo('Unable to retrieve the schedules random seed; setting it to 1.')
+      seed = 1
     else
-      building_id = @building_id
+      @runner.registerInfo("Retrieved the schedules random seed; setting it to #{@random_seed}.")
+      seed = @random_seed
     end
-
-    return building_id
+    return seed
   end
 
   def self.col_names
@@ -352,11 +349,8 @@ class ScheduleGenerator
   end
 
   def create_stochastic_schedules(args:)
-    # get building_id if this is called by, e.g., BuildExistingModel
-    building_id = get_building_id
-
-    # initialize a random number generator using building_id
-    prng = Random.new(building_id)
+    # initialize a random number generator
+    prng = Random.new(get_random_seed)
 
     # load the schedule configuration file
     schedule_config = YAML.load_file(args[:resources_path] + '/schedules_config.yml')
@@ -729,6 +723,7 @@ class ScheduleGenerator
     dw_power_sch = [0] * mins_in_year
     step = 0
     last_state = 0
+    start_time = Time.new(sim_year, 1, 1)
     while step < mkc_steps_in_a_year
       dish_state = sum_across_occupants(all_simulated_values, 4, step, max_clip = 1)
       step_jump = 1
@@ -775,13 +770,16 @@ class ScheduleGenerator
       step_jump = 1
       if (cooking_state > 0) && (last_state == 0) # last_state == 0 prevents consecutive cooking power without gap
         duration_15min, avg_power = sample_appliance_duration_power(prng, appliance_power_dist_map, 'cooking')
-        duration = [duration_15min * 15, mins_in_year - step * 15].min
+        month = (start_time + step * 15 * 60).month
+        duration_min = (duration_15min * 15 * schedule_config['cooking']['monthly_multiplier'][month - 1]).to_i
+        duration = [duration_min, mins_in_year - step * 15].min
         cooking_power_sch.fill(avg_power, step * 15, duration)
         step_jump = duration_15min
       end
       last_state = cooking_state
       step += step_jump
     end
+
     offset_range = 30
     random_offset = (prng.rand * 2 * offset_range).to_i - offset_range
     sink_activity_sch = sink_activity_sch.rotate(-4 * 60 + random_offset) # 4 am shifting
