@@ -419,7 +419,10 @@ module URBANopt
             # Simulation Control
             args[:simulation_control_timestep] = 60
             begin
+              
               args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
+              puts "RESIDENTIAL building args[:simulation_control_timestep] =====  #{args[:simulation_control_timestep]}"
+
             rescue
             end
 
@@ -702,6 +705,7 @@ module URBANopt
             begin
               timesteps_per_hour = feature.timesteps_per_hour
               if timesteps_per_hour
+                puts "COMERCIAL building feature timestepperhour === #{timesteps_per_hour}"
                 OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'timesteps_per_hour', timesteps_per_hour)
               end
             rescue StandardError
