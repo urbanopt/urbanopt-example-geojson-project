@@ -14,7 +14,7 @@
       "measure_dir_name": "set_run_period",
       "arguments": {
         "__SKIP__": false,
-        "timesteps_per_hour": 1,
+        "timesteps_per_hour": 6,
         "begin_date": "2019-09-01",
         "end_date": "2019-09-05"
       }
