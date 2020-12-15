@@ -7,11 +7,11 @@
     "import_surrounding_buildings_as_shading": null,
     "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
     "tariff_filename": null,
-    "climate_zone": "6A",
+    "climate_zone": "2A",
     "cec_climate_zone": null,
-    "begin_date": "2017-01-01T07:00:00.000Z",
-    "end_date": "2017-01-31T07:00:00.000Z",
-    "timesteps_per_hour": 4,
+    "begin_date": "2019-09-01T07:00:00.000Z",
+    "end_date": "2019-09-05T07:00:00.000Z",
+    "timesteps_per_hour": 12,
     "default_template": "90.1-2013"
   },
   "features": [
@@ -29,7 +29,7 @@
         "import_surrounding_buildings_as_shading": null,
         "surface_elevation": 176,
         "tariff_filename": null,
-        "timesteps_per_hour": 4,
+        "timesteps_per_hour": 12,
         "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw"
       },
       "geometry": {
