@@ -137,10 +137,23 @@ def reopt_scenario(json, csv)
 end
 
 def configure_project
-  # write a runner.conf in project dir
+  # write a runner.conf in project dir if it does not exist
+  # delete runner.conf to automatically regenerate it
   options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install")}
-  File.open(File.join(root_dir, 'runner.conf'), "w") do |f|
-    f.write(options.to_json)
+ 
+  # write a runner.conf in project dir (if it does not already exist)
+  if !File.exists?(File.join(root_dir, 'runner.conf'))
+    puts "GENERATING runner.conf file"
+    OpenStudio::Extension::RunnerConfig.init(root_dir)  # itinialize the file with default values
+    run_config = OpenStudio::Extension::RunnerConfig.new(root_dir) # get the configs
+    # update paths
+    options.each do |key, val|
+      run_config.update_config(key, val) # update gemfile_path
+    end
+    # save back to disk
+    run_config.save
+  else
+    puts "USING existing runner.conf file"
   end
 end
 
