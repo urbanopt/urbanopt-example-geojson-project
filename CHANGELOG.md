@@ -1,5 +1,10 @@
 # URBANopt Example GeoJSON Project
 
+## Version 0.5.0
+
+* Updated dependencies to work with OpenStudio 3.1
+
+
 ## Version 0.3.0
 
 * Updated dependencies to work with OpenStudio 3.x and Ruby 2.5.x
