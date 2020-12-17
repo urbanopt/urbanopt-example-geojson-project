@@ -14,7 +14,10 @@ Gemfile.lock
 /lib/measures/test_results
 /lib/measures/*/tests/output
 /run
+example_project/run
+example_project/.bundle/
 out.txt
+.DS_Store
 
 .rubocop*s3*
 
