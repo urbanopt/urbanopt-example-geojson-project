@@ -99,7 +99,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     if ['ResidentialGeometryCreateSingleFamilyAttached', 'ResidentialGeometryCreateMultifamily'].include? measure_subdir
       measure_args[:unit_ffa] = args[:geometry_cfa]
       measure_args[:num_floors] = args[:geometry_num_floors_above_grade]
-      measure_args[:num_units] = args[:geometry_num_units]
+      measure_args[:num_units] = args[:geometry_building_num_units]
     end
     measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
     measures[measure_subdir] << measure_args
@@ -171,7 +171,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         building_type = 'Single-Family Detached'
       when 'single-family attached'
         building_type = 'Single-Family Attached'
-      when 'multifamily'
+      when 'apartment unit'
         building_type = 'Multifamily'
       end
 
@@ -197,26 +197,28 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         next
       end
 
+      # below is for multi unit only
+
       # create building unit object to assign to spaces
       building_unit = OpenStudio::Model::BuildingUnit.new(unit_model)
-      building_unit.setName("building_unit_#{num_unit}")
+      building_unit.setName("building_unit_#{num_unit+1}")
 
       # save modified copy of model for use with merge
       unit_model.getSpaces.sort.each do |space|
-        space.setYOrigin(60 * (num_unit-1)) # meters
+        space.setYOrigin(100.0*num_unit) # meters
         space.setBuildingUnit(building_unit)
       end
 
       # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
       unit_model.objects.each do |model_object|
         next if model_object.name.nil?
-        model_object.setName("unit_#{num_unit} #{model_object.name.to_s}")
+        model_object.setName("unit_#{num_unit+1} #{model_object.name.to_s}")
       end
 
       moodified_unit_path = File.join(unit_dir, 'modified_unit.osm')
       unit_model.save(moodified_unit_path, true)
 
-      # run merge merge_spaces_from_external_file to add this unit to original model
+      # run merge_spaces_from_external_file to add this unit to original model
       merge_measures_dir = nil
       osw_measure_paths = runner.workflow.measurePaths
       osw_measure_paths.each do |orig_measure_path|
@@ -236,17 +238,20 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       merge_measure_args[:remove_spaces] = false
       merge_measure_args[:merge_schedules] = true
       merge_measure_args[:compact_to_ruleset] = false
-      merge_measure_args[:merge_zones] = true
-      merge_measure_args[:merge_air_loops] = true
-      merge_measure_args[:merge_plant_loops] = true
-      merge_measure_args[:merge_swh] = true
+      # merge_measure_args[:merge_zones] = true
+      # merge_measure_args[:merge_air_loops] = true
+      # merge_measure_args[:merge_plant_loops] = true
+      # merge_measure_args[:merge_swh] = true
       merge_measure_args = Hash[merge_measure_args.collect{ |k, v| [k.to_s, v] }]
       merge_measures[merge_measure_subdir] << merge_measure_args
 
-      # for this instance pass in original model and not unit_model. unit_model path witll be an argument
+      # for this instance pass in original model and not unit_model. unit_model path will be an argument
       if not apply_measures(merge_measures_dir, merge_measures, runner, model, workflow_json, 'out.osw', true)
         return false
       end
+
+      modified_building_path = File.expand_path(File.join('..', 'modified_building.osm'))
+      model.save(modified_building_path, true)
 
     end
 
