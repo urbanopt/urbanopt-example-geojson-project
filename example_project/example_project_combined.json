@@ -749,6 +749,53 @@
           ]
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "17",
+        "name": "Residential 4",
+        "type": "Building",
+        "building_type": "Single-Family Attached",
+        "floor_area": 9160,
+        "footprint_area": 9160,
+        "number_of_stories_above_ground": 1,
+        "number_of_stories": 1,
+        "number_of_bedrooms": 6,
+        "foundation_type": "slab",
+        "attic_type": "attic - vented",
+        "system_type": "Residential - furnace and room air conditioner",
+        "heating_system_fuel_type": "natural gas",
+        "number_of_residential_units": 2,
+        "template": "Residential IECC 2015 - Customizable Template Sep 2020"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -78.84911656368786,
+              42.81252982958267
+            ],
+            [
+              -78.84890198696667,
+              42.81258229954116
+            ],
+            [
+              -78.84870886759019,
+              42.81219926882915
+            ],
+            [
+              -78.84893774986267,
+              42.812152045720157
+            ],
+            [
+              -78.84911656368786,
+              42.81252982958267
+            ]
+          ]
+        ]
+      }
     }
   ],
   "mappers": [],
