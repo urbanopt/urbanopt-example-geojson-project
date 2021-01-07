@@ -116,6 +116,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
     check_dir_exists(measures_dir, runner)
 
+    model.getBuilding.remove
+    model.getShadowCalculation.remove
+    model.getSimulationControl.remove
+    model.getSite.remove
+    model.getTimestep.remove
+
     whole_building_model.getBuildingUnits.each_with_index do |unit, num_unit|
       unit_model = OpenStudio::Model::Model.new
 
@@ -180,82 +186,75 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         space_type.setStandardsBuildingType(building_type)
       end
 
-      unit_dir = File.expand_path("../unit #{num_unit+1}")
+      unit_dir = File.expand_path("../#{unit.name}")
       Dir.mkdir(unit_dir)
       FileUtils.cp(File.expand_path('../out.xml'), unit_dir) # this is the raw hpxml file
       FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
 
-      if whole_building_model.getBuildingUnits.length == 1
-        model.getBuilding.remove
-        model.getShadowCalculation.remove
-        model.getSimulationControl.remove
-        model.getSite.remove
-        model.getTimestep.remove
+      if num_unit == 0
 
         model.addObjects(unit_model.objects, true)
-        next
+
+      else # single-family attached and multifamily
+
+        # shift the unit so it's not right on top of the previous one
+        unit_model.getSpaces.sort.each do |space|
+          space.setYOrigin(100.0*num_unit) # meters
+        end
+
+        # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
+        sensors_map = {}
+        unit_model.getEnergyManagementSystemSensors.each do |sensor|
+          sensors_map[sensor.name.to_s] = "#{unit.name.to_s.gsub(" ", "_")}_#{sensor.name}"
+          sensor.setKeyName("#{unit.name} #{sensor.keyName}")
+        end
+
+        unit_model.getEnergyManagementSystemPrograms.each do |program|
+          new_lines = []
+          program.lines.each do |line|
+            sensors_map.each do |old_sensor_name, new_sensor_name|
+              line = line.gsub(" #{old_sensor_name} ", " #{new_sensor_name} ")
+            end
+            new_lines << line
+          end
+          program.setLines(new_lines)
+        end
+
+        unit_model.objects.each do |model_object|
+          next if model_object.name.nil?
+
+          model_object.setName("#{unit.name} #{model_object.name.to_s}")
+        end
+
+        # save the modified osm to file
+        modified_in_path = File.join(unit_dir, 'modified_in.osm')
+        unit_model.save(modified_in_path, true)
+
+        # we already have the following unique objects from the first building unit
+        unit_model.getConvergenceLimits.remove
+        unit_model.getOutputDiagnostics.remove
+        unit_model.getRunPeriodControlDaylightSavingTime.remove
+        unit_model.getShadowCalculation.remove
+        unit_model.getSimulationControl.remove
+        unit_model.getSiteGroundTemperatureDeep.remove
+        unit_model.getSiteGroundTemperatureShallow.remove
+        unit_model.getSite.remove
+        unit_model.getInsideSurfaceConvectionAlgorithm.remove
+        unit_model.getOutsideSurfaceConvectionAlgorithm.remove
+        unit_model.getTimestep.remove
+        unit_model.getFoundationKivaSettings.remove
+        unit_model_objects = []
+        unit_model.objects.each do |obj|
+          unit_model_objects << obj unless obj.to_Building.is_initialized
+        end
+
+        model.addObjects(unit_model_objects, true)
       end
 
-      # below is for multi unit only
-
-      # create building unit object to assign to spaces
-      building_unit = OpenStudio::Model::BuildingUnit.new(unit_model)
-      building_unit.setName("building_unit_#{num_unit+1}")
-
-      # save modified copy of model for use with merge
-      unit_model.getSpaces.sort.each do |space|
-        space.setYOrigin(100.0*num_unit) # meters
-        space.setBuildingUnit(building_unit)
-      end
-
-      # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
-      unit_model.objects.each do |model_object|
-        next if model_object.name.nil?
-        model_object.setName("unit_#{num_unit+1} #{model_object.name.to_s}")
-      end
-
-      moodified_unit_path = File.join(unit_dir, 'modified_unit.osm')
-      unit_model.save(moodified_unit_path, true)
-
-      # run merge_spaces_from_external_file to add this unit to original model
-      merge_measures_dir = nil
-      osw_measure_paths = runner.workflow.measurePaths
-      osw_measure_paths.each do |orig_measure_path|
-        next if not orig_measure_path.to_s.include?('gems/openstudio-model-articulation')
-        merge_measures_dir = orig_measure_path.to_s
-        break
-      end
-      merge_measure_subdir = 'merge_spaces_from_external_file'
-      merge_measures = {}
-      merge_measure_args = {}
-      merge_measures[merge_measure_subdir] = []
-      merge_measure_args[:external_model_name] = moodified_unit_path
-      merge_measure_args[:merge_geometry] = true
-      merge_measure_args[:merge_loads] = true
-      merge_measure_args[:merge_attribute_names] = true
-      merge_measure_args[:add_spaces] = true
-      merge_measure_args[:remove_spaces] = false
-      merge_measure_args[:merge_schedules] = true
-      merge_measure_args[:compact_to_ruleset] = false
-      # merge_measure_args[:merge_zones] = true
-      # merge_measure_args[:merge_air_loops] = true
-      # merge_measure_args[:merge_plant_loops] = true
-      # merge_measure_args[:merge_swh] = true
-      merge_measure_args = Hash[merge_measure_args.collect{ |k, v| [k.to_s, v] }]
-      merge_measures[merge_measure_subdir] << merge_measure_args
-
-      # for this instance pass in original model and not unit_model. unit_model path will be an argument
-      if not apply_measures(merge_measures_dir, merge_measures, runner, model, workflow_json, 'out.osw', true)
-        return false
-      end
-
-      modified_building_path = File.expand_path(File.join('..', 'modified_building.osm'))
-      model.save(modified_building_path, true)
-
+      building_path = File.expand_path(File.join('..', 'building.osm'))
+      model.save(building_path, true)
     end
-
-    # TODO: add surface intersection and matching (is don't in measure now but would be better to do once at end, make bool to skip in merge measure)
 
     return true
   end

@@ -450,6 +450,7 @@ module URBANopt
             when 'Multifamily'
               args[:geometry_building_num_units] = feature.number_of_residential_units
               args[:geometry_unit_type] = "apartment unit"
+              args[:geometry_corridor_position] = 'Double Exterior' # if we had an interior corridor, we'd have to subtract its area from the footprint area
             end
 
             args[:geometry_foundation_type] = "SlabOnGrade"

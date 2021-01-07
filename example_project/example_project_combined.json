@@ -804,7 +804,7 @@
         "name": "Residential 5",
         "type": "Building",
         "building_type": "Multifamily",
-        "floor_area": ,
+        "floor_area": 28636,
         "footprint_area": 14318,
         "number_of_stories_above_ground": 2,
         "number_of_stories": 2,
