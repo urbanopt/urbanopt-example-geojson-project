@@ -100,6 +100,29 @@ class HPXMLTest < MiniTest::Test
     assert(File.exist? hpxml_defaults_path)
   end
 
+  def test_run_simulation_json_output
+    # Check that the simulation produces JSON outputs (instead of CSV outputs) if requested
+    os_cli = OpenStudio.getOpenStudioCLI
+    rb_path = File.join(File.dirname(__FILE__), '..', 'run_simulation.rb')
+    xml = File.join(File.dirname(__FILE__), '..', 'sample_files', 'base.xml')
+    command = "#{os_cli} #{rb_path} -x #{xml} --debug --hourly ALL --output-format json"
+    system(command, err: File::NULL)
+
+    # Check for output files
+    sql_path = File.join(File.dirname(xml), 'run', 'eplusout.sql')
+    assert(File.exist? sql_path)
+    csv_output_path = File.join(File.dirname(xml), 'run', 'results_annual.json')
+    assert(File.exist? csv_output_path)
+    csv_output_path = File.join(File.dirname(xml), 'run', 'results_timeseries.json')
+    assert(File.exist? csv_output_path)
+
+    # Check for debug files
+    osm_path = File.join(File.dirname(xml), 'run', 'in.osm')
+    assert(File.exist? osm_path)
+    hpxml_defaults_path = File.join(File.dirname(xml), 'run', 'in.xml')
+    assert(File.exist? hpxml_defaults_path)
+  end
+
   def test_template_osw
     # Check that simulation works using template.osw
     require 'json'
@@ -186,6 +209,7 @@ class HPXMLTest < MiniTest::Test
                                                             'Expected FractionHeatLoadServed to sum to <= 1, but calculated sum is 1.1.'],
                             'hvac-distribution-return-duct-leakage-missing.xml' => ["Return ducts exist but leakage was not specified for distribution system 'HVACDistribution'."],
                             'hvac-inconsistent-fan-powers.xml' => ["Fan powers for heating system 'HeatingSystem' and cooling system 'CoolingSystem' must be the same."],
+                            'invalid-assembly-effective-rvalue.xml' => ['Expected Insulation/AssemblyEffectiveRValue to be greater than 0 [context: /HPXML/Building/BuildingDetails/Enclosure/Walls/Wall]'],
                             'invalid-datatype-boolean.xml' => ["Cannot convert 'FOOBAR' to boolean."],
                             'invalid-datatype-boolean2.xml' => ["Cannot convert '' to boolean."],
                             'invalid-datatype-integer.xml' => ["Cannot convert '2.5' to integer."],
@@ -205,6 +229,11 @@ class HPXMLTest < MiniTest::Test
                                                                      "The building is of type 'single-family detached' but the surface 'FoundationWallOther' is adjacent to Attached/Multifamily space 'other housing unit'.",
                                                                      "The building is of type 'single-family detached' but the surface 'FloorOther' is adjacent to Attached/Multifamily space 'other housing unit'.",
                                                                      "The building is of type 'single-family detached' but the surface 'CeilingOther' is adjacent to Attached/Multifamily space 'other housing unit'."],
+                            'invalid-foundation-wall-properties.xml' => ['Expected DepthBelowGrade to be less than or equal to Height [context: /HPXML/Building/BuildingDetails/Enclosure/FoundationWalls/FoundationWall]',
+                                                                         'Expected extension/DistanceToBottomOfInsulation to be greater than or equal to extension/DistanceToTopOfInsulation [context: /HPXML/Building/BuildingDetails/Enclosure/FoundationWalls/FoundationWall/Insulation/Layer[InstallationType="continuous - exterior" or InstallationType="continuous - interior"]]',
+                                                                         'Expected extension/DistanceToBottomOfInsulation to be less than or equal to ../../Height [context: /HPXML/Building/BuildingDetails/Enclosure/FoundationWalls/FoundationWall/Insulation/Layer[InstallationType="continuous - exterior" or InstallationType="continuous - interior"]]'],
+                            'invalid-id.xml' => ["Empty SystemIdentifier ID ('') detected for skylights."],
+                            'invalid-infiltration-volume.xml' => ['Expected InfiltrationVolume to be greater than or equal to ../../../BuildingSummary/BuildingConstruction/ConditionedBuildingVolume [context: /HPXML/Building/BuildingDetails/Enclosure/AirInfiltration/AirInfiltrationMeasurement[BuildingAirLeakage/UnitofMeasure[text()="ACH" or text()="CFM"]]]'],
                             'invalid-input-parameters.xml' => ["Expected Transaction to be 'create' or 'update' [context: /HPXML/XMLTransactionHeaderInformation]",
                                                                "Expected SiteType to be 'rural' or 'suburban' or 'urban' [context: /HPXML/Building/BuildingDetails/BuildingSummary/Site]",
                                                                "Expected Year to be '2012' or '2009' or '2006' or '2003' [context: /HPXML/Building/BuildingDetails/ClimateandRiskZones/ClimateZoneIECC]",
@@ -212,12 +241,16 @@ class HPXMLTest < MiniTest::Test
                                                                'Expected RadiantBarrierGrade to be less than or equal to 3 [context: /HPXML/Building/BuildingDetails/Enclosure/Roofs/Roof]',
                                                                'Expected EnergyFactor to be less than or equal to 5 [context: /HPXML/Building/BuildingDetails/Appliances/Dishwasher]'],
                             'invalid-neighbor-shading-azimuth.xml' => ['A neighbor building has an azimuth (145) not equal to the azimuth of any wall.'],
+                            'invalid-number-of-bedrooms-served.xml' => ['Expected extension/NumberofBedroomsServed to be greater than ../../../BuildingSummary/BuildingConstruction/NumberofBedrooms [context: /HPXML/Building/BuildingDetails/Systems/Photovoltaics/PVSystem[IsSharedSystem="true"]]'],
+                            'invalid-number-of-conditioned-floors.xml' => ['Expected NumberofConditionedFloors to be greater than or equal to NumberofConditionedFloorsAboveGrade [context: /HPXML/Building/BuildingDetails/BuildingSummary/BuildingConstruction]'],
+                            'invalid-number-of-units-served.xml' => ['Expected NumberofUnitsServed to be greater than 1 [context: /HPXML/Building/BuildingDetails/Systems/WaterHeating/WaterHeatingSystem[IsSharedSystem="true"]]'],
                             'invalid-relatedhvac-dhw-indirect.xml' => ["RelatedHVACSystem 'HeatingSystem_bad' not found for water heating system 'WaterHeater'"],
                             'invalid-relatedhvac-desuperheater.xml' => ["RelatedHVACSystem 'CoolingSystem_bad' not found for water heating system 'WaterHeater'."],
                             'invalid-schema-version.xml' => ['HPXML version 3.0 is required.'],
+                            'invalid-shared-vent-in-unit-flowrate.xml' => ['Expected extension/InUnitFlowRate to be less than RatedFlowRate [context: /HPXML/Building/BuildingDetails/Systems/MechanicalVentilation/VentilationFans/VentilationFan[UsedForWholeBuildingVentilation="true" and IsSharedSystem="true"]]'],
                             'invalid-timestep.xml' => ['Timestep (45) must be one of: 60, 30, 20, 15, 12, 10, 6, 5, 4, 3, 2, 1.'],
                             'invalid-runperiod.xml' => ['Run Period End Day of Month (31) must be one of: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30.'],
-                            'invalid-window-height.xml' => ["For Window 'WindowEast', overhangs distance to bottom (2.0) must be greater than distance to top (2.0)."],
+                            'invalid-window-height.xml' => ['Expected DistanceToBottomOfWindow to be greater than DistanceToTopOfWindow [context: /HPXML/Building/BuildingDetails/Enclosure/Windows/Window/Overhangs]'],
                             'lighting-fractions.xml' => ['Sum of fractions of interior lighting (1.15) is greater than 1.'],
                             'mismatched-slab-and-foundation-wall.xml' => ["Foundation wall 'FoundationWall' is adjacent to 'basement - conditioned' but no corresponding slab was found adjacent to"],
                             'missing-elements.xml' => ['Expected 1 element(s) for xpath: NumberofConditionedFloors [context: /HPXML/Building/BuildingDetails/BuildingSummary/BuildingConstruction]',
@@ -235,7 +268,7 @@ class HPXMLTest < MiniTest::Test
                             'refrigerator-location.xml' => ["Refrigerator location is 'garage' but building does not have this location specified."],
                             'repeated-relatedhvac-dhw-indirect.xml' => ["RelatedHVACSystem 'HeatingSystem' is attached to multiple water heating systems."],
                             'repeated-relatedhvac-desuperheater.xml' => ["RelatedHVACSystem 'CoolingSystem' is attached to multiple water heating systems."],
-                            'slab-zero-exposed-perimeter.xml' => ["Exposed perimeter for Slab 'Slab' must be greater than zero."],
+                            'slab-zero-exposed-perimeter.xml' => ['Expected ExposedPerimeter to be greater than 0 [context: /HPXML/Building/BuildingDetails/Enclosure/Slabs/Slab]'],
                             'solar-thermal-system-with-combi-tankless.xml' => ["Water heating system 'WaterHeater' connected to solar thermal system 'SolarThermalSystem' cannot be a space-heating boiler."],
                             'solar-thermal-system-with-desuperheater.xml' => ["Water heating system 'WaterHeater' connected to solar thermal system 'SolarThermalSystem' cannot be attached to a desuperheater."],
                             'solar-thermal-system-with-dhw-indirect.xml' => ["Water heating system 'WaterHeater' connected to solar thermal system 'SolarThermalSystem' cannot be a space-heating boiler."],
@@ -665,6 +698,7 @@ class HPXMLTest < MiniTest::Test
       num_expected_kiva_instances = { 'base-foundation-ambient.xml' => 0,                # no foundation in contact w/ ground
                                       'base-foundation-multiple.xml' => 2,               # additional instance for 2nd foundation type
                                       'base-enclosure-2stories-garage.xml' => 2,         # additional instance for garage
+                                      'base-foundation-basement-garage.xml' => 2,        # additional instance for garage
                                       'base-enclosure-garage.xml' => 2,                  # additional instance for garage
                                       'base-foundation-walkout-basement.xml' => 4,       # 3 foundation walls plus a no-wall exposed perimeter
                                       'base-foundation-complex.xml' => 10 }              # lots of foundations for testing
@@ -1139,7 +1173,7 @@ class HPXMLTest < MiniTest::Test
     vent_fan_bath = hpxml.ventilation_fans.select { |vent_mech| vent_mech.used_for_local_ventilation && (vent_mech.fan_location == HPXML::LocationBath) }
 
     if not (fan_cfis + fan_sup + fan_exh + fan_bal + vent_fan_kitchen + vent_fan_bath).empty?
-      mv_energy = UnitConversions.convert(results['Electricity: Mech Vent (MBtu)'], 'MBtu', 'GJ')
+      mv_energy = UnitConversions.convert(results['End Use: Electricity: Mech Vent (MBtu)'], 'MBtu', 'GJ')
 
       if not fan_cfis.empty?
         # CFIS, check for positive mech vent energy that is less than the energy if it had run 24/7
@@ -1239,7 +1273,7 @@ class HPXMLTest < MiniTest::Test
     end
 
     # Lighting
-    ltg_energy = results.select { |k, v| k.include? 'Electricity: Lighting' }.map { |k, v| v }.sum(0.0)
+    ltg_energy = results.select { |k, v| k.include? 'End Use: Electricity: Lighting' }.map { |k, v| v }.sum(0.0)
     assert_equal(hpxml.lighting_groups.size > 0, ltg_energy > 0)
 
     # Get fuels
@@ -1270,10 +1304,10 @@ class HPXMLTest < MiniTest::Test
      HPXML::FuelTypeCoal].each do |fuel|
       fuel_name = fuel.split.map(&:capitalize).join(' ')
       fuel_name += ' Cord' if fuel_name == 'Wood'
-      energy_htg = results.fetch("#{fuel_name}: Heating (MBtu)", 0)
-      energy_dhw = results.fetch("#{fuel_name}: Hot Water (MBtu)", 0)
-      energy_cd = results.fetch("#{fuel_name}: Clothes Dryer (MBtu)", 0)
-      energy_cr = results.fetch("#{fuel_name}: Range/Oven (MBtu)", 0)
+      energy_htg = results.fetch("End Use: #{fuel_name}: Heating (MBtu)", 0)
+      energy_dhw = results.fetch("End Use: #{fuel_name}: Hot Water (MBtu)", 0)
+      energy_cd = results.fetch("End Use: #{fuel_name}: Clothes Dryer (MBtu)", 0)
+      energy_cr = results.fetch("End Use: #{fuel_name}: Range/Oven (MBtu)", 0)
       if htg_fuels.include?(fuel) && (not hpxml_path.include? 'location-miami')
         assert_operator(energy_htg, :>, 0)
       else
