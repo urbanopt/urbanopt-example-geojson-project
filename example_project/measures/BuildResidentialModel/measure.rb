@@ -2,15 +2,16 @@
 # http://nrel.github.io/OpenStudio-user-documentation/measures/measure_writing_guide/
 
 require 'openstudio'
-
-# require gem for merge measures
-# was able to harvest measure paths from primary osw for meta osw. Remove this once confirm that works
-#require 'openstudio-model-articulation'
-#require 'measures/merge_spaces_from_external_file/measure.rb'
-
-resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
-meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
-require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
+if File.exist? File.absolute_path(File.join(File.dirname(__FILE__), '../../lib/resources/hpxml-measures/HPXMLtoOpenStudio/resources')) # Hack to run ResStock on AWS
+  resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../lib/resources/hpxml-measures/HPXMLtoOpenStudio/resources'))
+elsif File.exist? File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources')) # Hack to run ResStock unit tests locally
+  resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources'))
+elsif File.exist? File.join(OpenStudio::BCLMeasure::userMeasuresDir.to_s, 'HPXMLtoOpenStudio/resources') # Hack to run measures in the OS App since applied measures are copied off into a temporary directory
+  resources_path = File.join(OpenStudio::BCLMeasure::userMeasuresDir.to_s, 'HPXMLtoOpenStudio/resources')
+else
+  resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../HPXMLtoOpenStudio/resources'))
+end
+require File.join(resources_path, 'meta_measure')
 
 # start the measure
 class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
@@ -55,12 +56,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     end
 
     # assign the user inputs to variables
-    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
-    measure_subdir = 'BuildResidentialHPXML'
-    full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
-    check_file_exists(full_measure_path, runner)
-    measure = get_measure_instance(full_measure_path)
-    args = measure.get_argument_values(runner, user_arguments)
+    args = get_argument_values(runner, arguments(model), user_arguments)
 
     # optionals: get or remove
     args.keys.each do |arg|
@@ -74,15 +70,21 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
     end
 
+    # get file/dir paths
+    resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
+    meta_measure_file = File.join(resources_dir, 'meta_measure.rb')
+    require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
+    workflow_json = File.join(resources_dir, 'measure-info.json')
+
     # apply whole building create geometry measures
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../measures'))
     check_dir_exists(measures_dir, runner)
 
-    if args[:geometry_unit_type] == 'single-family detached'
+    if args['geometry_unit_type'] == 'single-family detached'
       measure_subdir = 'ResidentialGeometryCreateSingleFamilyDetached'
-    elsif args[:geometry_unit_type] == 'single-family attached'
+    elsif args['geometry_unit_type'] == 'single-family attached'
       measure_subdir = 'ResidentialGeometryCreateSingleFamilyAttached'
-    elsif args[:geometry_unit_type] == 'apartment unit'
+    elsif args['geometry_unit_type'] == 'apartment unit'
       measure_subdir = 'ResidentialGeometryCreateMultifamily'
     end
 
@@ -97,25 +99,21 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     measures = {}
     measures[measure_subdir] = []
     if ['ResidentialGeometryCreateSingleFamilyAttached', 'ResidentialGeometryCreateMultifamily'].include? measure_subdir
-      measure_args[:unit_ffa] = args[:geometry_cfa]
-      measure_args[:num_floors] = args[:geometry_num_floors_above_grade]
-      measure_args[:num_units] = args[:geometry_building_num_units]
+      measure_args['unit_ffa'] = args['geometry_cfa']
+      measure_args['num_floors'] = args['geometry_num_floors_above_grade']
+      measure_args['num_units'] = args['geometry_building_num_units']
     end
-    measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
     measures[measure_subdir] << measure_args
 
-    if not apply_measures(measures_dir, measures, runner, whole_building_model, nil, nil, true)
+    if not apply_measures(measures_dir, measures, runner, whole_building_model, true)
       return false
     end
 
-    # get file/dir paths
-    resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), 'resources'))
-    workflow_json = File.join(resources_dir, 'measure-info.json')
-
     # apply HPXML measures
-    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
+    measures_dir = File.join(resources_dir, 'hpxml-measures')
     check_dir_exists(measures_dir, runner)
 
+    # these will get added back in by unit_model
     model.getBuilding.remove
     model.getShadowCalculation.remove
     model.getSimulationControl.remove
@@ -127,30 +125,31 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # BuildResidentialHPXML
       measure_subdir = 'BuildResidentialHPXML'
+      full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+      check_file_exists(full_measure_path, runner)
 
       # fill the measure args hash with default values
       measure_args = args
 
       measures = {}
       measures[measure_subdir] = []
-      measure_args[:hpxml_path] = File.expand_path('../out.xml')
+      measure_args['hpxml_path'] = File.expand_path('../out.xml')
       begin
-        measure_args[:software_program_used] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
+        measure_args['software_program_used'] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
       rescue
       end
       begin
         version_rb File.absolute_path(File.join(File.dirname(__FILE__), '../../../lib/uo_cli/version.rb'))
         require version_rb
-        measure_args[:software_program_version] = URBANopt::CLI::VERSION
+        measure_args['software_program_version'] = URBANopt::CLI::VERSION
       rescue
       end
       if unit.additionalProperties.getFeatureAsString('GeometryLevel').is_initialized
-        measure_args[:geometry_level] = unit.additionalProperties.getFeatureAsString('GeometryLevel').get
+        measure_args['geometry_level'] = unit.additionalProperties.getFeatureAsString('GeometryLevel').get
       end
       if unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').is_initialized
-        measure_args[:geometry_horizontal_location] = unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').get
+        measure_args['geometry_horizontal_location'] = unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').get
       end
-      measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
       measures[measure_subdir] << measure_args
 
       # HPXMLtoOpenStudio
@@ -162,17 +161,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args = {}
 
       measures[measure_subdir] = []
-      measure_args[:hpxml_path] = File.expand_path('../out.xml')
-      measure_args[:output_dir] = File.expand_path('..')
-      measure_args[:debug] = true
-      measure_args = Hash[measure_args.collect{ |k, v| [k.to_s, v] }]
+      measure_args['hpxml_path'] = File.expand_path('../out.xml')
+      measure_args['output_dir'] = File.expand_path('..')
+      measure_args['debug'] = true
       measures[measure_subdir] << measure_args
 
-      if not apply_measures(measures_dir, measures, runner, unit_model, workflow_json, 'out.osw', true)
+      if not apply_child_measures(measures_dir, measures, runner, unit_model, workflow_json, 'out.osw', true)
         return false
       end
 
-      case args[:geometry_unit_type]
+      case args['geometry_unit_type']
       when 'single-family detached'
         building_type = 'Single-Family Detached'
       when 'single-family attached'
@@ -192,11 +190,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
 
-      if num_unit == 0
+      if num_unit == 0 # for the first building unit, add everything
 
         model.addObjects(unit_model.objects, true)
 
-      else # single-family attached and multifamily
+      else # for single-family attached and multifamily, add "almost" everything
 
         # shift the unit so it's not right on top of the previous one
         unit_model.getSpaces.sort.each do |space|
@@ -246,12 +244,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         unit_model.getFoundationKivaSettings.remove
         unit_model_objects = []
         unit_model.objects.each do |obj|
-          unit_model_objects << obj unless obj.to_Building.is_initialized
+          unit_model_objects << obj unless obj.to_Building.is_initialized # if we remove this, we lose all thermal zones
         end
 
         model.addObjects(unit_model_objects, true)
       end
 
+      # save the "re-composed" model with all building units to file
       building_path = File.expand_path(File.join('..', 'building.osm'))
       model.save(building_path, true)
     end
