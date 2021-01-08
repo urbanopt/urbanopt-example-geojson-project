@@ -170,27 +170,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         return false
       end
 
-      # maximum_number_of_stories
+      # store metadata for default feature reports measure
       standards_number_of_stories = Integer(args['geometry_num_floors_above_grade'])
+      unit_model.getBuilding.setStandardsNumberOfAboveGroundStories(standards_number_of_stories)
       if ['UnconditionedBasement', 'ConditionedBasement'].include?(args['geometry_foundation_type'])
         standards_number_of_stories += 1
       end
-      # unit_model.getBuilding.setStandardsNumberOfStories(standards_number_of_stories)
 
-      # maximum_roof_height
-      # unit_model.getBuilding.setNominalFloortoFloorHeight(Float(args['geometry_wall_height']) * standards_number_of_stories)
-
-      # maximum_number_of_stories_above_ground
-      # unit_model.getBuilding.setStandardsNumberOfAboveGroundStories(Integer(args['geometry_num_floors_above_grade']))
-
-      # number_of_residential_units
       standards_number_of_living_units = 1
       if args.keys.include?('geometry_building_num_units')
-        standards_number_of_living_units = Integer(args['geometry_building_num_units']) # FIXME: uncomment when bug fixed in default features report measure
+        standards_number_of_living_units = Integer(args['geometry_building_num_units'])
       end
-      # unit_model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
 
-      # building_types
       case args['geometry_unit_type']
       when 'single-family detached'
         building_type = 'Single-Family Detached'
@@ -202,8 +193,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       unit_model.getSpaceTypes.each do |space_type|
         next unless space_type.standardsSpaceType.is_initialized
+        next if space_type.standardsSpaceType.get != 'living space'
         space_type.setStandardsBuildingType(building_type)
       end
+
+      unit_model.getBuilding.setStandardsBuildingType('Residential')
+      unit_model.getBuilding.setStandardsNumberOfStories(standards_number_of_stories)
+      unit_model.getBuilding.setNominalFloortoFloorHeight(Float(args['geometry_wall_height']))
+      unit_model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
 
       # save debug files
       unit_dir = File.expand_path("../#{unit.name}")
