@@ -170,6 +170,27 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         return false
       end
 
+      # maximum_number_of_stories
+      standards_number_of_stories = Integer(args['geometry_num_floors_above_grade'])
+      if ['UnconditionedBasement', 'ConditionedBasement'].include?(args['geometry_foundation_type'])
+        standards_number_of_stories += 1
+      end
+      # unit_model.getBuilding.setStandardsNumberOfStories(standards_number_of_stories)
+
+      # maximum_roof_height
+      # unit_model.getBuilding.setNominalFloortoFloorHeight(Float(args['geometry_wall_height']) * standards_number_of_stories)
+
+      # maximum_number_of_stories_above_ground
+      # unit_model.getBuilding.setStandardsNumberOfAboveGroundStories(Integer(args['geometry_num_floors_above_grade']))
+
+      # number_of_residential_units
+      standards_number_of_living_units = 1
+      if args.keys.include?('geometry_building_num_units')
+        standards_number_of_living_units = Integer(args['geometry_building_num_units']) # FIXME: uncomment when bug fixed in default features report measure
+      end
+      # unit_model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
+
+      # building_types
       case args['geometry_unit_type']
       when 'single-family detached'
         building_type = 'Single-Family Detached'
@@ -184,6 +205,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         space_type.setStandardsBuildingType(building_type)
       end
 
+      # save debug files
       unit_dir = File.expand_path("../#{unit.name}")
       Dir.mkdir(unit_dir)
       FileUtils.cp(File.expand_path('../out.xml'), unit_dir) # this is the raw hpxml file
