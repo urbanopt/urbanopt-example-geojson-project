@@ -503,6 +503,19 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_building_num_units]
 
+            begin
+              num_garage_spaces = 0
+              if feature.onsite_parking_fraction
+                num_garage_spaces = 1
+                if args[:geometry_cfa] >= 2500.0
+                  num_garage_spaces = 2
+                end
+              end
+              args[:geometry_garage_width] = 12.0 * num_garage_spaces
+              args[:geometry_garage_protrusion] = 1.0
+            rescue
+            end
+
             # SCHEDULES
 
             args[:schedules_type] = 'stochastic'
@@ -564,10 +577,7 @@ module URBANopt
             args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
             args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
 
-            # VENTILATION
-
-            args[:kitchen_fans_present] = true
-            args[:bathroom_fans_present] = true
+            # WATER HEATER
 
             args[:water_heater_fuel_type] = args[:heating_system_fuel]
 
@@ -642,11 +652,18 @@ module URBANopt
                   args.update(row) unless row.nil?
                 end
 
-                # VENTILATION
+                # MECHANICAL VENTILATION
 
-                mechvent_filepath = File.join(File.dirname(__FILE__), "residential/mechanical_ventilation.tsv")
+                mechvent_filepath = File.join(File.dirname(__FILE__), 'residential/mechanical_ventilation.tsv')
                 mechvent = get_lookup_tsv(args, mechvent_filepath)
                 row = get_lookup_row(args, mechvent, template_vals)
+                args.update(row) unless row.nil?
+
+                # EXHAUST
+
+                exhaust_filepath = File.join(File.dirname(__FILE__), 'residential/exhaust.tsv')
+                exhaust = get_lookup_tsv(args, exhaust_filepath)
+                row = get_lookup_row(args, exhaust, template_vals)
                 args.update(row) unless row.nil?
 
                 # WATER HEATER

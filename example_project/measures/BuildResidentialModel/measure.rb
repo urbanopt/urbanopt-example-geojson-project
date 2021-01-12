@@ -98,10 +98,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     measures = {}
     measures[measure_subdir] = []
-    if ['ResidentialGeometryCreateSingleFamilyAttached', 'ResidentialGeometryCreateMultifamily'].include? measure_subdir
+    # we don't need to set every argument because all we really want is the orientation of all the building units
+    # i.e., level, horizontal location
+    if ['ResidentialGeometryCreateSingleFamilyDetached'].include? measure_subdir
+      measure_args['garage_width'] = args['geometry_garage_width']
+      measure_args['garage_protrusion'] = args['geometry_garage_protrusion']
+    elsif ['ResidentialGeometryCreateSingleFamilyAttached', 'ResidentialGeometryCreateMultifamily'].include? measure_subdir
       measure_args['unit_ffa'] = args['geometry_cfa']
       measure_args['num_floors'] = args['geometry_num_floors_above_grade']
       measure_args['num_units'] = args['geometry_building_num_units']
+      if measure_subdir == 'ResidentialGeometryCreateMultifamily'
+        measure_args['corridor_position'] = args['geometry_corridor_position']
+      end
     end
     measures[measure_subdir] << measure_args
 
@@ -268,11 +276,15 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         model.addObjects(unit_model_objects, true)
       end
-
-      # save the "re-composed" model with all building units to file
-      building_path = File.expand_path(File.join('..', 'building.osm'))
-      model.save(building_path, true)
     end
+
+    # save the "whole building" model with all building units to file
+    building_path = File.expand_path(File.join('..', 'whole_building_1.osm'))
+    whole_building_model.save(building_path, true)
+
+    # save the "re-composed" model with all building units to file
+    building_path = File.expand_path(File.join('..', 'whole_building_2.osm'))
+    model.save(building_path, true)
 
     return true
   end

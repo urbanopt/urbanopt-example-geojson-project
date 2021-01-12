@@ -712,6 +712,7 @@
         "attic_type": "attic - conditioned",
         "system_type": "Residential - electric resistance and no cooling",
         "heating_system_fuel_type": "electricity",
+        "onsite_parking_fraction": 1,
         "template": "Residential IECC 2015 - Customizable Template Sep 2020"
       },
       "geometry": {
