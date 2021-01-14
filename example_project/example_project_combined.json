@@ -9,9 +9,9 @@
     "tariff_filename": null,
     "climate_zone": "2A",
     "cec_climate_zone": null,
-    "begin_date": "2017-01-01T07:00:00.000Z",
-    "end_date": "2017-01-02T07:00:00.000Z",
-    "timesteps_per_hour": 2,
+    "begin_date": "2019-09-01T07:00:00.000Z",
+    "end_date": "2019-09-07T07:00:00.000Z",
+    "timesteps_per_hour": 4,
     "default_template": "90.1-2013"
   },
   "features": [
@@ -24,12 +24,12 @@
         "begin_date": "2017-01-01T07:00:00.000Z",
         "end_date": "2017-01-02T07:00:00.000Z",
         "cec_climate_zone": null,
-        "climate_zone": "6A",
+        "climate_zone": "2A",
         "default_template": "90.1-2013",
         "import_surrounding_buildings_as_shading": null,
         "surface_elevation": 176,
         "tariff_filename": null,
-        "timesteps_per_hour": 2,
+        "timesteps_per_hour": 1,
         "weather_filename": "USA_TX_Houston-Bush.Intercontinental.AP.722430_TMY3.epw"
       },
       "geometry": {

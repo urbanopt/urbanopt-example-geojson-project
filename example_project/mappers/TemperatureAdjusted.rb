@@ -48,26 +48,13 @@ module URBANopt
         building_type = feature.building_type
 
         
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'cooling_setpoint', 22)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'hour_of_the_day', 9)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'cooling_setpoint', 22)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'hour_of_the_day', 10)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'cooling_setpoint', 22)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'hour_of_the_day', 11)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'cooling_setpoint', 26)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'hour_of_the_day', 16)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'cooling_setpoint', 26)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'hour_of_the_day', 17)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'cooling_setpoint', 26)
-		OpenStudio::Extension.set_measure_argument(osw, 'cooling_setpoints_hourly_adjusted_by_degrees', 'hour_of_the_day', 18)		
-
-	
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', '__SKIP__', false)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'cooling_setpoint_adjustment', 1)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'hour_of_the_day', 14)
+		
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', '__SKIP__', false)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'cooling_setpoint_adjustment', -1)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'hour_of_the_day', 15)
 
         return osw
       end

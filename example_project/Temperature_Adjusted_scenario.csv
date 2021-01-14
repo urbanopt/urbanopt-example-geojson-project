@@ -1,0 +1,4 @@
+Feature Id,Feature Name,Mapper Class
+43b5f98b-89a3-41a6-95e8-0786f1fa883f,office_1,URBANopt::Scenario::TemperatureAdjusted
+daaf69fe-f96d-43c4-a172-8592446f7281,office_2,URBANopt::Scenario::TemperatureAdjusted
+1ac3a7c5-f3a4-4f81-8d4c-96d839dcd8df,res_143,URBANopt::Scenario::TemperatureAdjusted

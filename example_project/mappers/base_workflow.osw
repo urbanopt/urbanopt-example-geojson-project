@@ -75,11 +75,18 @@
         "surrounding_buildings": "None"
       }
     },{
-      "measure_dir_name": "cooling_setpoints_hourly_adjusted_by_degrees",
+      "measure_dir_name": "adjustment_of_cooling_setpoints_hourlyd_by_degrees_c",
       "arguments": {
         "__SKIP__": true,
-        "cooling_setpoint": "26.6",
-        "hour_of_the_day": "16"
+        "cooling_setpoint_adjustment": "1",
+        "hour_of_the_day": "12"
+      }
+    },{
+      "measure_dir_name": "adjustment_of_cooling_setpoints_hourlyd_by_degrees_c",
+      "arguments": {
+        "__SKIP__": true,
+        "cooling_setpoint_adjustment": "1",
+        "hour_of_the_day": "12"
       }
     },{
       "name": "create_typical_building_from_model 2",
