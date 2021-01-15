@@ -38,9 +38,10 @@ class AdjustmentOfCoolingSetpointsHourlydByDegreesCAllday < OpenStudio::Measure:
 	for i in 1..24
 		argument_name = "hour_#{i}_setpoint"
 		display_name = "Hour_#{i}_Setpoint"
-		arg = OpenStudio::Ruleset::OSArgument::makeDoubleArgument(argument_name, true)
-		arg.setDisplayName(display_name)
-		args << arg
+		hour_setpoint = OpenStudio::Ruleset::OSArgument::makeDoubleArgument(argument_name, true)
+		hour_setpoint.setDisplayName(display_name)
+		hour_setpoint.setDescription("Example: hour_2_setpoint : 1")
+		args << hour_setpoint
 	end
 
     return args
@@ -58,7 +59,6 @@ class AdjustmentOfCoolingSetpointsHourlydByDegreesCAllday < OpenStudio::Measure:
 		# assign the user inputs to variables
 		#cooling_setpoint_adjustment = runner.getDoubleArgumentValue('cooling_setpoint_adjustment',user_arguments)
 		args = OsLib_HelperMethods.createRunVariables(runner, model, user_arguments, arguments(model))
-
 		#input test
 		#if cooling_setpoint_adjustment < 0
 		#	runner.registerWarning('This will increase the electricity use')
