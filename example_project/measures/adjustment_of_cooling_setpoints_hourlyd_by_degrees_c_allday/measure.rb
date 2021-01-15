@@ -37,7 +37,7 @@ class AdjustmentOfCoolingSetpointsHourlydByDegreesCAllday < OpenStudio::Measure:
 	
 	for i in 1..24
 		argument_name = "hour_#{i}_setpoint"
-		display_name = "Hour #{i} Setpoint"
+		display_name = "Hour_#{i}_Setpoint"
 		arg = OpenStudio::Ruleset::OSArgument::makeDoubleArgument(argument_name, true)
 		arg.setDisplayName(display_name)
 		args << arg

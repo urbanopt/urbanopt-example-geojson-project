@@ -16,7 +16,7 @@
 # used to endorse or promote products derived from this software without specific
 # prior written permission.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND
 # ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 # IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
@@ -48,13 +48,32 @@ module URBANopt
         building_type = feature.building_type
 
         
-		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'cooling_setpoint_adjustment', 1)
-		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'hour_of_the_day', 14)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', '__SKIP__', false)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_1_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_2_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_3_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_4_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_5_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_6_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_7_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_8_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_9_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_10_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_11_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_12_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_13_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_14_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_15_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_16_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_17_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_18_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_19_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_20_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_21_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_22_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour_23_setpoint': 0)
+		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday', 'hour 24_setpoint': 0)
 		
-		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', '__SKIP__', false)
-		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'cooling_setpoint_adjustment', -1)
-		OpenStudio::Extension.set_measure_argument(osw, 'adjustment_of_cooling_setpoints_hourlyd_by_degrees_c', 'hour_of_the_day', 15)
 
         return osw
       end

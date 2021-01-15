@@ -89,6 +89,35 @@
         "hour_of_the_day": "12"
       }
     },{
+      "measure_dir_name": "adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday",
+      "arguments": {
+        "__SKIP__": true,
+        "hour_1_setpoint": 1,
+        "hour_2_setpoint": 12,
+        "hour_3_setpoint": 12,
+        "hour_4_setpoint": 12,
+        "hour_5_setpoint": 12,
+        "hour_6_setpoint": 12,
+        "hour_7_setpoint": 12,
+        "hour_8_setpoint": 12,
+        "hour_9_setpoint": 12,
+        "hour_10_setpoint":12,
+        "hour_11_setpoint": 12,
+        "hour_12_setpoint": 12,
+        "hour_13_setpoint": 12,
+        "hour_14_setpoint": 12,
+        "hour_15_setpoint": 12,
+        "hour_16_setpoint": 12,
+        "hour_17_setpoint": 12,
+        "hour_18_setpoint": 12,
+        "hour_19_setpoint": 12,
+        "hour_20_setpoint": 12,
+        "hour_21_setpoint": 12,
+        "hour_22_setpoint": 12,
+        "hour_23_setpoint": 12,
+        "hour_24_setpoint": 12
+      }
+    },{
       "name": "create_typical_building_from_model 2",
       "measure_dir_name": "create_typical_building_from_model",
       "arguments": {
