@@ -516,6 +516,9 @@ module URBANopt
             rescue
             end
 
+            args[:neighbor_left_distance] = 0.0
+            args[:neighbor_right_distance] = 0.0
+
             # SCHEDULES
 
             args[:schedules_type] = 'stochastic'
