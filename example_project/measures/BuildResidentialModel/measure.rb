@@ -103,6 +103,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     if ['ResidentialGeometryCreateSingleFamilyDetached'].include? measure_subdir
       measure_args['garage_width'] = args['geometry_garage_width']
       measure_args['garage_protrusion'] = args['geometry_garage_protrusion']
+      measure_args['neighbor_left_offset'] = 0.0
+      measure_args['neighbor_right_offset'] = 0.0
     elsif ['ResidentialGeometryCreateSingleFamilyAttached', 'ResidentialGeometryCreateMultifamily'].include? measure_subdir
       measure_args['unit_ffa'] = args['geometry_cfa']
       measure_args['num_floors'] = args['geometry_num_floors_above_grade']
@@ -110,6 +112,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       if measure_subdir == 'ResidentialGeometryCreateMultifamily'
         measure_args['corridor_position'] = args['geometry_corridor_position']
       end
+      measure_args['neighbor_left_offset'] = 0.0
+      measure_args['neighbor_right_offset'] = 0.0
     end
     measures[measure_subdir] << measure_args
 
