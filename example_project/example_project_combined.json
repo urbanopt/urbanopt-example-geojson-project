@@ -705,7 +705,7 @@
         "building_type": "Single-Family Detached",
         "floor_area": 5500,
         "footprint_area": 4655,
-        "number_of_stories_above_ground": 1,
+        "number_of_stories_above_ground": 2,
         "number_of_stories": 2,
         "number_of_bedrooms": 5,
         "foundation_type": "basement - conditioned",
@@ -767,7 +767,7 @@
         "attic_type": "attic - vented",
         "system_type": "Residential - furnace and room air conditioner",
         "heating_system_fuel_type": "fuel oil",
-        "number_of_residential_units": 3,
+        "number_of_residential_units": 4,
         "template": "Residential IECC 2015 - Customizable Template Sep 2020"
       },
       "geometry": {

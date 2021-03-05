@@ -282,13 +282,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
           elsif position == 2
             geometry_horizontal_location = 'Right'
           elsif position == num_units_per_floor and num_units_per_floor.even?
-            geometry_horizontal_location = 'Right'
+            geometry_horizontal_location = 'Left'
           elsif position == num_units_per_floor and num_units_per_floor.odd?
-            geometry_horizontal_location = 'Left'
-          elsif position + 1 == num_units_per_floor and num_units_per_floor.even?
-            geometry_horizontal_location = 'Left'
-          elsif position + 1 == num_units_per_floor and num_units_per_floor.odd?
             geometry_horizontal_location = 'Right'
+          elsif position + 1 == num_units_per_floor and num_units_per_floor.even?
+            geometry_horizontal_location = 'Right'
+          elsif position + 1 == num_units_per_floor and num_units_per_floor.odd?
+            geometry_horizontal_location = 'Left'
           end
 
           if floor == 1

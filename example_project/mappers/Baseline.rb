@@ -473,12 +473,11 @@ module URBANopt
               args[:geometry_foundation_height] = 8.0
             end
 
-            args[:geometry_attic_type] = "ConditionedAttic"
+            args[:geometry_attic_type] = "VentedAttic"
             args[:geometry_roof_type] = "flat"
             begin
               case feature.attic_type
               when 'attic - vented'
-                args[:geometry_attic_type] = "VentedAttic"
                 args[:geometry_roof_type] = "gable"
               when 'attic - unvented'
                 args[:geometry_attic_type] = "UnventedAttic"
