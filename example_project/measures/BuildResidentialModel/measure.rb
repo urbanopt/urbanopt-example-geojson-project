@@ -76,51 +76,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     require File.join(File.dirname(meta_measure_file), File.basename(meta_measure_file, File.extname(meta_measure_file)))
     workflow_json = File.join(resources_dir, 'measure-info.json')
 
-    # apply whole building create geometry measures
-    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../measures'))
-    check_dir_exists(measures_dir, runner)
-
-    if args['geometry_unit_type'] == 'single-family detached'
-      measure_subdir = 'ResidentialGeometryCreateSingleFamilyDetached'
-    elsif args['geometry_unit_type'] == 'single-family attached'
-      measure_subdir = 'ResidentialGeometryCreateSingleFamilyAttached'
-    elsif args['geometry_unit_type'] == 'apartment unit'
-      measure_subdir = 'ResidentialGeometryCreateMultifamily'
-    end
-
-    full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
-    check_file_exists(full_measure_path, runner)
-    measure = get_measure_instance(full_measure_path)
-
-    measure_args = {}
-    whole_building_model = OpenStudio::Model::Model.new
-    get_measure_args_default_values(whole_building_model, measure_args, measure)
-
-    measures = {}
-    measures[measure_subdir] = []
-    # we don't need to set every argument because all we really want is the orientation of all the building units
-    # i.e., level, horizontal location
-    if ['ResidentialGeometryCreateSingleFamilyDetached'].include? measure_subdir
-      measure_args['garage_width'] = args['geometry_garage_width']
-      measure_args['garage_protrusion'] = args['geometry_garage_protrusion']
-      measure_args['neighbor_left_offset'] = 0.0
-      measure_args['neighbor_right_offset'] = 0.0
-    elsif ['ResidentialGeometryCreateSingleFamilyAttached', 'ResidentialGeometryCreateMultifamily'].include? measure_subdir
-      measure_args['unit_ffa'] = args['geometry_cfa']
-      measure_args['num_floors'] = args['geometry_num_floors_above_grade']
-      measure_args['num_units'] = args['geometry_building_num_units']
-      if measure_subdir == 'ResidentialGeometryCreateMultifamily'
-        measure_args['corridor_position'] = args['geometry_corridor_position']
-      end
-      measure_args['neighbor_left_offset'] = 0.0
-      measure_args['neighbor_right_offset'] = 0.0
-    end
-    measures[measure_subdir] << measure_args
-
-    if not apply_measures(measures_dir, measures, runner, whole_building_model, true)
-      return false
-    end
-
     # apply HPXML measures
     measures_dir = File.join(resources_dir, 'hpxml-measures')
     check_dir_exists(measures_dir, runner)
@@ -132,7 +87,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     model.getSite.remove
     model.getTimestep.remove
 
-    whole_building_model.getBuildingUnits.each_with_index do |unit, num_unit|
+    units = get_units_orientation(runner, args)
+    if units.empty?
+      return false
+    end
+
+    units.each_with_index do |unit, unit_num|
       unit_model = OpenStudio::Model::Model.new
 
       # BuildResidentialHPXML
@@ -156,11 +116,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args['software_program_version'] = URBANopt::CLI::VERSION
       rescue
       end
-      if unit.additionalProperties.getFeatureAsString('GeometryLevel').is_initialized
-        measure_args['geometry_level'] = unit.additionalProperties.getFeatureAsString('GeometryLevel').get
+      if unit.keys.include?('geometry_level')
+        measure_args['geometry_level'] = unit['geometry_level']
       end
-      if unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').is_initialized
-        measure_args['geometry_horizontal_location'] = unit.additionalProperties.getFeatureAsString('GeometryHorizontalLocation').get
+      if unit.keys.include?('geometry_horizontal_location')
+        measure_args['geometry_horizontal_location'] = unit['geometry_horizontal_location']
       end
       measures[measure_subdir] << measure_args
 
@@ -215,13 +175,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       unit_model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
 
       # save debug files
-      unit_dir = File.expand_path("../#{unit.name}")
+      unit_dir = File.expand_path("../#{unit['name']}")
       Dir.mkdir(unit_dir)
       FileUtils.cp(File.expand_path('../out.xml'), unit_dir) # this is the raw hpxml file
       FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
       FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
 
-      if num_unit == 0 # for the first building unit, add everything
+      if unit_num == 0 # for the first building unit, add everything
 
         model.addObjects(unit_model.objects, true)
 
@@ -229,14 +189,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         # shift the unit so it's not right on top of the previous one
         unit_model.getSpaces.sort.each do |space|
-          space.setYOrigin(100.0*num_unit) # meters
+          space.setYOrigin(100.0 * unit_num) # meters
         end
 
         # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
         sensors_map = {}
         unit_model.getEnergyManagementSystemSensors.each do |sensor|
-          sensors_map[sensor.name.to_s] = "#{unit.name.to_s.gsub(" ", "_")}_#{sensor.name}"
-          sensor.setKeyName("#{unit.name} #{sensor.keyName}")
+          sensors_map[sensor.name.to_s] = "#{unit['name'].gsub(' ', '_')}_#{sensor.name}"
+          sensor.setKeyName("#{unit['name']} #{sensor.keyName}")
         end
 
         unit_model.getEnergyManagementSystemPrograms.each do |program|
@@ -253,7 +213,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         unit_model.objects.each do |model_object|
           next if model_object.name.nil?
 
-          model_object.setName("#{unit.name} #{model_object.name.to_s}")
+          model_object.setName("#{unit['name']} #{model_object.name.to_s}")
         end
 
         # save the modified osm to file
@@ -282,15 +242,77 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
     end
 
-    # save the "whole building" model with all building units to file
-    building_path = File.expand_path(File.join('..', 'whole_building_1.osm'))
-    whole_building_model.save(building_path, true)
-
     # save the "re-composed" model with all building units to file
-    building_path = File.expand_path(File.join('..', 'whole_building_2.osm'))
+    building_path = File.expand_path(File.join('..', 'whole_building.osm'))
     model.save(building_path, true)
 
     return true
+  end
+
+  def get_units_orientation(runner, args)
+    units = []
+    if args['geometry_unit_type'] == 'single-family detached'
+      units << {'name' => "unit 1"}
+    elsif args['geometry_unit_type'] == 'single-family attached'
+      (1..args['geometry_building_num_units']).to_a.each do |unit_num|
+        if unit_num == 1
+          units << {'name' => "unit #{unit_num}", 'geometry_horizontal_location' => 'Left'}
+        elsif unit_num == args['geometry_building_num_units']
+          units << {'name' => "unit #{unit_num}", 'geometry_horizontal_location' => 'Right'}
+        else
+          units << {'name' => "unit #{unit_num}", 'geometry_horizontal_location' => 'Middle'}
+        end
+      end
+    elsif args['geometry_unit_type'] == 'apartment unit'
+      if args['geometry_corridor_position'] == 'Double Exterior'
+
+        num_units_per_floor = (Float(args['geometry_building_num_units']) / Float(args['geometry_num_floors_above_grade'])).ceil
+        if num_units_per_floor == 1
+          runner.registerError("num_units_per_floor='#{num_units_per_floor}' not supported.")
+          return units
+        end
+
+        floor = 1
+        position = 1
+        (1..args['geometry_building_num_units']).to_a.each do |unit_num|
+
+          geometry_horizontal_location = 'Middle'
+          if position == 1
+            geometry_horizontal_location = 'Left'
+          elsif position == 2
+            geometry_horizontal_location = 'Right'
+          elsif position == num_units_per_floor and num_units_per_floor.even?
+            geometry_horizontal_location = 'Right'
+          elsif position == num_units_per_floor and num_units_per_floor.odd?
+            geometry_horizontal_location = 'Left'
+          elsif position + 1 == num_units_per_floor and num_units_per_floor.even?
+            geometry_horizontal_location = 'Left'
+          elsif position + 1 == num_units_per_floor and num_units_per_floor.odd?
+            geometry_horizontal_location = 'Right'
+          end
+
+          if floor == 1
+            geometry_level = 'Bottom'
+          elsif floor == args['geometry_num_floors_above_grade']
+            geometry_level = 'Top'
+          else
+            geometry_level = 'Middle'
+          end
+
+          if unit_num % num_units_per_floor == 0
+            floor += 1
+            position = 0
+          end
+          position += 1
+
+          units << {'name' => "unit #{unit_num}", 'geometry_horizontal_location' => geometry_horizontal_location, 'geometry_level' => geometry_level}
+        end
+      else
+        runner.registerError("geometry_corridor_position='#{args['geometry_corridor_position']}' not supported.")
+        return units
+      end
+    end
+    return units
   end
 
   def get_measure_args_default_values(model, args, measure)
