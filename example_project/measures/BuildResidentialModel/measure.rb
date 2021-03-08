@@ -87,7 +87,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     model.getSite.remove
     model.getTimestep.remove
 
-    units = get_units_orientation(runner, args)
+    units = get_unit_positions(runner, args)
     if units.empty?
       return false
     end
@@ -249,7 +249,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     return true
   end
 
-  def get_units_orientation(runner, args)
+  def get_unit_positions(runner, args)
     units = []
     if args['geometry_unit_type'] == 'single-family detached'
       units << {'name' => "unit 1"}
