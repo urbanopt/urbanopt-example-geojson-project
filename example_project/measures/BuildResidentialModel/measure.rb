@@ -122,6 +122,9 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       if unit.keys.include?('geometry_horizontal_location')
         measure_args['geometry_horizontal_location'] = unit['geometry_horizontal_location']
       end
+      if unit.keys.include?('geometry_orientation')
+        measure_args['geometry_orientation'] = unit['geometry_orientation']
+      end
       measures[measure_subdir] << measure_args
 
       # HPXMLtoOpenStudio
@@ -276,6 +279,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         position = 1
         (1..args['geometry_building_num_units']).to_a.each do |unit_num|
 
+          geometry_orientation = 180.0
+          if position.even?
+            geometry_orientation = 0.0
+          end
+
           geometry_horizontal_location = 'Middle'
           if position == 1
             geometry_horizontal_location = 'Left'
@@ -305,7 +313,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
           end
           position += 1
 
-          units << {'name' => "unit #{unit_num}", 'geometry_horizontal_location' => geometry_horizontal_location, 'geometry_level' => geometry_level}
+          units << {'name' => "unit #{unit_num}", 'geometry_horizontal_location' => geometry_horizontal_location, 'geometry_level' => geometry_level, 'geometry_orientation' => geometry_orientation}
         end
       else
         runner.registerError("geometry_corridor_position='#{args['geometry_corridor_position']}' not supported.")

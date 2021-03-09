@@ -506,7 +506,7 @@ module URBANopt
               num_garage_spaces = 0
               if feature.onsite_parking_fraction
                 num_garage_spaces = 1
-                if args[:geometry_cfa] >= 2500.0
+                if args[:geometry_cfa] > 2500.0
                   num_garage_spaces = 2
                 end
               end
