@@ -125,11 +125,11 @@ class Airflow
   end
 
   def self.get_default_vented_attic_sla()
-    return 1.0 / 300.0 # Table 4.2.2(1) - Attics
+    return (1.0 / 300.0).round(6) # Table 4.2.2(1) - Attics
   end
 
   def self.get_default_vented_crawl_sla()
-    return 1.0 / 150.0 # Table 4.2.2(1) - Crawlspaces
+    return (1.0 / 150.0).round(6) # Table 4.2.2(1) - Crawlspaces
   end
 
   def self.get_default_mech_vent_fan_power(vent_fan)
@@ -566,12 +566,6 @@ class Airflow
     ducts.each do |duct|
       if duct.leakage_frac.nil? == duct.leakage_cfm25.nil?
         fail 'Ducts: Must provide either leakage fraction or cfm25, but not both.'
-      end
-      if (not duct.leakage_frac.nil?) && ((duct.leakage_frac < 0) || (duct.leakage_frac > 1))
-        fail 'Ducts: Leakage Fraction must be greater than or equal to 0 and less than or equal to 1.'
-      end
-      if (not duct.leakage_cfm25.nil?) && (duct.leakage_cfm25 < 0)
-        fail 'Ducts: Leakage CFM25 must be greater than or equal to 0.'
       end
     end
 
