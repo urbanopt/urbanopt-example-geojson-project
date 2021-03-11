@@ -32,12 +32,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
   # define the arguments that the user will input
   def arguments(model)
+    args = OpenStudio::Measure::OSArgumentVector.new
+
+    arg = OpenStudio::Ruleset::OSArgument.makeIntegerArgument('feature_id', true)
+    arg.setDisplayName('Feature ID')
+    arg.setDescription('The feature ID passed from Baseline.rb.')
+    args << arg
+
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
     measure_subdir = 'BuildResidentialHPXML'
     full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
     measure = get_measure_instance(full_measure_path)
 
-    args = OpenStudio::Measure::OSArgumentVector.new
     measure.arguments(model).each do |arg|
       next if ['hpxml_path'].include? arg.name
       args << arg
@@ -95,17 +101,20 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     units.each_with_index do |unit, unit_num|
       unit_model = OpenStudio::Model::Model.new
 
+      hpxml_path = File.expand_path("../#{unit['name']}.xml")
+
       # BuildResidentialHPXML
       measure_subdir = 'BuildResidentialHPXML'
       full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
 
       # fill the measure args hash with default values
-      measure_args = args
+      measure_args = args.clone
+      measure_args.delete('feature_id')
 
       measures = {}
       measures[measure_subdir] = []
-      measure_args['hpxml_path'] = File.expand_path('../out.xml')
+      measure_args['hpxml_path'] = hpxml_path
       begin
         measure_args['software_program_used'] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
       rescue
@@ -116,6 +125,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args['software_program_version'] = URBANopt::CLI::VERSION
       rescue
       end
+      measure_args['schedules_random_seed'] = args['feature_id'] * (unit_num + 1) # variation across units, but deterministic
       if unit.keys.include?('geometry_level')
         measure_args['geometry_level'] = unit['geometry_level']
       end
@@ -136,12 +146,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args = {}
 
       measures[measure_subdir] = []
-      measure_args['hpxml_path'] = File.expand_path('../out.xml')
+      measure_args['hpxml_path'] = hpxml_path
       measure_args['output_dir'] = File.expand_path('..')
       measure_args['debug'] = true
       measures[measure_subdir] << measure_args
 
-      if not apply_child_measures(measures_dir, measures, runner, unit_model, workflow_json, 'out.osw', true)
+      if not apply_child_measures(measures_dir, measures, runner, unit_model, workflow_json, "#{unit['name']}.osw", true)
         return false
       end
 
@@ -177,13 +187,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       unit_model.getBuilding.setNominalFloortoFloorHeight(Float(args['geometry_wall_height']))
       unit_model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
 
-      # save debug files
-      unit_dir = File.expand_path("../#{unit['name']}")
-      Dir.mkdir(unit_dir)
-      FileUtils.cp(File.expand_path('../out.xml'), unit_dir) # this is the raw hpxml file
-      FileUtils.cp(File.expand_path('../out.osw'), unit_dir) # this has hpxml measure arguments in it      
-      FileUtils.cp(File.expand_path('../in.osm'), unit_dir) # this is osm translated from hpxml
-
       if unit_num == 0 # for the first building unit, add everything
 
         model.addObjects(unit_model.objects, true)
@@ -218,10 +221,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
           model_object.setName("#{unit['name']} #{model_object.name.to_s}")
         end
-
-        # save the modified osm to file
-        modified_in_path = File.join(unit_dir, 'modified_in.osm')
-        unit_model.save(modified_in_path, true)
 
         # we already have the following unique objects from the first building unit
         unit_model.getConvergenceLimits.remove
