@@ -156,10 +156,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
 
       # store metadata for default feature reports measure
+      standards_number_of_above_ground_stories = Integer(args['geometry_num_floors_above_grade'])
       standards_number_of_stories = Integer(args['geometry_num_floors_above_grade'])
-      unit_model.getBuilding.setStandardsNumberOfAboveGroundStories(standards_number_of_stories)
+      number_of_conditioned_stories = Integer(args['geometry_num_floors_above_grade'])
       if ['UnconditionedBasement', 'ConditionedBasement'].include?(args['geometry_foundation_type'])
         standards_number_of_stories += 1
+        if ['ConditionedBasement'].include?(args['geometry_foundation_type'])
+          number_of_conditioned_stories += 1
+        end
       end
 
       standards_number_of_living_units = 1
@@ -183,9 +187,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
 
       unit_model.getBuilding.setStandardsBuildingType('Residential')
+      unit_model.getBuilding.setStandardsNumberOfAboveGroundStories(standards_number_of_above_ground_stories)
       unit_model.getBuilding.setStandardsNumberOfStories(standards_number_of_stories)
       unit_model.getBuilding.setNominalFloortoFloorHeight(Float(args['geometry_wall_height']))
       unit_model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
+      unit_model.getBuilding.additionalProperties.setFeature('NumberOfConditionedStories', number_of_conditioned_stories)
 
       if unit_num == 0 # for the first building unit, add everything
 
