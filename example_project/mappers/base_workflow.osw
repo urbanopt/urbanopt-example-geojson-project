@@ -1,7 +1,7 @@
 {
   "seed_file": null,
   "weather_file": null,
-  "measure_paths": [],
+  "measure_paths": ["../measures/"],
   "file_paths": [],
   "run_directory": null,
   "steps": [
@@ -14,7 +14,7 @@
       "measure_dir_name": "set_run_period",
       "arguments": {
         "__SKIP__": true,
-        "timesteps_per_hour": 4,
+        "timesteps_per_hour": 1,
         "begin_date": "2019-06-01",
         "end_date": "2019-09-30"
       }
@@ -22,8 +22,8 @@
       "measure_dir_name": "ChangeBuildingLocation",
       "arguments": {
         "__SKIP__": true,
-        "weather_file_name": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
-        "climate_zone": "ASHRAE 169-2013-6A"
+        "weather_file_name": "USA_TX_Houston-Bush.Intercontinental.AP.722430_TMY3.epw",
+        "climate_zone": "ASHRAE 169-2013-2A"
       }
     },{
       "measure_dir_name": "create_bar_from_building_type_ratios",
@@ -73,6 +73,35 @@
         "geojson_file": "exportGeo.json",
         "feature_id": "5",
         "surrounding_buildings": "None"
+      }
+    },{
+      "measure_dir_name": "adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday",
+      "arguments": {
+        "__SKIP__": true,
+        "hour_1_setpoint": 1,
+        "hour_2_setpoint": 12,
+        "hour_3_setpoint": 12,
+        "hour_4_setpoint": 12,
+        "hour_5_setpoint": 12,
+        "hour_6_setpoint": 12,
+        "hour_7_setpoint": 12,
+        "hour_8_setpoint": 12,
+        "hour_9_setpoint": 12,
+        "hour_10_setpoint":12,
+        "hour_11_setpoint": 12,
+        "hour_12_setpoint": 12,
+        "hour_13_setpoint": 12,
+        "hour_14_setpoint": 12,
+        "hour_15_setpoint": 12,
+        "hour_16_setpoint": 12,
+        "hour_17_setpoint": 12,
+        "hour_18_setpoint": 12,
+        "hour_19_setpoint": 12,
+        "hour_20_setpoint": 12,
+        "hour_21_setpoint": 12,
+        "hour_22_setpoint": 12,
+        "hour_23_setpoint": 12,
+        "hour_24_setpoint": 12
       }
     },{
       "name": "create_typical_building_from_model 2",

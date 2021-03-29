@@ -1,0 +1,204 @@
+<?xml version="1.0"?>
+<measure>
+  <schema_version>3.0</schema_version>
+  <name>adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday</name>
+  <uid>b29bc61b-fe7b-40da-8dc1-92d556c657af</uid>
+  <version_id>470093fb-27cd-43cc-a4a1-e12bdfc30581</version_id>
+  <version_modified>20210114T002209Z</version_modified>
+  <xml_checksum>68048E3B</xml_checksum>
+  <class_name>AdjustmentOfCoolingSetpointsHourlydByDegreesCAllday</class_name>
+  <display_name>AdjustmentOfCoolingSetpointsHourlydByDegreesC_allday</display_name>
+  <description>Cooling Setpoints Hourly adjustment to decrease or increase the cooling load for OpenDSS testin. Schedules are for all day. </description>
+  <modeler_description>Cooling Setpoints Hourly adjustment to decrease or increase the cooling load for OpenDSS testin. Gets the default setpoint and asjusts it based on the user input. All day inputs.</modeler_description>
+  <arguments>
+    <argument>
+      <name>hour_of_the_day</name>
+      <display_name>Hour of the Day</display_name>
+      <description>Hour of the Day for Specified Cooling Setpoint</description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_1_setpoint</name>
+      <display_name>Hour 1 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_2_setpoint</name>
+      <display_name>Hour 2 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_3_setpoint</name>
+      <display_name>Hour 3 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_4_setpoint</name>
+      <display_name>Hour 4 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_5_setpoint</name>
+      <display_name>Hour 5 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_6_setpoint</name>
+      <display_name>Hour 6 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_7_setpoint</name>
+      <display_name>Hour 7 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+    <argument>
+      <name>hour_8_setpoint</name>
+      <display_name>Hour 8 Setpoint</display_name>
+      <description></description>
+      <type>Double</type>
+      <units></units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value></default_value>
+      <min_value></min_value>
+      <max_value></max_value>
+    </argument>
+  </arguments>
+  <outputs />
+  <provenances />
+  <tags>
+    <tag>HVAC.HVAC Controls</tag>
+  </tags>
+  <attributes>
+    <attribute>
+      <name>Intended Software Tool</name>
+      <value>Apply Measure Now</value>
+      <datatype>string</datatype>
+    </attribute>
+    <attribute>
+      <name>Intended Software Tool</name>
+      <value>OpenStudio Application</value>
+      <datatype>string</datatype>
+    </attribute>
+    <attribute>
+      <name>Intended Software Tool</name>
+      <value>Parametric Analysis Tool</value>
+      <datatype>string</datatype>
+    </attribute>
+    <attribute>
+      <name>Measure Type</name>
+      <value>ModelMeasure</value>
+      <datatype>string</datatype>
+    </attribute>
+    <attribute>
+      <name>Intended Software Tool</name>
+      <value>OpenStudio Application</value>
+      <datatype>string</datatype>
+    </attribute>
+    <attribute>
+      <name>Intended Software Tool</name>
+      <value>Parametric Analysis Tool</value>
+      <datatype>string</datatype>
+    </attribute>
+  </attributes>
+  <files>
+    <file>
+      <filename>LICENSE.md</filename>
+      <filetype>md</filetype>
+      <usage_type>license</usage_type>
+      <checksum>CD7F5672</checksum>
+    </file>
+    <file>
+      <filename>README.md.erb</filename>
+      <filetype>erb</filetype>
+      <usage_type>readmeerb</usage_type>
+      <checksum>703C9964</checksum>
+    </file>
+    <file>
+      <filename>example_model.osm</filename>
+      <filetype>osm</filetype>
+      <usage_type>test</usage_type>
+      <checksum>53D14E69</checksum>
+    </file>
+    <file>
+      <filename>adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday_test.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>test</usage_type>
+      <checksum>72D4C1CC</checksum>
+    </file>
+    <file>
+      <version>
+        <software_program>OpenStudio</software_program>
+        <identifier>2.8.0</identifier>
+        <min_compatible>2.8.0</min_compatible>
+      </version>
+      <filename>measure.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>script</usage_type>
+      <checksum>F3DB20B7</checksum>
+    </file>
+    <file>
+      <filename>README.md</filename>
+      <filetype>md</filetype>
+      <usage_type>readme</usage_type>
+      <checksum>0B68E96D</checksum>
+    </file>
+  </files>
+</measure>
+<error>Unable to extract OpenStudio::Measure::OSMeasure object from C:/github_local/EE_DR_git/measure_directory_PAT/adjustment_of_cooling_setpoints_hourlyd_by_degrees_c_allday/measure.rb. The script should contain a class that derives from OpenStudio::Measure::OSMeasure and should close with a line stating the class name followed by .new.registerWithApplication.</error>
