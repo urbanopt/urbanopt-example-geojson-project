@@ -508,6 +508,13 @@ module URBANopt
             # SCHEDULES
 
             args[:schedules_type] = 'stochastic'
+            begin
+              schedules_random_seed = Float(feature_id)
+              if schedules_random_seed % 1 == 0
+                args[:schedules_random_seed] = Integer(schedules_random_seed)
+              end
+            rescue
+            end
 
             # HVAC
 
