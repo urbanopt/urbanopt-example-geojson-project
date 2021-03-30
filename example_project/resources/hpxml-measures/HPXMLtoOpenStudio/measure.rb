@@ -214,8 +214,8 @@ class OSModel
     add_simulation_params(model)
 
     @schedules_file = nil
-    if not @hpxml.header.schedules_path.nil?
-      @schedules_file = SchedulesFile.new(runner: runner, model: model, schedules_path: @hpxml.header.schedules_path, col_names: ScheduleGenerator.col_names)
+    unless @hpxml.header.schedules_path.nil?
+      @schedules_file = SchedulesFile.new(runner: runner, model: model, schedules_path: @hpxml.header.schedules_path, col_names: ScheduleGenerator.col_names.keys)
     end
 
     # Conditioned space/zone
@@ -280,7 +280,9 @@ class OSModel
     # add_ems_debug_output(runner, model)
 
     # Vacancy
-    set_vacancy(runner, model)
+    unless @schedules_file.nil?
+      @schedules_file.set_vacancy
+    end
 
     if debug
       osm_output_path = File.join(output_dir, 'in.osm')
@@ -1274,6 +1276,7 @@ class OSModel
         next unless slab.interior_adjacent_to == foundation_type
 
         slabs << slab
+        slab.exposed_perimeter = [slab.exposed_perimeter, 1.0].max # minimum value to prevent error if no exposed slab
       end
 
       # Calculate combinations of slabs/walls for each Kiva instance
@@ -2396,14 +2399,9 @@ class OSModel
     end
 
     # If all ducts are in conditioned space, model leakage as going to outside
-    registered_warning = false
     [HPXML::DuctTypeSupply, HPXML::DuctTypeReturn].each do |duct_side|
       next unless (leakage_to_outside[duct_side][0] > 0) && (total_unconditioned_duct_area[duct_side] == 0)
 
-      if not registered_warning
-        runner.registerWarning("HVACDistribution '#{hvac_distribution.id}' has ducts entirely within conditioned space but there is non-zero leakage to the outside. Leakage to the outside is typically zero in these situations; consider revising leakage values. Leakage will be modeled as heat lost to the ambient environment.")
-        registered_warning = true
-      end
       duct_area = 0.0
       duct_rvalue = 0.0
       duct_loc_space = nil # outside
@@ -2945,12 +2943,6 @@ class OSModel
     program_calling_manager.setName("#{program.name} calling manager")
     program_calling_manager.setCallingPoint('EndOfZoneTimestepAfterZoneReporting')
     program_calling_manager.addProgram(program)
-  end
-
-  def self.set_vacancy(runner, model)
-    return if @schedules_file.nil?
-
-    @schedules_file.set_vacancy(col_names: ScheduleGenerator.col_names)
   end
 
   def self.add_output_control_files(runner, model)
