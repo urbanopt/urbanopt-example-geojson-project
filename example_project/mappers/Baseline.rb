@@ -521,13 +521,7 @@ module URBANopt
             # SCHEDULES
 
             args[:schedules_type] = 'stochastic'
-            begin
-              id = Float(feature_id)
-              if id % 1 == 0
-                args[:feature_id] = Integer(id)
-              end
-            rescue
-            end
+            args[:feature_id] = feature_id.hex
 
             # HVAC
 
