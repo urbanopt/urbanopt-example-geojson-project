@@ -205,17 +205,26 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
 
         # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
-        sensors_map = {}
+        sensors_and_actuators_map = {}
         unit_model.getEnergyManagementSystemSensors.each do |sensor|
-          sensors_map[sensor.name.to_s] = "#{unit['name'].gsub(' ', '_')}_#{sensor.name}"
-          sensor.setKeyName("#{unit['name']} #{sensor.keyName}")
+          sensors_and_actuators_map[sensor.name.to_s] = "#{unit['name'].gsub(' ', '_')}_#{sensor.name}"
+          sensor.setKeyName("#{unit['name']} #{sensor.keyName}") unless sensor.keyName.empty?
+        end
+        unit_model.getEnergyManagementSystemActuators.each do |actuator|
+          sensors_and_actuators_map[actuator.name.to_s] = "#{unit['name'].gsub(' ', '_')}_#{actuator.name}"
         end
 
+        # variables in program lines don't get updated automatically
         unit_model.getEnergyManagementSystemPrograms.each do |program|
           new_lines = []
-          program.lines.each do |line|
-            sensors_map.each do |old_sensor_name, new_sensor_name|
-              line = line.gsub(" #{old_sensor_name} ", " #{new_sensor_name} ")
+          program.lines.each_with_index do |line, i|
+            sensors_and_actuators_map.each do |old_name, new_name|
+              line = line.gsub(" #{old_name}", " #{new_name}") if line.include?(" #{old_name}")
+              line = line.gsub("(#{old_name} ", "(#{new_name} ") if line.include?("(#{old_name} ")
+              line = line.gsub(" #{old_name})", " #{new_name})") if line.include?(" #{old_name})")
+              line = line.gsub("-#{old_name})", "-#{new_name})") if line.include?("-#{old_name})")
+              line = line.gsub("+#{old_name})", "+#{new_name})") if line.include?("+#{old_name})")
+              line = line.gsub("*#{old_name})", "*#{new_name})") if line.include?("*#{old_name})")
             end
             new_lines << line
           end
