@@ -24,7 +24,6 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # elsif allow_local
 #   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
-#
 
 if allow_local && File.exist?('../openstudio-common-measures-gem')
   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
@@ -71,7 +70,7 @@ if allow_local && File.exists?('../urbanopt-geojson-gem')
 elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
-  gem 'urbanopt-geojson', '~> 0.5.0'
+  gem 'urbanopt-geojson', '~> 0.5.2'
 end
 
 if allow_local && File.exists?('../urbanopt-reporting-gem')
