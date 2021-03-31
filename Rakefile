@@ -512,8 +512,13 @@ task :post_process_all => [:post_process_baseline, :post_process_high_efficiency
   # post_process all the scenarios
 end
 
+desc 'Visualize all scenarios'
+task :visualize_all => [:visualize_features['baseline_scenario.csv'], :visualize_features['high_efficiency_scenario.csv'], :visualize_features['thermal_storage_scenario.csv'], :visualize_features['reopt_scenario.csv'], :visualize_features['mixed_scenario.csv'], :visualize_scenarios] do
+  # visualize all the scenarios
+end
+
 desc 'Run and post process all scenarios'
-task :update_all => [:run_all, :post_process_all] do
+task :update_all => [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
 end
 
