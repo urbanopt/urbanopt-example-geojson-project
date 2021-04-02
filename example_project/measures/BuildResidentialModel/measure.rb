@@ -327,20 +327,24 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
   end
 
   def prefix_all_unit_model_objects(unit_model, unit)
-    sensors_and_actuators_map = {}
+    ems_map = {}
     unit_model.getEnergyManagementSystemSensors.each do |sensor|
-      sensors_and_actuators_map[sensor.name.to_s] = "#{unit['name'].gsub(' ', '_')}_#{sensor.name}"
+      ems_map["#{sensor.name}"] = "#{unit['name'].gsub(' ', '_')}_#{sensor.name}"
       sensor.setKeyName("#{unit['name']} #{sensor.keyName}") unless sensor.keyName.empty?
     end
     unit_model.getEnergyManagementSystemActuators.each do |actuator|
-      sensors_and_actuators_map[actuator.name.to_s] = "#{unit['name'].gsub(' ', '_')}_#{actuator.name}"
+      ems_map["#{actuator.name}"] = "#{unit['name'].gsub(' ', '_')}_#{actuator.name}"
+    end
+    unit_model.getEnergyManagementSystemOutputVariables.each do |output_variable|
+      ems_map["#{output_variable.emsVariableName}"] = "#{unit['name'].gsub(' ', '_')}_#{output_variable.emsVariableName}"
+      output_variable.setEMSVariableName("#{unit['name'].gsub(' ', '_')}_#{output_variable.emsVariableName}")
     end
 
     # variables in program lines don't get updated automatically
     unit_model.getEnergyManagementSystemPrograms.each do |program|
       new_lines = []
       program.lines.each_with_index do |line, i|
-        sensors_and_actuators_map.each do |old_name, new_name|
+        ems_map.each do |old_name, new_name|
           line = line.gsub(" #{old_name}", " #{new_name}") if line.include?(" #{old_name}")
           line = line.gsub("(#{old_name} ", "(#{new_name} ") if line.include?("(#{old_name} ")
           line = line.gsub(" #{old_name})", " #{new_name})") if line.include?(" #{old_name})")
@@ -357,10 +361,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       next if model_object.name.nil?
 
       model_object.setName("#{unit['name']} #{model_object.name.to_s}")
-    end
-
-    unit_model.getEnergyManagementSystemOutputVariables.each do |output_variable|
-      output_variable.setEMSVariableName("#{unit['name'].gsub(' ', '_')}_#{output_variable.emsVariableName}")
     end
   end
 end
