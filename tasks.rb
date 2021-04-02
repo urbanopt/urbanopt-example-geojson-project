@@ -294,6 +294,7 @@ def create_osws
     'extra-zero-freezer-kwh.osw' => 'base.osw',
     'extra-zero-clothes-washer-kwh.osw' => 'base.osw',
     'extra-zero-dishwasher-kwh.osw' => 'base.osw',
+    'extra-bldgtype-single-family-attached-atticroof-flat.osw' => 'base-bldgtype-single-family-attached.osw',
 
     'extra-bldgtype-single-family-attached-atticroof-conditioned-eaves-gable.osw' => 'extra-bldgtype-single-family-attached-slab.osw',
     'extra-bldgtype-single-family-attached-atticroof-conditioned-eaves-hip.osw' => 'extra-bldgtype-single-family-attached-atticroof-conditioned-eaves-gable.osw',
@@ -2030,6 +2031,12 @@ def get_values(osw_file, step)
     step.setArgument('clothes_dryer_location', 'none')
   elsif ['extra-zero-dishwasher-kwh.osw'].include? osw_file
     step.setArgument('dishwasher_efficiency', '0')
+  elsif ['extra-bldgtype-single-family-attached-atticroof-flat.osw'].include? osw_file
+    step.setArgument('geometry_roof_type', 'flat')
+    step.setArgument('ducts_supply_leakage_value', 0.0)
+    step.setArgument('ducts_return_leakage_value', 0.0)
+    step.setArgument('ducts_supply_location', HPXML::LocationBasementConditioned)
+    step.setArgument('ducts_return_location', HPXML::LocationBasementConditioned)
 
   elsif ['extra-bldgtype-single-family-attached-atticroof-conditioned-eaves-gable.osw'].include? osw_file
     step.setArgument('geometry_num_floors_above_grade', 2)
@@ -2450,6 +2457,7 @@ def create_hpxmls
     'invalid_files/hvac-dse-multiple-attached-heating.xml' => 'base-hvac-dse.xml',
     'invalid_files/hvac-frac-load-served.xml' => 'base-hvac-multiple.xml',
     'invalid_files/hvac-inconsistent-fan-powers.xml' => 'base.xml',
+    'invalid_files/hvac-shared-negative-seer-eq.xml' => 'base-bldgtype-multifamily-shared-chiller-only-baseboard.xml',
     'invalid_files/generator-number-of-bedrooms-served.xml' => 'base-bldgtype-multifamily-shared-generator.xml',
     'invalid_files/generator-output-greater-than-consumption.xml' => 'base-misc-generators.xml',
     'invalid_files/invalid-assembly-effective-rvalue.xml' => 'base.xml',
@@ -5659,6 +5667,8 @@ def set_hpxml_cooling_systems(hpxml_file, hpxml)
     hpxml.cooling_systems << hpxml.cooling_systems[0].dup
     hpxml.cooling_systems[1].id += '2'
     hpxml.cooling_systems[1].distribution_system_idref += '2'
+  elsif ['invalid_files/hvac-shared-negative-seer-eq.xml'].include? hpxml_file
+    hpxml.cooling_systems[0].shared_loop_watts *= 100.0
   elsif hpxml_file.include?('base-hvac-autosize') && (not hpxml.cooling_systems.nil?) && (hpxml.cooling_systems.size > 0)
     hpxml.cooling_systems[0].cooling_capacity = nil
   end
