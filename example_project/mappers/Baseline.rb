@@ -522,6 +522,7 @@ module URBANopt
 
             args[:schedules_type] = 'stochastic'
             args[:feature_id] = feature_id.hex
+            args[:schedules_variation] = 'building' # building or unit
 
             # HVAC
 
@@ -690,7 +691,7 @@ module URBANopt
 
             args.keys.each do |arg_name|
               unless default_args.keys.include? arg_name
-                next if arg_name == 'feature_id'
+                next if [:feature_id, :schedules_variation].include?(arg_name)
 
                 puts "Argument '#{arg_name}' is unknown."
               end

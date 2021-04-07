@@ -39,6 +39,15 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg.setDescription('The feature ID passed from Baseline.rb.')
     args << arg
 
+    schedules_variation_choices = OpenStudio::StringVector.new
+    schedules_variation_choices << 'building'
+    schedules_variation_choices << 'unit'
+
+    arg = OpenStudio::Ruleset::OSArgument.makeChoiceArgument('schedules_variation', schedules_variation_choices, true)
+    arg.setDisplayName('Schedules: Variation')
+    arg.setDescription('How the schedules vary.')
+    args << arg
+
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
     measure_subdir = 'BuildResidentialHPXML'
     full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
@@ -111,10 +120,15 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       # fill the measure args hash with default values
       measure_args = args.clone
       measure_args.delete('feature_id')
+      measure_args.delete('schedules_variation')
 
       measures = {}
       measures[measure_subdir] = []
+
+      # hpxml path
       measure_args['hpxml_path'] = hpxml_path
+
+      # software program
       begin
         measure_args['software_program_used'] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
       rescue
@@ -125,7 +139,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args['software_program_version'] = URBANopt::CLI::VERSION
       rescue
       end
+
+      # schedules
       measure_args['schedules_random_seed'] = args['feature_id'] * (unit_num + 1) # variation across units, but deterministic
+      if args['schedules_variation'] == 'building' && unit_num != 0 # variation by building, use already generated schedules
+        measure_args['schedules_type'] = 'user-specified'
+        measure_args['schedules_path'] = File.expand_path('../unit 1_schedules.csv')
+        measure_args.delete('schedules_random_seed')
+      end
+
+      # geometry
       if unit.keys.include?('geometry_level')
         measure_args['geometry_level'] = unit['geometry_level']
       end
@@ -135,6 +158,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       if unit.keys.include?('geometry_orientation')
         measure_args['geometry_orientation'] = unit['geometry_orientation']
       end
+
       measures[measure_subdir] << measure_args
 
       # HPXMLtoOpenStudio
@@ -226,6 +250,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
 
         model.addObjects(unit_model_objects, true)
+
       end
     end
 
