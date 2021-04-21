@@ -42,7 +42,8 @@ module URBANopt
 
       # number of datapoints(features) you want to run in parallel
       # based on the number of available processors on your local machine.
-      OpenStudio::Extension::Extension::NUM_PARALLEL = 7
+      # This does not seem to function, instead added line to code for runner.config file
+      # OpenStudio::Extension::Extension::NUM_PARALLEL = 7
 
       # set MAX_DATAPOINTS
       OpenStudio::Extension::Extension::MAX_DATAPOINTS = 1000
@@ -139,7 +140,7 @@ end
 def configure_project
   # write a runner.conf in project dir if it does not exist
   # delete runner.conf to automatically regenerate it
-  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install")}
+  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install"), num_parallel: 7}
  
   # write a runner.conf in project dir (if it does not already exist)
   if !File.exists?(File.join(root_dir, 'runner.conf'))
