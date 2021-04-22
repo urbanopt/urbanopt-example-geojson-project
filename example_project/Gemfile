@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-ruby '~> 2.5.0'
+ruby '~> 2.7.0'
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
@@ -46,7 +46,7 @@ if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
 elsif allow_local
   gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'master'
 else
-  gem 'openstudio-load-flexibility-measures', '~> 0.2.1'
+  gem 'openstudio-load-flexibility-measures', '~> 0.3.1'
 end
 
 if allow_local && File.exist?('../openstudio-ee-gem')
