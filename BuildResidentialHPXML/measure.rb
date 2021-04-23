@@ -1380,7 +1380,7 @@ class BuildResidentialHPXML < OpenStudio::Measure::ModelMeasure
 
     arg = OpenStudio::Measure::OSArgument::makeStringArgument('ducts_number_of_return_registers', true)
     arg.setDisplayName('Ducts: Number of Return Registers')
-    arg.setDescription('The number of return registers of the ducts.')
+    arg.setDescription("The number of return registers of the ducts. Ignored for ducted #{HPXML::HVACTypeEvaporativeCooler}.")
     arg.setUnits('#')
     arg.setDefaultValue(Constants.Auto)
     args << arg
@@ -4213,6 +4213,9 @@ class HPXMLFile
 
     if [HPXML::HVACTypeEvaporativeCooler].include?(args[:cooling_system_type]) && hpxml.heating_systems.size == 0 && hpxml.heat_pumps.size == 0
       number_of_return_registers = nil
+      if args[:cooling_system_is_ducted]
+        number_of_return_registers = 0
+      end
     end
 
     if air_distribution_systems.size > 0
@@ -4231,7 +4234,6 @@ class HPXMLFile
     if fan_coil_distribution_systems.size > 0
       hpxml.hvac_distributions.add(id: 'FanCoilDistribution',
                                    distribution_system_type: HPXML::HVACDistributionTypeAir,
-                                   conditioned_floor_area_served: args[:geometry_cfa],
                                    air_type: HPXML::AirTypeFanCoil)
       fan_coil_distribution_systems.each do |hvac_system|
         hvac_system.distribution_system_idref = hpxml.hvac_distributions[-1].id
@@ -5274,14 +5276,20 @@ class HPXMLFile
       pump_usage_multiplier = args[:pool_pump_usage_multiplier]
     end
 
-    if args[:pool_heater_annual_kwh] != Constants.Auto
-      heater_load_units = 'kWh/year'
-      heater_load_value = args[:pool_heater_annual_kwh]
+    pool_heater_type = args[:pool_heater_type]
+
+    if [HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(pool_heater_type)
+      if args[:pool_heater_annual_kwh] != Constants.Auto
+        heater_load_units = 'kWh/year'
+        heater_load_value = args[:pool_heater_annual_kwh]
+      end
     end
 
-    if args[:pool_heater_annual_therm] != Constants.Auto
-      heater_load_units = 'therm/year'
-      heater_load_value = args[:pool_heater_annual_therm]
+    if [HPXML::HeaterTypeGas].include?(pool_heater_type)
+      if args[:pool_heater_annual_therm] != Constants.Auto
+        heater_load_units = 'therm/year'
+        heater_load_value = args[:pool_heater_annual_therm]
+      end
     end
 
     if args[:pool_heater_usage_multiplier] != 1.0
@@ -5293,7 +5301,7 @@ class HPXMLFile
                     pump_type: HPXML::TypeUnknown,
                     pump_kwh_per_year: pump_kwh_per_year,
                     pump_usage_multiplier: pump_usage_multiplier,
-                    heater_type: args[:pool_heater_type],
+                    heater_type: pool_heater_type,
                     heater_load_units: heater_load_units,
                     heater_load_value: heater_load_value,
                     heater_usage_multiplier: heater_usage_multiplier)
@@ -5310,14 +5318,20 @@ class HPXMLFile
       pump_usage_multiplier = args[:hot_tub_pump_usage_multiplier]
     end
 
-    if args[:hot_tub_heater_annual_kwh] != Constants.Auto
-      heater_load_units = 'kWh/year'
-      heater_load_value = args[:hot_tub_heater_annual_kwh]
+    hot_tub_heater_type = args[:hot_tub_heater_type]
+
+    if [HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(hot_tub_heater_type)
+      if args[:hot_tub_heater_annual_kwh] != Constants.Auto
+        heater_load_units = 'kWh/year'
+        heater_load_value = args[:hot_tub_heater_annual_kwh]
+      end
     end
 
-    if args[:hot_tub_heater_annual_therm] != Constants.Auto
-      heater_load_units = 'therm/year'
-      heater_load_value = args[:hot_tub_heater_annual_therm]
+    if [HPXML::HeaterTypeGas].include?(hot_tub_heater_type)
+      if args[:hot_tub_heater_annual_therm] != Constants.Auto
+        heater_load_units = 'therm/year'
+        heater_load_value = args[:hot_tub_heater_annual_therm]
+      end
     end
 
     if args[:hot_tub_heater_usage_multiplier] != 1.0
@@ -5329,7 +5343,7 @@ class HPXMLFile
                        pump_type: HPXML::TypeUnknown,
                        pump_kwh_per_year: pump_kwh_per_year,
                        pump_usage_multiplier: pump_usage_multiplier,
-                       heater_type: args[:hot_tub_heater_type],
+                       heater_type: hot_tub_heater_type,
                        heater_load_units: heater_load_units,
                        heater_load_value: heater_load_value,
                        heater_usage_multiplier: heater_usage_multiplier)
