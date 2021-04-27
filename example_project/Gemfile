@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-ruby '~> 2.5.0'
+ruby '~> 2.7.0'
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
