@@ -6,7 +6,7 @@ class HPXMLDefaults
   # being written to the HPXML file. This is useful to associate additional values
   # with the HPXML objects that will ultimately get passed around.
 
-  def self.apply(hpxml, eri_version, weather, epw_file: nil, do_hvac_sizing: true)
+  def self.apply(hpxml, eri_version, weather, epw_file: nil)
     cfa = hpxml.building_construction.conditioned_floor_area
     nbeds = hpxml.building_construction.number_of_bedrooms
     ncfl = hpxml.building_construction.number_of_conditioned_floors
@@ -27,7 +27,7 @@ class HPXMLDefaults
     apply_slabs(hpxml)
     apply_windows(hpxml)
     apply_skylights(hpxml)
-    apply_hvac(hpxml, weather, do_hvac_sizing)
+    apply_hvac(hpxml, weather)
     apply_hvac_control(hpxml)
     apply_hvac_distribution(hpxml, ncfl, ncfl_ag)
     apply_ventilation_fans(hpxml)
@@ -43,8 +43,6 @@ class HPXMLDefaults
     apply_fuel_loads(hpxml, cfa, nbeds)
     apply_pv_systems(hpxml)
     apply_generators(hpxml)
-
-    return unless do_hvac_sizing
 
     # Do HVAC sizing after all other defaults have been applied
     apply_hvac_sizing(hpxml, weather, cfa, nbeds)
@@ -425,8 +423,8 @@ class HPXMLDefaults
     end
   end
 
-  def self.apply_hvac(hpxml, weather, do_hvac_sizing)
-    HVAC.apply_shared_systems(hpxml, do_hvac_sizing)
+  def self.apply_hvac(hpxml, weather)
+    HVAC.apply_shared_systems(hpxml)
 
     # Default AC/HP compressor type
     hpxml.cooling_systems.each do |cooling_system|
@@ -754,6 +752,7 @@ class HPXMLDefaults
       end
 
       next unless not hvac_control.cooling_setup_temp.nil?
+
       if hvac_control.cooling_setup_start_hour.nil?
         hvac_control.cooling_setup_start_hour = 9 # 9 am
         hvac_control.cooling_setup_start_hour_isdefaulted = true
@@ -1376,6 +1375,7 @@ class HPXMLDefaults
       end
 
       next unless pool.heater_type != HPXML::TypeNone
+
       # Heater
       if pool.heater_load_value.nil?
         default_heater_load_units, default_heater_load_value = MiscLoads.get_pool_heater_default_values(cfa, nbeds, pool.heater_type)
@@ -1429,6 +1429,7 @@ class HPXMLDefaults
       end
 
       next unless hot_tub.heater_type != HPXML::TypeNone
+
       # Heater
       if hot_tub.heater_load_value.nil?
         default_heater_load_units, default_heater_load_value = MiscLoads.get_hot_tub_heater_default_values(cfa, nbeds, hot_tub.heater_type)
@@ -1655,6 +1656,22 @@ class HPXMLDefaults
   end
 
   def self.apply_hvac_sizing(hpxml, weather, cfa, nbeds)
+    # Convert negative values (e.g., -1) to nil as appropriate
+    hpxml.hvac_systems.each do |hvac_system|
+      if hvac_system.respond_to?(:heating_capacity) && hvac_system.heating_capacity.to_f < 0
+        hvac_system.heating_capacity = nil
+      end
+      if hvac_system.respond_to?(:cooling_capacity) && hvac_system.cooling_capacity.to_f < 0
+        hvac_system.cooling_capacity = nil
+      end
+      if hvac_system.respond_to?(:heating_capacity_17F) && hvac_system.heating_capacity_17F.to_f < 0
+        hvac_system.heating_capacity_17F = nil
+      end
+      if hvac_system.respond_to?(:backup_heating_capacity) && hvac_system.backup_heating_capacity.to_f < 0
+        hvac_system.backup_heating_capacity = nil
+      end
+    end
+
     hvac_systems = HVAC.get_hpxml_hvac_systems(hpxml)
 
     # Calculate building design loads and equipment capacities/airflows
