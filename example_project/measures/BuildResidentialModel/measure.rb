@@ -264,7 +264,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
   def get_unit_positions(runner, args)
     units = []
     if args['geometry_unit_type'] == 'single-family detached'
-      units << {'name' => "unit 1"}
+      units << {'name' => 'unit 1'}
     elsif args['geometry_unit_type'] == 'single-family attached'
       (1..args['geometry_building_num_units']).to_a.each do |unit_num|
         if unit_num == 1
@@ -337,15 +337,15 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       next unless arg.hasDefaultValue
 
       case arg.type.valueName.downcase
-      when "boolean"
+      when 'boolean'
         args[arg.name] = arg.defaultValueAsBool
-      when "double"
+      when 'double'
         args[arg.name] = arg.defaultValueAsDouble
-      when "integer"
+      when 'integer'
         args[arg.name] = arg.defaultValueAsInteger
-      when "string"
+      when 'string'
         args[arg.name] = arg.defaultValueAsString
-      when "choice"
+      when 'choice'
         args[arg.name] = arg.defaultValueAsString
       end
     end
