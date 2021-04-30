@@ -1,5 +1,9 @@
 # URBANopt Example GeoJSON Project
 
+## Version 0.6.0
+
+* Updated dependencies to work with OpenStudio 3.2
+
 ## Version 0.5.0
 
 * Updated dependencies to work with OpenStudio 3.1
