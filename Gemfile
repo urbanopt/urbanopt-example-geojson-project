@@ -46,7 +46,7 @@ if allow_local && File.exist?('../urbanopt-geojson-gem')
 elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
-  gem 'urbanopt-geojson', '~> 0.6.0'
+  gem 'urbanopt-geojson', '~> 0.6.1'
 end
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
