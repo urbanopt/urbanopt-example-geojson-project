@@ -42,7 +42,8 @@ module URBANopt
 
       # number of datapoints(features) you want to run in parallel
       # based on the number of available processors on your local machine.
-      OpenStudio::Extension::Extension::NUM_PARALLEL = 7
+      # This does not seem to function, instead added line to code for runner.config file
+      # OpenStudio::Extension::Extension::NUM_PARALLEL = 7
 
       # set MAX_DATAPOINTS
       OpenStudio::Extension::Extension::MAX_DATAPOINTS = 1000
@@ -139,7 +140,7 @@ end
 def configure_project
   # write a runner.conf in project dir if it does not exist
   # delete runner.conf to automatically regenerate it
-  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install")}
+  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install"), num_parallel: 7}
  
   # write a runner.conf in project dir (if it does not already exist)
   if !File.exists?(File.join(root_dir, 'runner.conf'))
@@ -160,33 +161,33 @@ end
 def visualize_scenarios
   name = 'Visualize Scenario Results'
   run_dir = File.join(root_dir, 'run')
-  scenario_folder_dirs = []
+  scenario_folders = []
   scenario_report_exists = false
-  Dir.glob(File.join(run_dir, '/*_scenario')) do |scenario_folder_dir|
-    scenario_report = File.join(scenario_folder_dir, 'default_scenario_report.csv')
+  Dir.glob(File.join(run_dir, '/*_scenario')) do |scenario_folder|
+    scenario_report = File.join(scenario_folder, 'default_scenario_report.csv')
     if File.exist?(scenario_report)
-      scenario_folder_dirs << scenario_folder_dir
+      scenario_folders << scenario_folder
       scenario_report_exists = true
     else
-      puts "\nERROR: Default reports not created for #{scenario_folder_dir}. Please use post processing command to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder_dir}.\n"
+      puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
     end
   end
-
   if scenario_report_exists == true
     puts "\nCreating visualizations for all Scenario results\n"
-    URBANopt::Scenario::ResultVisualization.create_visualization(scenario_folder_dirs, false)
+    URBANopt::Scenario::ResultVisualization.create_visualization(scenario_folders, false)
     vis_file_path = File.join(root_dir, 'visualization')
-    if !File.exists?(vis_file_path)
+    if !File.exist?(vis_file_path)
       Dir.mkdir File.join(root_dir, 'visualization')
     end
     html_in_path = File.join(vis_file_path, 'input_visualization_scenario.html')
-    if !File.exists?(html_in_path)
-      visualization_file = 'https://raw.githubusercontent.com/urbanopt/urbanopt-example-geojson-project/master/example-project/visualization/input_visualization_scenario.html'
-      vis_file_name = File.basename(visualization_file)
-      vis_download = open(visualization_file, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE)
-      IO.copy_stream(vis_download, File.join(vis_file_path, vis_file_name))
+    if !File.exist?(html_in_path)
+      $LOAD_PATH.each do |path_item|
+        if path_item.to_s.end_with?('example_files')
+          FileUtils.cp(File.join(path_item, 'visualization', 'input_visualization_scenario.html'), html_in_path)
+        end
+      end
     end
-    html_out_path = File.join(root_dir, 'run', 'scenario_comparison.html')
+    html_out_path = File.join(run_dir, 'scenario_comparison.html')
     FileUtils.cp(html_in_path, html_out_path)
     puts "\nDone\n"
   end
@@ -194,34 +195,37 @@ end
 
 def visualize_features(scenario_file)
   name = 'Visualize Feature Results'
+
   scenario_name = File.basename(scenario_file, File.extname(scenario_file))
   run_dir = File.join(root_dir, 'run', scenario_name.downcase)
   feature_report_exists = false
-  feature_id = CSV.read(File.join(root_dir, scenario_file), :headers => true)
+  csv = CSV.read(File.join(root_dir, scenario_file), :headers => true)
+  feature_names = csv['Feature Name']
   feature_folders = []
   # loop through building feature ids from scenario csv
-  feature_id["Feature Id"].each do |feature|
+  csv['Feature Id'].each do |feature|
     feature_report = File.join(run_dir, feature, 'feature_reports')
     if File.exist?(feature_report)
       feature_report_exists = true
       feature_folders << File.join(run_dir, feature)
     else
-      puts "\nERROR: Default reports not created for #{feature}. Please use post processing command to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+      puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
     end
   end
   if feature_report_exists == true
     puts "\nCreating visualizations for Feature results in the Scenario\n"
-    URBANopt::Scenario::ResultVisualization.create_visualization(feature_folders, true)
+    URBANopt::Scenario::ResultVisualization.create_visualization(feature_folders, true, feature_names)
     vis_file_path = File.join(root_dir, 'visualization')
-    if !File.exists?(vis_file_path)
+    if !File.exist?(vis_file_path)
       Dir.mkdir File.join(root_dir, 'visualization')
     end
     html_in_path = File.join(vis_file_path, 'input_visualization_feature.html')
-    if !File.exists?(html_in_path)
-      visualization_file = 'https://raw.githubusercontent.com/urbanopt/urbanopt-example-geojson-project/master/example_project/visualization/input_visualization_feature.html'
-      vis_file_name = File.basename(visualization_file)
-      vis_download = open(visualization_file, ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE)
-      IO.copy_stream(vis_download, File.join(vis_file_path, vis_file_name))
+    if !File.exist?(html_in_path)
+      $LOAD_PATH.each do |path_item|
+        if path_item.to_s.end_with?('example_files')
+          FileUtils.cp(File.join(path_item, 'visualization', 'input_visualization_feature.html'), html_in_path)
+        end
+      end
     end
     html_out_path = File.join(root_dir, 'run', scenario_name, 'feature_comparison.html')
     FileUtils.cp(html_in_path, html_out_path)
@@ -486,6 +490,7 @@ desc 'Visualize and compare results for all Features in a Scenario'
 task :visualize_features, [:csv] do |t, args|
   puts 'Visualizing results for all Features in the Scenario...'
   
+  csv = args[:csv]
   csv = 'baseline_scenario.csv' if args[:csv].nil?
   
   visualize_features(csv)
@@ -508,8 +513,23 @@ task :post_process_all => [:post_process_baseline, :post_process_high_efficiency
   # post_process all the scenarios
 end
 
+desc 'Visualize all scenarios'
+task :visualize_all do
+  # visualize all features within each scenario, then visualize across all scenarios
+  Rake::Task['visualize_features'].invoke("baseline_scenario.csv")
+  Rake::Task["visualize_features"].reenable
+  Rake::Task["visualize_features"].invoke("high_efficiency_scenario.csv")
+  Rake::Task["visualize_features"].reenable
+  Rake::Task["visualize_features"].invoke("thermal_storage_scenario.csv")
+  Rake::Task["visualize_features"].reenable
+  Rake::Task["visualize_features"].invoke("reopt_scenario.csv")
+  Rake::Task["visualize_features"].reenable
+  Rake::Task["visualize_features"].invoke("mixed_scenario.csv")
+  Rake::Task["visualize_scenarios"].invoke()
+end
+
 desc 'Run and post process all scenarios'
-task :update_all => [:run_all, :post_process_all] do
+task :update_all => [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
 end
 

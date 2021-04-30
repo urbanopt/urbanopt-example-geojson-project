@@ -309,7 +309,7 @@
               <DistributionSystem idref='HVACDistribution'/>
               <CoolingSystemType>central air conditioner</CoolingSystemType>
               <CoolingSystemFuel>electricity</CoolingSystemFuel>
-              <CoolingCapacity>48000.0</CoolingCapacity>
+              <CoolingCapacity>24000.0</CoolingCapacity>
               <CompressorType>single stage</CompressorType>
               <FractionCoolLoadServed>1.0</FractionCoolLoadServed>
               <AnnualCoolingEfficiency>
@@ -317,18 +317,15 @@
                 <Value>13.0</Value>
               </AnnualCoolingEfficiency>
               <SensibleHeatFraction>0.73</SensibleHeatFraction>
-              <extension>
-                <FanPowerWattsPerCFM>0.45</FanPowerWattsPerCFM>
-              </extension>
             </CoolingSystem>
             <HeatPump>
               <SystemIdentifier id='HeatPump'/>
               <DistributionSystem idref='HVACDistribution'/>
               <HeatPumpType>air-to-air</HeatPumpType>
               <HeatPumpFuel>electricity</HeatPumpFuel>
-              <HeatingCapacity>42000.0</HeatingCapacity>
-              <HeatingCapacity17F>26460.0</HeatingCapacity17F>
-              <CoolingCapacity>48000.0</CoolingCapacity>
+              <HeatingCapacity>36000.0</HeatingCapacity>
+              <HeatingCapacity17F>22680.0</HeatingCapacity17F>
+              <CoolingCapacity>36000.0</CoolingCapacity>
               <CompressorType>single stage</CompressorType>
               <CoolingSensibleHeatFraction>0.73</CoolingSensibleHeatFraction>
               <BackupSystemFuel>electricity</BackupSystemFuel>
@@ -336,7 +333,7 @@
                 <Units>Percent</Units>
                 <Value>1.0</Value>
               </BackupAnnualHeatingEfficiency>
-              <BackupHeatingCapacity>34121.0</BackupHeatingCapacity>
+              <BackupHeatingCapacity>36000.0</BackupHeatingCapacity>
               <FractionHeatLoadServed>1.0</FractionHeatLoadServed>
               <FractionCoolLoadServed>0.0</FractionCoolLoadServed>
               <AnnualCoolingEfficiency>
@@ -347,9 +344,6 @@
                 <Units>HSPF</Units>
                 <Value>7.7</Value>
               </AnnualHeatingEfficiency>
-              <extension>
-                <FanPowerWattsPerCFM>0.45</FanPowerWattsPerCFM>
-              </extension>
             </HeatPump>
           </HVACPlant>
           <HVACControl>
@@ -362,6 +356,7 @@
             <SystemIdentifier id='HVACDistribution'/>
             <DistributionSystemType>
               <AirDistribution>
+                <AirDistributionType>regular velocity</AirDistributionType>
                 <DuctLeakageMeasurement>
                   <DuctType>supply</DuctType>
                   <DuctLeakage>
@@ -390,6 +385,7 @@
                   <DuctLocation>attic - unvented</DuctLocation>
                   <DuctSurfaceArea>50.0</DuctSurfaceArea>
                 </Ducts>
+                <NumberofReturnRegisters>2</NumberofReturnRegisters>
               </AirDistribution>
             </DistributionSystemType>
             <ConditionedFloorAreaServed>2700.0</ConditionedFloorAreaServed>
@@ -447,7 +443,6 @@
           <Location>living space</Location>
           <FuelType>electricity</FuelType>
           <CombinedEnergyFactor>3.73</CombinedEnergyFactor>
-          <ControlType>timer</ControlType>
           <extension>
             <IsVented>true</IsVented>
             <VentedFlowRate>150.0</VentedFlowRate>

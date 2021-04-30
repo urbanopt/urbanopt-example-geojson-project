@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-ruby '~> 2.5.0'
+ruby '~> 2.7.0'
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
@@ -25,28 +25,12 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
 
-# if allow_local && File.exist?('../openstudio-common-measures-gem')
-#   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
-# elsif allow_local
-#   gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
-# else
-#   gem 'openstudio-common-measures', '~> 0.2.0'
-# end
-
-if allow_local && File.exist?('../openstudio-model-articulation-gem')
-  gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
-elsif allow_local
-  gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
-else
-  gem 'openstudio-model-articulation', '~> 0.3.1'
-end
-
 if allow_local && File.exist?('../urbanopt-scenario-gem')
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 elsif allow_local
   gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 else
-  gem 'urbanopt-scenario', '~> 0.5.0'
+  gem 'urbanopt-scenario', '~> 0.6.0'
 end
 
 if allow_local && File.exist?('../urbanopt-reporting-gem')
@@ -54,7 +38,7 @@ if allow_local && File.exist?('../urbanopt-reporting-gem')
 elsif allow_local
   gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
 else
-  gem 'urbanopt-reporting', '~> 0.3.2'
+  gem 'urbanopt-reporting', '~> 0.4.0'
 end
 
 if allow_local && File.exist?('../urbanopt-geojson-gem')
@@ -62,15 +46,7 @@ if allow_local && File.exist?('../urbanopt-geojson-gem')
 elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
- gem 'urbanopt-geojson', '~> 0.5.0'
-end
-
-if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
-  gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
-elsif allow_local
-  gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'master'
-else
-  gem 'openstudio-load-flexibility-measures', '~> 0.2.1'
+  gem 'urbanopt-geojson', '~> 0.6.1'
 end
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
@@ -78,5 +54,5 @@ if allow_local && File.exist?('../urbanopt-reopt-gem')
 elsif allow_local
   gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
 else
-  gem 'urbanopt-reopt', '0.5.0'
+  gem 'urbanopt-reopt', '0.6.0'
 end

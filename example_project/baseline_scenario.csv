@@ -15,3 +15,5 @@ Feature Id,Feature Name,Mapper Class
 14,Residential 1,URBANopt::Scenario::BaselineMapper
 15,Residential 2,URBANopt::Scenario::BaselineMapper
 16,Residential 3,URBANopt::Scenario::BaselineMapper
+17,Residential 4,URBANopt::Scenario::BaselineMapper
+18,Residential 5,URBANopt::Scenario::BaselineMapper

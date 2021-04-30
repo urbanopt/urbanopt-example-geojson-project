@@ -2,8 +2,9 @@
 
 require 'fileutils'
 
-def run_hpxml_workflow(rundir, hpxml, measures, measures_dir, debug: false, output_vars: [],
-                       output_meters: [], run_measures_only: false, print_prefix: '')
+def run_hpxml_workflow(rundir, measures, measures_dir, debug: false, output_vars: [],
+                       output_meters: [], run_measures_only: false, print_prefix: '',
+                       ep_input_format: 'idf')
   rm_path(rundir)
   FileUtils.mkdir_p(rundir)
 
@@ -47,23 +48,38 @@ def run_hpxml_workflow(rundir, hpxml, measures, measures_dir, debug: false, outp
     om.setReportingFrequency(output_meter[1])
   end
 
-  # Translate model to IDF
+  # Translate model to workspace
   forward_translator = OpenStudio::EnergyPlus::ForwardTranslator.new
   forward_translator.setExcludeLCCObjects(true)
-  model_idf = forward_translator.translateModel(model)
-  report_ft_errors_warnings(forward_translator, rundir)
+  workspace = forward_translator.translateModel(model)
+  success = report_ft_errors_warnings(forward_translator, rundir)
+
+  if not success
+    print "#{print_prefix}Creating input unsuccessful.\n"
+    print "#{print_prefix}See #{File.join(rundir, 'run.log')} for details.\n"
+    return { success: false, runner: runner }
+  end
 
   # Apply reporting measure output requests
-  apply_energyplus_output_requests(measures_dir, measures, runner, model, model_idf)
+  apply_energyplus_output_requests(measures_dir, measures, runner, model, workspace)
 
-  # Write IDF to file
-  File.open(File.join(rundir, 'in.idf'), 'w') { |f| f << model_idf.to_s }
+  # Write to file
+  if ep_input_format == 'idf'
+    ep_input_filename = 'in.idf'
+    File.open(File.join(rundir, ep_input_filename), 'w') { |f| f << workspace.to_s }
+  elsif ep_input_format == 'epjson'
+    ep_input_filename = 'in.epJSON'
+    json = OpenStudio::EPJSON::toJSONString(workspace.toIdfFile)
+    File.open(File.join(rundir, ep_input_filename), 'w') { |f| f << json.to_s }
+  else
+    fail "Unexpected ep_input_format: #{ep_input_format}."
+  end
 
   # Run simulation
   print "#{print_prefix}Running simulation...\n"
   ep_path = File.absolute_path(File.join(OpenStudio.getOpenStudioCLI.to_s, '..', '..', 'EnergyPlus', 'energyplus')) # getEnergyPlusDirectory can be unreliable, using getOpenStudioCLI instead
   simulation_start = Time.now
-  command = "\"#{ep_path}\" -w \"#{model.getWeatherFile.path.get}\" in.idf"
+  command = "\"#{ep_path}\" -w \"#{model.getWeatherFile.path.get}\" #{ep_input_filename}"
   if debug
     File.open(File.join(rundir, 'run.log'), 'a') do |f|
       f << "Executing command '#{command}' from working directory '#{rundir}'.\n"
@@ -153,7 +169,7 @@ def apply_measures(measures_dir, measures, runner, model, show_measure_calls = t
   return true
 end
 
-def apply_energyplus_output_requests(measures_dir, measures, runner, model, model_idf)
+def apply_energyplus_output_requests(measures_dir, measures, runner, model, workspace)
   # Call each measure in the specified order
   measures.keys.each do |measure_subdir|
     # Gather measure arguments and call measure
@@ -167,7 +183,7 @@ def apply_energyplus_output_requests(measures_dir, measures, runner, model, mode
       runner.setLastOpenStudioModel(model)
       idf_objects = measure.energyPlusOutputRequests(runner, argument_map)
       idf_objects.each do |idf_object|
-        model_idf.addObject(idf_object)
+        workspace.addObject(idf_object)
       end
     end
   end
@@ -274,6 +290,19 @@ def get_argument_map(model, measure, provided_args, lookup_file, measure_name, r
   return argument_map
 end
 
+def get_value_from_workflow_step_value(step_value)
+  variant_type = step_value.variantType
+  if variant_type == 'Boolean'.to_VariantType
+    return step_value.valueAsBoolean
+  elsif variant_type == 'Double'.to_VariantType
+    return step_value.valueAsDouble
+  elsif variant_type == 'Integer'.to_VariantType
+    return step_value.valueAsInteger
+  elsif variant_type == 'String'.to_VariantType
+    return step_value.valueAsString
+  end
+end
+
 def run_measure(model, measure, argument_map, runner)
   begin
     # run the measure
@@ -296,6 +325,11 @@ def run_measure(model, measure, argument_map, runner)
     end
     if result_child.finalCondition.is_initialized
       runner.registerFinalCondition(result_child.finalCondition.get.logMessage)
+    end
+
+    # re-register runner child registered values on the parent runner
+    result_child.stepValues.each do |step_value|
+      runner.registerValue(step_value.name, get_value_from_workflow_step_value(step_value))
     end
 
     # log messages
@@ -338,7 +372,7 @@ end
 def register_error(msg, runner = nil)
   if not runner.nil?
     runner.registerError(msg)
-    fail msg # OS 2.0 will handle this more gracefully
+    fail msg
   else
     raise "ERROR: #{msg}"
   end
@@ -388,14 +422,17 @@ end
 
 def report_ft_errors_warnings(forward_translator, rundir)
   # Report warnings/errors
+  success = true
   File.open(File.join(rundir, 'run.log'), 'a') do |f|
     forward_translator.warnings.each do |s|
       f << "FT Warning: #{s.logMessage}\n"
     end
     forward_translator.errors.each do |s|
       f << "FT Error: #{s.logMessage}\n"
+      success = false
     end
   end
+  return success
 end
 
 def report_os_warnings(os_log, rundir)
@@ -406,6 +443,7 @@ def report_os_warnings(os_log, rundir)
       next if s.logMessage.include? 'WorkflowStepResult value called with undefined stepResult'
       next if s.logMessage.include?("Object of type 'Schedule:Constant' and named 'Always") && s.logMessage.include?('points to an object named') && s.logMessage.include?('but that object cannot be located')
       next if s.logMessage.include? 'Appears there are no design condition fields in the EPW file'
+      next if s.logMessage.include?('Using EnergyPlusVersion version') && s.logMessage.include?("which should have 'Year' field, but it's always zero")
 
       f << "OS Message: #{s.logMessage}\n"
     end
@@ -439,4 +477,38 @@ class String
 
     return true
   end
+end
+
+def get_argument_values(runner, arguments, user_arguments)
+  args = {}
+  arguments.each do |argument|
+    if argument.required
+      case argument.type
+      when 'Choice'.to_OSArgumentType
+        args[argument.name] = runner.getStringArgumentValue(argument.name, user_arguments)
+      when 'Boolean'.to_OSArgumentType
+        args[argument.name] = runner.getBoolArgumentValue(argument.name, user_arguments)
+      when 'Double'.to_OSArgumentType
+        args[argument.name] = runner.getDoubleArgumentValue(argument.name, user_arguments)
+      when 'Integer'.to_OSArgumentType
+        args[argument.name] = runner.getIntegerArgumentValue(argument.name, user_arguments)
+      when 'String'.to_OSArgumentType
+        args[argument.name] = runner.getStringArgumentValue(argument.name, user_arguments)
+      end
+    else
+      case argument.type
+      when 'Choice'.to_OSArgumentType
+        args[argument.name] = runner.getOptionalStringArgumentValue(argument.name, user_arguments)
+      when 'Boolean'.to_OSArgumentType
+        args[argument.name] = runner.getOptionalStringArgumentValue(argument.name, user_arguments)
+      when 'Double'.to_OSArgumentType
+        args[argument.name] = runner.getOptionalDoubleArgumentValue(argument.name, user_arguments)
+      when 'Integer'.to_OSArgumentType
+        args[argument.name] = runner.getOptionalIntegerArgumentValue(argument.name, user_arguments)
+      when 'String'.to_OSArgumentType
+        args[argument.name] = runner.getOptionalStringArgumentValue(argument.name, user_arguments)
+      end
+    end
+  end
+  return args
 end

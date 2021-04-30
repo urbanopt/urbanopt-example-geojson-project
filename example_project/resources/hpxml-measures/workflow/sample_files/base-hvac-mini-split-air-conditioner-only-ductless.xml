@@ -308,16 +308,13 @@
               <SystemIdentifier id='CoolingSystem'/>
               <CoolingSystemType>mini-split</CoolingSystemType>
               <CoolingSystemFuel>electricity</CoolingSystemFuel>
-              <CoolingCapacity>48000.0</CoolingCapacity>
+              <CoolingCapacity>24000.0</CoolingCapacity>
               <FractionCoolLoadServed>1.0</FractionCoolLoadServed>
               <AnnualCoolingEfficiency>
                 <Units>SEER</Units>
                 <Value>19.0</Value>
               </AnnualCoolingEfficiency>
               <SensibleHeatFraction>0.73</SensibleHeatFraction>
-              <extension>
-                <FanPowerWattsPerCFM>0.2</FanPowerWattsPerCFM>
-              </extension>
             </CoolingSystem>
           </HVACPlant>
           <HVACControl>
@@ -379,7 +376,6 @@
           <Location>living space</Location>
           <FuelType>electricity</FuelType>
           <CombinedEnergyFactor>3.73</CombinedEnergyFactor>
-          <ControlType>timer</ControlType>
           <extension>
             <IsVented>true</IsVented>
             <VentedFlowRate>150.0</VentedFlowRate>

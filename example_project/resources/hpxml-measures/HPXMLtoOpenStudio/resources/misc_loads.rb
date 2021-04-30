@@ -30,17 +30,6 @@ class MiscLoads
     sens_frac = plug_load.frac_sensible
     lat_frac = plug_load.frac_latent
 
-    # check for valid inputs
-    if (sens_frac < 0) || (sens_frac > 1)
-      fail 'Sensible fraction must be greater than or equal to 0 and less than or equal to 1.'
-    end
-    if (lat_frac < 0) || (lat_frac > 1)
-      fail 'Latent fraction must be greater than or equal to 0 and less than or equal to 1.'
-    end
-    if lat_frac + sens_frac > 1
-      fail 'Sum of sensible and latent fractions must be less than or equal to 1.'
-    end
-
     if apply_ashrae140_assumptions
       # ASHRAE 140, Table 7-9. Sensible loads are 70% radiative and 30% convective.
       rad_frac = 0.7 * sens_frac
@@ -89,17 +78,6 @@ class MiscLoads
     sens_frac = fuel_load.frac_sensible
     lat_frac = fuel_load.frac_latent
 
-    # check for valid inputs
-    if (sens_frac < 0) || (sens_frac > 1)
-      fail 'Sensible fraction must be greater than or equal to 0 and less than or equal to 1.'
-    end
-    if (lat_frac < 0) || (lat_frac > 1)
-      fail 'Latent fraction must be greater than or equal to 0 and less than or equal to 1.'
-    end
-    if lat_frac + sens_frac > 1
-      fail 'Sum of sensible and latent fractions must be less than or equal to 1.'
-    end
-
     # Add other equipment for the mfl
     mfl_def = OpenStudio::Model::OtherEquipmentDefinition.new(model)
     mfl = OpenStudio::Model::OtherEquipment.new(mfl_def)
@@ -116,6 +94,8 @@ class MiscLoads
   end
 
   def self.apply_pool_or_hot_tub_heater(model, pool_or_hot_tub, obj_name, living_space, schedules_file)
+    return if pool_or_hot_tub.heater_type == HPXML::TypeNone
+
     heater_kwh = 0
     heater_therm = 0
 
@@ -165,17 +145,18 @@ class MiscLoads
         heater_sch = heater_sch.schedule
       end
 
-      mel_def = OpenStudio::Model::GasEquipmentDefinition.new(model)
-      mel = OpenStudio::Model::GasEquipment.new(mel_def)
-      mel.setName(obj_name)
-      mel.setEndUseSubcategory(obj_name)
-      mel.setSpace(living_space)
-      mel_def.setName(obj_name)
-      mel_def.setDesignLevel(space_design_level)
-      mel_def.setFractionRadiant(0)
-      mel_def.setFractionLatent(0)
-      mel_def.setFractionLost(1)
-      mel.setSchedule(heater_sch)
+      mfl_def = OpenStudio::Model::OtherEquipmentDefinition.new(model)
+      mfl = OpenStudio::Model::OtherEquipment.new(mfl_def)
+      mfl.setName(obj_name)
+      mfl.setEndUseSubcategory(obj_name)
+      mfl.setFuelType(EPlus.fuel_type(HPXML::FuelTypeNaturalGas))
+      mfl.setSpace(living_space)
+      mfl_def.setName(obj_name)
+      mfl_def.setDesignLevel(space_design_level)
+      mfl_def.setFractionRadiant(0)
+      mfl_def.setFractionLatent(0)
+      mfl_def.setFractionLost(1)
+      mfl.setSchedule(heater_sch)
     end
   end
 

@@ -128,7 +128,7 @@
             <Emittance>0.92</Emittance>
             <Insulation>
               <SystemIdentifier id='RimJoistFoundationInsulation'/>
-              <AssemblyEffectiveRValue>2.3</AssemblyEffectiveRValue>
+              <AssemblyEffectiveRValue>4.0</AssemblyEffectiveRValue>
             </Insulation>
           </RimJoist>
           <RimJoist>
@@ -141,7 +141,7 @@
             <Emittance>0.92</Emittance>
             <Insulation>
               <SystemIdentifier id='RimJoistCrawlspaceInsulation'/>
-              <AssemblyEffectiveRValue>2.3</AssemblyEffectiveRValue>
+              <AssemblyEffectiveRValue>4.0</AssemblyEffectiveRValue>
             </Insulation>
           </RimJoist>
         </RimJoists>
@@ -434,7 +434,7 @@
                 <Furnace/>
               </HeatingSystemType>
               <HeatingSystemFuel>natural gas</HeatingSystemFuel>
-              <HeatingCapacity>64000.0</HeatingCapacity>
+              <HeatingCapacity>36000.0</HeatingCapacity>
               <AnnualHeatingEfficiency>
                 <Units>AFUE</Units>
                 <Value>0.92</Value>
@@ -446,7 +446,7 @@
               <DistributionSystem idref='HVACDistribution'/>
               <CoolingSystemType>central air conditioner</CoolingSystemType>
               <CoolingSystemFuel>electricity</CoolingSystemFuel>
-              <CoolingCapacity>48000.0</CoolingCapacity>
+              <CoolingCapacity>24000.0</CoolingCapacity>
               <CompressorType>single stage</CompressorType>
               <FractionCoolLoadServed>1.0</FractionCoolLoadServed>
               <AnnualCoolingEfficiency>
@@ -466,6 +466,7 @@
             <SystemIdentifier id='HVACDistribution'/>
             <DistributionSystemType>
               <AirDistribution>
+                <AirDistributionType>regular velocity</AirDistributionType>
                 <DuctLeakageMeasurement>
                   <DuctType>supply</DuctType>
                   <DuctLeakage>
@@ -494,6 +495,7 @@
                   <DuctLocation>basement - unconditioned</DuctLocation>
                   <DuctSurfaceArea>50.0</DuctSurfaceArea>
                 </Ducts>
+                <NumberofReturnRegisters>1</NumberofReturnRegisters>
               </AirDistribution>
             </DistributionSystemType>
             <ConditionedFloorAreaServed>1350.0</ConditionedFloorAreaServed>
@@ -551,7 +553,6 @@
           <Location>basement - unconditioned</Location>
           <FuelType>electricity</FuelType>
           <CombinedEnergyFactor>3.73</CombinedEnergyFactor>
-          <ControlType>timer</ControlType>
           <extension>
             <IsVented>true</IsVented>
             <VentedFlowRate>150.0</VentedFlowRate>

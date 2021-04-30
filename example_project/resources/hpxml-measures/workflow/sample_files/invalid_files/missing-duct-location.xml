@@ -411,7 +411,7 @@
               <DistributionSystem idref='HVACDistribution2'/>
               <CoolingSystemType>central air conditioner</CoolingSystemType>
               <CoolingSystemFuel>electricity</CoolingSystemFuel>
-              <CoolingCapacity>9600.0</CoolingCapacity>
+              <CoolingCapacity>4800.0</CoolingCapacity>
               <CompressorType>single stage</CompressorType>
               <FractionCoolLoadServed>0.2</FractionCoolLoadServed>
               <AnnualCoolingEfficiency>
@@ -523,6 +523,7 @@
             <SystemIdentifier id='HVACDistribution'/>
             <DistributionSystemType>
               <AirDistribution>
+                <AirDistributionType>regular velocity</AirDistributionType>
                 <DuctLeakageMeasurement>
                   <DuctType>supply</DuctType>
                   <DuctLeakage>
@@ -562,14 +563,16 @@
                   <DuctLocation>outside</DuctLocation>
                   <DuctSurfaceArea>25.0</DuctSurfaceArea>
                 </Ducts>
+                <NumberofReturnRegisters>2</NumberofReturnRegisters>
               </AirDistribution>
             </DistributionSystemType>
-            <ConditionedFloorAreaServed>675.0</ConditionedFloorAreaServed>
+            <ConditionedFloorAreaServed>270.0</ConditionedFloorAreaServed>
           </HVACDistribution>
           <HVACDistribution>
             <SystemIdentifier id='HVACDistribution2'/>
             <DistributionSystemType>
               <AirDistribution>
+                <AirDistributionType>regular velocity</AirDistributionType>
                 <DuctLeakageMeasurement>
                   <DuctType>supply</DuctType>
                   <DuctLeakage>
@@ -609,9 +612,10 @@
                   <DuctLocation>outside</DuctLocation>
                   <DuctSurfaceArea>25.0</DuctSurfaceArea>
                 </Ducts>
+                <NumberofReturnRegisters>2</NumberofReturnRegisters>
               </AirDistribution>
             </DistributionSystemType>
-            <ConditionedFloorAreaServed>675.0</ConditionedFloorAreaServed>
+            <ConditionedFloorAreaServed>270.0</ConditionedFloorAreaServed>
           </HVACDistribution>
           <HVACDistribution>
             <SystemIdentifier id='HVACDistribution3'/>
@@ -633,6 +637,7 @@
             <SystemIdentifier id='HVACDistribution5'/>
             <DistributionSystemType>
               <AirDistribution>
+                <AirDistributionType>regular velocity</AirDistributionType>
                 <DuctLeakageMeasurement>
                   <DuctType>supply</DuctType>
                   <DuctLeakage>
@@ -672,14 +677,16 @@
                   <DuctLocation>outside</DuctLocation>
                   <DuctSurfaceArea>25.0</DuctSurfaceArea>
                 </Ducts>
+                <NumberofReturnRegisters>2</NumberofReturnRegisters>
               </AirDistribution>
             </DistributionSystemType>
-            <ConditionedFloorAreaServed>675.0</ConditionedFloorAreaServed>
+            <ConditionedFloorAreaServed>270.0</ConditionedFloorAreaServed>
           </HVACDistribution>
           <HVACDistribution>
             <SystemIdentifier id='HVACDistribution6'/>
             <DistributionSystemType>
               <AirDistribution>
+                <AirDistributionType>regular velocity</AirDistributionType>
                 <DuctLeakageMeasurement>
                   <DuctType>supply</DuctType>
                   <DuctLeakage>
@@ -719,9 +726,10 @@
                   <DuctLocation>outside</DuctLocation>
                   <DuctSurfaceArea>25.0</DuctSurfaceArea>
                 </Ducts>
+                <NumberofReturnRegisters>2</NumberofReturnRegisters>
               </AirDistribution>
             </DistributionSystemType>
-            <ConditionedFloorAreaServed>675.0</ConditionedFloorAreaServed>
+            <ConditionedFloorAreaServed>270.0</ConditionedFloorAreaServed>
           </HVACDistribution>
         </HVAC>
         <WaterHeating>
@@ -776,7 +784,6 @@
           <Location>living space</Location>
           <FuelType>electricity</FuelType>
           <CombinedEnergyFactor>3.73</CombinedEnergyFactor>
-          <ControlType>timer</ControlType>
           <extension>
             <IsVented>true</IsVented>
             <VentedFlowRate>150.0</VentedFlowRate>

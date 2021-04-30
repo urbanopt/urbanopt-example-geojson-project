@@ -183,6 +183,7 @@ class Waterheater
       if water_heating_system.standby_loss <= 0
         fail 'A negative indirect water heater standby loss was calculated, double check water heater inputs.'
       end
+
       act_vol = calc_storage_tank_actual_vol(water_heating_system.tank_volume, nil)
       a_side = calc_tank_areas(act_vol)[1]
       ua = calc_indirect_ua_with_standbyloss(act_vol, water_heating_system, a_side, solar_fraction)
@@ -1192,10 +1193,11 @@ class Waterheater
         ef = calc_ef_from_uef(water_heating_system)
       end
       if ef >= 0.75
-        return 0.778114 * ef + 0.276679
+        re = 0.561 * ef + 0.439
       else
-        return 0.252117 * ef + 0.607997
+        re = 0.252 * ef + 0.608
       end
+      return re
     end
   end
 
@@ -1398,8 +1400,6 @@ class Waterheater
       location_hierarchy = [HPXML::LocationBasementConditioned,
                             HPXML::LocationBasementUnconditioned,
                             HPXML::LocationLivingSpace]
-    else
-      fail "Unexpected IECC climate zone: '#{iecc_zone}'."
     end
     location_hierarchy.each do |space_type|
       if hpxml.has_space_type(space_type)

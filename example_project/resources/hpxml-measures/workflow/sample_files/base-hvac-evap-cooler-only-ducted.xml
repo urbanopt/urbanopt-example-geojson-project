@@ -309,6 +309,7 @@
               <DistributionSystem idref='HVACDistribution'/>
               <CoolingSystemType>evaporative cooler</CoolingSystemType>
               <CoolingSystemFuel>electricity</CoolingSystemFuel>
+              <CoolingCapacity>24000.0</CoolingCapacity>
               <FractionCoolLoadServed>1.0</FractionCoolLoadServed>
             </CoolingSystem>
           </HVACPlant>
@@ -322,11 +323,20 @@
             <SystemIdentifier id='HVACDistribution'/>
             <DistributionSystemType>
               <AirDistribution>
+                <AirDistributionType>regular velocity</AirDistributionType>
                 <DuctLeakageMeasurement>
                   <DuctType>supply</DuctType>
                   <DuctLeakage>
                     <Units>CFM25</Units>
                     <Value>75.0</Value>
+                    <TotalOrToOutside>to outside</TotalOrToOutside>
+                  </DuctLeakage>
+                </DuctLeakageMeasurement>
+                <DuctLeakageMeasurement>
+                  <DuctType>return</DuctType>
+                  <DuctLeakage>
+                    <Units>CFM25</Units>
+                    <Value>0.0</Value>
                     <TotalOrToOutside>to outside</TotalOrToOutside>
                   </DuctLeakage>
                 </DuctLeakageMeasurement>
@@ -336,6 +346,7 @@
                   <DuctLocation>attic - unvented</DuctLocation>
                   <DuctSurfaceArea>150.0</DuctSurfaceArea>
                 </Ducts>
+                <NumberofReturnRegisters>0</NumberofReturnRegisters>
               </AirDistribution>
             </DistributionSystemType>
             <ConditionedFloorAreaServed>2700.0</ConditionedFloorAreaServed>
@@ -393,7 +404,6 @@
           <Location>living space</Location>
           <FuelType>electricity</FuelType>
           <CombinedEnergyFactor>3.73</CombinedEnergyFactor>
-          <ControlType>timer</ControlType>
           <extension>
             <IsVented>true</IsVented>
             <VentedFlowRate>150.0</VentedFlowRate>

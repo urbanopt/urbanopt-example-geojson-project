@@ -443,48 +443,48 @@ module URBANopt
             args[:geometry_building_num_units] = 1
             case building_type
             when 'Single-Family Detached'
-              args[:geometry_unit_type] = "single-family detached"
+              args[:geometry_unit_type] = 'single-family detached'
             when 'Single-Family Attached'
               args[:geometry_building_num_units] = feature.number_of_residential_units
-              args[:geometry_unit_type] = "single-family attached"
+              args[:geometry_unit_type] = 'single-family attached'
             when 'Multifamily'
               args[:geometry_building_num_units] = feature.number_of_residential_units
-              args[:geometry_unit_type] = "apartment unit"
+              args[:geometry_unit_type] = 'apartment unit'
+              args[:geometry_corridor_position] = 'Double Exterior' # if we had an interior corridor, we'd have to subtract its area from the footprint area
             end
 
-            args[:geometry_foundation_type] = "SlabOnGrade"
+            args[:geometry_foundation_type] = 'SlabOnGrade'
             args[:geometry_foundation_height] = 0.0
             case feature.foundation_type
             when 'crawlspace - vented'
-              args[:geometry_foundation_type] = "VentedCrawlspace"
+              args[:geometry_foundation_type] = 'VentedCrawlspace'
               args[:geometry_foundation_height] = 3.0
             when 'crawlspace - unvented'
-              args[:geometry_foundation_type] = "UnventedCrawlspace"
+              args[:geometry_foundation_type] = 'UnventedCrawlspace'
               args[:geometry_foundation_height] = 3.0
             when 'basement - unconditioned'
-              args[:geometry_foundation_type] = "UnconditionedBasement"
+              args[:geometry_foundation_type] = 'UnconditionedBasement'
               args[:geometry_foundation_height] = 8.0
             when 'basement - conditioned'
-              args[:geometry_foundation_type] = "ConditionedBasement"
+              args[:geometry_foundation_type] = 'ConditionedBasement'
               args[:geometry_foundation_height] = 8.0
             when 'ambient'
-              args[:geometry_foundation_type] = "Ambient"
+              args[:geometry_foundation_type] = 'Ambient'
               args[:geometry_foundation_height] = 8.0
             end
 
-            args[:geometry_attic_type] = "ConditionedAttic"
-            args[:geometry_roof_type] = "flat"
+            args[:geometry_attic_type] = 'VentedAttic'
+            args[:geometry_roof_type] = 'flat'
             begin
               case feature.attic_type
               when 'attic - vented'
-                args[:geometry_attic_type] = "VentedAttic"
-                args[:geometry_roof_type] = "gable"
+                args[:geometry_roof_type] = 'gable'
               when 'attic - unvented'
-                args[:geometry_attic_type] = "UnventedAttic"
-                args[:geometry_roof_type] = "gable"
+                args[:geometry_attic_type] = 'UnventedAttic'
+                args[:geometry_roof_type] = 'gable'
               when 'attic - conditioned'
-                args[:geometry_attic_type] = "ConditionedAttic"
-                args[:geometry_roof_type] = "gable"
+                args[:geometry_attic_type] = 'ConditionedAttic'
+                args[:geometry_roof_type] = 'gable'
               end
             rescue
             end
@@ -502,60 +502,71 @@ module URBANopt
             args[:geometry_num_bedrooms] = feature.number_of_bedrooms
             args[:geometry_num_bedrooms] /= args[:geometry_building_num_units]
 
-            # SCHEDULES
-
-            args[:schedules_type] = 'stochastic'
             begin
-              schedules_random_seed = Float(feature_id)
-              if schedules_random_seed % 1 == 0
-                args[:schedules_random_seed] = Integer(schedules_random_seed)
+              num_garage_spaces = 0
+              if feature.onsite_parking_fraction
+                num_garage_spaces = 1
+                if args[:geometry_cfa] > 2500.0
+                  num_garage_spaces = 2
+                end
               end
+              args[:geometry_garage_width] = 12.0 * num_garage_spaces
+              args[:geometry_garage_protrusion] = 1.0
             rescue
             end
 
+            args[:neighbor_left_distance] = 0.0
+            args[:neighbor_right_distance] = 0.0
+
+            # SCHEDULES
+
+            args[:schedules_type] = 'stochastic'
+            args[:feature_id] = feature_id.hex
+            args[:schedules_variation] = 'building' # building or unit
+
             # HVAC
 
-            system_type = "Residential - furnace and central air conditioner"
+            system_type = 'Residential - furnace and central air conditioner'
             begin
               system_type = feature.system_type
             rescue
             end
 
-            args[:heating_system_type] = "none"
+            args[:heating_system_type] = 'none'
             if system_type.include?('electric resistance')
-              args[:heating_system_type] = "ElectricResistance"
+              args[:heating_system_type] = 'ElectricResistance'
             elsif system_type.include?('furnace')
-              args[:heating_system_type] = "Furnace"
+              args[:heating_system_type] = 'Furnace'
             elsif system_type.include?('boiler')
-              args[:heating_system_type] = "Boiler"
+              args[:heating_system_type] = 'Boiler'
             end
 
-            args[:cooling_system_type] = "none"
+            args[:cooling_system_type] = 'none'
             if system_type.include?('central air conditioner')
-              args[:cooling_system_type] = "central air conditioner"
+              args[:cooling_system_type] = 'central air conditioner'
             elsif system_type.include?('room air conditioner')
-              args[:cooling_system_type] = "room air conditioner"
+              args[:cooling_system_type] = 'room air conditioner'
             elsif system_type.include?('evaporative cooler')
-              args[:cooling_system_type] = "evaporative cooler"
+              args[:cooling_system_type] = 'evaporative cooler'
             end
 
-            args[:heat_pump_type] = "none"
+            args[:heat_pump_type] = 'none'
             if system_type.include?('air-to-air')
-              args[:heat_pump_type] = "air-to-air"
+              args[:heat_pump_type] = 'air-to-air'
             elsif system_type.include?('mini-split')
-              args[:heat_pump_type] = "mini-split"
+              args[:heat_pump_type] = 'mini-split'
             elsif system_type.include?('ground-to-air')
-              args[:heat_pump_type] = "ground-to-air"
+              args[:heat_pump_type] = 'ground-to-air'
             end
 
-            args[:heating_system_fuel] = "natural gas"
+            args[:heating_system_fuel] = 'natural gas'
             begin
               args[:heating_system_fuel] = feature.heating_system_fuel_type
             rescue
             end
 
-            if args[:heating_system_type] == "ElectricResistance"
-              args[:heating_system_fuel] = "electricity"
+            if args[:heating_system_type] == 'ElectricResistance'
+              args[:heating_system_fuel] = 'electricity'
             end
 
             # APPLIANCES
@@ -563,10 +574,7 @@ module URBANopt
             args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
             args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
 
-            # VENTILATION
-
-            args[:kitchen_fans_present] = true
-            args[:bathroom_fans_present] = true
+            # WATER HEATER
 
             args[:water_heater_fuel_type] = args[:heating_system_fuel]
 
@@ -611,21 +619,21 @@ module URBANopt
 
                 # HVAC
 
-                if args[:heating_system_type] != "none"
+                if args[:heating_system_type] != 'none'
                   heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
                   heating_system = get_lookup_tsv(args, heating_system_filepath)
                   row = get_lookup_row(args, heating_system, template_vals)
                   args.update(row) unless row.nil?
                 end
 
-                if args[:cooling_system_type] != "none"
+                if args[:cooling_system_type] != 'none'
                   cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
                   cooling_system = get_lookup_tsv(args, cooling_system_filepath)
                   row = get_lookup_row(args, cooling_system, template_vals)
                   args.update(row) unless row.nil?
                 end
 
-                if args[:heat_pump_type] != "none"
+                if args[:heat_pump_type] != 'none'
                   heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
                   heat_pump = get_lookup_tsv(args, heat_pump_filepath)
                   row = get_lookup_row(args, heat_pump, template_vals)
@@ -641,11 +649,18 @@ module URBANopt
                   args.update(row) unless row.nil?
                 end
 
-                # VENTILATION
+                # MECHANICAL VENTILATION
 
-                mechvent_filepath = File.join(File.dirname(__FILE__), "residential/mechanical_ventilation.tsv")
+                mechvent_filepath = File.join(File.dirname(__FILE__), 'residential/mechanical_ventilation.tsv')
                 mechvent = get_lookup_tsv(args, mechvent_filepath)
                 row = get_lookup_row(args, mechvent, template_vals)
+                args.update(row) unless row.nil?
+
+                # EXHAUST
+
+                exhaust_filepath = File.join(File.dirname(__FILE__), 'residential/exhaust.tsv')
+                exhaust = get_lookup_tsv(args, exhaust_filepath)
+                row = get_lookup_row(args, exhaust, template_vals)
                 args.update(row) unless row.nil?
 
                 # WATER HEATER
@@ -676,6 +691,8 @@ module URBANopt
 
             args.keys.each do |arg_name|
               unless default_args.keys.include? arg_name
+                next if [:feature_id, :schedules_variation].include?(arg_name)
+
                 puts "Argument '#{arg_name}' is unknown."
               end
             end

@@ -215,11 +215,10 @@
           <HVACDistribution>
             <SystemIdentifier id='HVACDistribution'/>
             <DistributionSystemType>
-              <HydronicAndAirDistribution>
-                <HydronicAndAirDistributionType>fan coil</HydronicAndAirDistributionType>
-              </HydronicAndAirDistribution>
+              <AirDistribution>
+                <AirDistributionType>fan coil</AirDistributionType>
+              </AirDistribution>
             </DistributionSystemType>
-            <ConditionedFloorAreaServed>900.0</ConditionedFloorAreaServed>
           </HVACDistribution>
         </HVAC>
         <WaterHeating>
@@ -274,7 +273,6 @@
           <Location>living space</Location>
           <FuelType>electricity</FuelType>
           <CombinedEnergyFactor>3.73</CombinedEnergyFactor>
-          <ControlType>timer</ControlType>
           <extension>
             <IsVented>true</IsVented>
             <VentedFlowRate>150.0</VentedFlowRate>
