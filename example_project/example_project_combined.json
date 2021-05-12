@@ -5,7 +5,7 @@
     "name": "New Project",
     "surface_elevation": null,
     "import_surrounding_buildings_as_shading": null,
-    "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
+    "weather_filename": "USA_AK_Ambler.701718_TMY3.epw",
     "tariff_filename": null,
     "climate_zone": "6A",
     "cec_climate_zone": null,
@@ -30,7 +30,7 @@
         "surface_elevation": null,
         "tariff_filename": null,
         "timesteps_per_hour": 1,
-        "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw"
+        "weather_filename": "USA_AK_Ambler.701718_TMY3.epw"
       },
       "geometry": {
         "type": "Point",
