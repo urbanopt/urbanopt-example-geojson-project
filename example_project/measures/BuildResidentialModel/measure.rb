@@ -40,8 +40,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     args << arg
 
     schedules_variation_choices = OpenStudio::StringVector.new
-    schedules_variation_choices << 'building'
-    schedules_variation_choices << 'unit'
+    schedules_variation_choices << 'building-to-building'
+    schedules_variation_choices << 'unit-to-unit'
 
     arg = OpenStudio::Ruleset::OSArgument.makeChoiceArgument('schedules_variation', schedules_variation_choices, true)
     arg.setDisplayName('Schedules: Variation')
@@ -141,11 +141,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
 
       # schedules
-      measure_args['schedules_random_seed'] = args['feature_id'] * (unit_num + 1) # variation across units, but deterministic
-      if args['schedules_variation'] == 'building' && unit_num != 0 # variation by building, use already generated schedules
-        measure_args['schedules_type'] = 'user-specified'
-        measure_args['schedules_path'] = File.expand_path('../unit 1_schedules.csv')
-        measure_args.delete('schedules_random_seed')
+      if args['schedules_type'] == 'stochastic'
+        measure_args['schedules_random_seed'] = args['feature_id'] * (unit_num + 1) # variation across units, but deterministic
+        if args['schedules_variation'] == 'building-to-building' && unit_num != 0 # variation by building, use already generated schedules
+          measure_args['schedules_type'] = 'user-specified'
+          measure_args['schedules_path'] = File.expand_path('../unit 1_schedules.csv')
+          measure_args.delete('schedules_random_seed')
+        end
       end
 
       # geometry
