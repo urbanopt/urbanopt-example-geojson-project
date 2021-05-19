@@ -220,3 +220,103 @@ Dependency=Climate Zone	Dependency=Template Month	Dependency=Template Year	Depen
 6C	Sep	2020	Boiler	wood	0.86	Engineering judgment
 7	Sep	2020	Boiler	wood	0.86	Engineering judgment
 8	Sep	2020	Boiler	wood	0.86	Engineering judgment
+1A	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+1B	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+1C	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+2A	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+2B	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+2C	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+3A	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+3B	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+3C	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+4A	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+4B	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+4C	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+5A	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+5B	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+5C	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+6A	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+6B	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+6C	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+7	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+8	Sep	2020	Shared Boiler w/ Baseboard	electricity	1	Engineering judgment
+1A	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+1B	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+1C	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+2A	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+2B	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+2C	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+3A	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+3B	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+3C	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.8	Engineering judgment
+4A	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+4B	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+4C	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+5A	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+5B	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+5C	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+6A	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+6B	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+6C	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+7	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+8	Sep	2020	Shared Boiler w/ Baseboard	natural gas	0.9	Engineering judgment
+1A	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+1B	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+1C	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+2A	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+2B	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+2C	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+3A	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+3B	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+3C	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.8	Engineering judgment
+4A	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+4B	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+4C	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+5A	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+5B	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+5C	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+6A	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+6B	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+6C	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+7	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+8	Sep	2020	Shared Boiler w/ Baseboard	fuel oil	0.86	Engineering judgment
+1A	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+1B	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+1C	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+2A	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+2B	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+2C	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+3A	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+3B	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+3C	Sep	2020	Shared Boiler w/ Baseboard	propane	0.8	Engineering judgment
+4A	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+4B	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+4C	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+5A	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+5B	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+5C	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+6A	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+6B	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+6C	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+7	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+8	Sep	2020	Shared Boiler w/ Baseboard	propane	0.86	Engineering judgment
+1A	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+1B	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+1C	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+2A	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+2B	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+2C	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+3A	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+3B	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+3C	Sep	2020	Shared Boiler w/ Baseboard	wood	0.8	Engineering judgment
+4A	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+4B	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+4C	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+5A	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+5B	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+5C	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+6A	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+6B	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+6C	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+7	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment
+8	Sep	2020	Shared Boiler w/ Baseboard	wood	0.86	Engineering judgment

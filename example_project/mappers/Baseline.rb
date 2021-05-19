@@ -537,6 +537,8 @@ module URBANopt
               args[:heating_system_type] = 'ElectricResistance'
             elsif system_type.include?('furnace')
               args[:heating_system_type] = 'Furnace'
+            elsif system_type.include?('shared boiler')
+              args[:heating_system_type] = 'Shared Boiler w/ Baseboard'
             elsif system_type.include?('boiler')
               args[:heating_system_type] = 'Boiler'
             end
