@@ -527,10 +527,6 @@ module URBANopt
             rescue
             end
 
-            if args[:schedules_type] == 'user-specified'
-              args[:schedules_path] = feature.schedules_path
-            end
-
             args[:schedules_variation] = 'unit-to-unit'
             begin
               args[:schedules_variation] = feature.schedules_variation
