@@ -713,7 +713,8 @@
         "attic_type": "attic - conditioned",
         "system_type": "Residential - electric resistance and no cooling",
         "heating_system_fuel_type": "electricity",
-        "template": "Residential IECC 2015 - Customizable Template Sep 2020"
+        "template": "Residential IECC 2015 - Customizable Template Sep 2020",
+        "schedules_type": "default"
       },
       "geometry": {
         "type": "Polygon",
