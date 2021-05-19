@@ -41,13 +41,13 @@ else
   gem 'urbanopt-reporting', '~> 0.4.0'
 end
 
-if allow_local && File.exist?('../urbanopt-geojson-gem')
-  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-else
-  gem 'urbanopt-geojson', '~> 0.6.1'
-end
+#if allow_local && File.exist?('../urbanopt-geojson-gem')
+#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+#elsif allow_local
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'res-shared-boiler'
+#else
+#  gem 'urbanopt-geojson', '~> 0.6.1'
+#end
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
