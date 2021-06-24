@@ -278,7 +278,10 @@ module URBANopt
           'Service',
           'Uncovered Parking',
           'Covered Parking',
-          'Mixed use'
+          'Mixed use',
+          'Multifamily (2 to 4 units)',
+          'Multifamily (5 or more units)',
+          'Single-Family'
         ]
       end
 
@@ -520,8 +523,13 @@ module URBANopt
 
             # SCHEDULES
 
+            feature_ids = []
+            scenario.feature_file.features.each do |feature|
+              feature_ids << feature.id
+            end
+
             args[:schedules_type] = 'stochastic'
-            args[:feature_id] = feature_id.hex
+            args[:feature_id] = feature_ids.index(feature_id)
             args[:schedules_variation] = 'building' # building or unit
 
             # HVAC
