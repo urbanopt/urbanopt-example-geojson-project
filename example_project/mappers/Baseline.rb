@@ -43,6 +43,7 @@ require 'openstudio/common_measures'
 require 'openstudio/model_articulation'
 require 'openstudio/ee_measures'
 require 'openstudio/calibration'
+require 'openstudio/load_flexibility_measures'
 
 require 'json'
 require 'rexml/document'
@@ -538,8 +539,13 @@ module URBANopt
 
             # SCHEDULES
 
+            feature_ids = []
+            scenario.feature_file.features.each do |feature|
+              feature_ids << feature.id
+            end
+
             args[:schedules_type] = 'stochastic'
-            args[:feature_id] = feature_id.hex
+            args[:feature_id] = feature_ids.index(feature_id)
             args[:schedules_variation] = 'building' # building or unit
 
             # HVAC
