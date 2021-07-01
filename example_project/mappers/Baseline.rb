@@ -544,9 +544,19 @@ module URBANopt
               feature_ids << feature.id
             end
 
-            args[:schedules_type] = 'stochastic'
             args[:feature_id] = feature_ids.index(feature_id)
-            args[:schedules_variation] = 'building' # building or unit
+
+            args[:schedules_type] = 'stochastic'
+            begin
+              args[:schedules_type] = feature.schedules_type
+            rescue
+            end
+
+            args[:schedules_variation] = 'unit-to-unit'
+            begin
+              args[:schedules_variation] = feature.schedules_variation
+            rescue
+            end
 
             # HVAC
 
