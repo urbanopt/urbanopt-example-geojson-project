@@ -29,7 +29,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
   def modeler_description
     return 'Builds the residential OpenStudio Model using the geojson feature file, which contains the specified parameters for each existing building.'
   end
-
+ 
   # define the arguments that the user will input
   def arguments(model)
     args = OpenStudio::Measure::OSArgumentVector.new
