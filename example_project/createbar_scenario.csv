@@ -1,14 +1,182 @@
 Feature Id,Feature Name,Mapper Class
-1,Mixed_use 1,URBANopt::Scenario::CreateBarMapper
-2,Restaurant 1,URBANopt::Scenario::CreateBarMapper
-3,Restaurant 10,URBANopt::Scenario::CreateBarMapper
-4,Restaurant 12,URBANopt::Scenario::CreateBarMapper
-5,Restaurant 14,URBANopt::Scenario::CreateBarMapper
-6,Restaurant 15,URBANopt::Scenario::CreateBarMapper
-7,Office 1,URBANopt::Scenario::CreateBarMapper
-8,Hospital 1,URBANopt::Scenario::CreateBarMapper
-9,Hospital 2,URBANopt::Scenario::CreateBarMapper
-10,Mixed use 2,URBANopt::Scenario::CreateBarMapper
-11,Restaurant 13,URBANopt::Scenario::CreateBarMapper
-12,Mall 1,URBANopt::Scenario::CreateBarMapper
-13,Hotel 1,URBANopt::Scenario::CreateBarMapper
+1,office_1,URBANopt::Scenario::CreateBarMapper
+2,office_2,URBANopt::Scenario::CreateBarMapper
+3,office_3,URBANopt::Scenario::CreateBarMapper
+4,office_4,URBANopt::Scenario::CreateBarMapper
+5,office_5,URBANopt::Scenario::CreateBarMapper
+6,office_6,URBANopt::Scenario::CreateBarMapper
+7,office_7,URBANopt::Scenario::CreateBarMapper
+8,mixed use_1,URBANopt::Scenario::CreateBarMapper
+9,mixed use_2,URBANopt::Scenario::CreateBarMapper
+10,mall_1,URBANopt::Scenario::CreateBarMapper
+11,mall_2,URBANopt::Scenario::CreateBarMapper
+12,school_1,URBANopt::Scenario::CreateBarMapper
+13,school_2,URBANopt::Scenario::CreateBarMapper
+14,school_3,URBANopt::Scenario::CreateBarMapper
+15,school_4,URBANopt::Scenario::CreateBarMapper
+16,super market_1,URBANopt::Scenario::CreateBarMapper
+17,super market_2,URBANopt::Scenario::CreateBarMapper
+18,super market_3,URBANopt::Scenario::CreateBarMapper
+19,hospital_1,URBANopt::Scenario::CreateBarMapper
+20,hospital_2,URBANopt::Scenario::CreateBarMapper
+21,hospital_3,URBANopt::Scenario::CreateBarMapper
+22,hospital_4,URBANopt::Scenario::CreateBarMapper
+23,hospital_5,URBANopt::Scenario::CreateBarMapper
+24,hospital_6,URBANopt::Scenario::CreateBarMapper
+25,hospital_7,URBANopt::Scenario::CreateBarMapper
+26,restaurant_1,URBANopt::Scenario::CreateBarMapper
+27,restaurant_2,URBANopt::Scenario::CreateBarMapper
+28,restaurant_3,URBANopt::Scenario::CreateBarMapper
+29,restaurant_4,URBANopt::Scenario::CreateBarMapper
+30,restaurant_5,URBANopt::Scenario::CreateBarMapper
+31,restaurant_6,URBANopt::Scenario::CreateBarMapper
+32,restaurant_7,URBANopt::Scenario::CreateBarMapper
+33,restaurant_8,URBANopt::Scenario::CreateBarMapper
+34,restaurant_9,URBANopt::Scenario::CreateBarMapper
+35,restaurant_10,URBANopt::Scenario::CreateBarMapper
+36,restaurant_11,URBANopt::Scenario::CreateBarMapper
+37,restaurant_12,URBANopt::Scenario::CreateBarMapper
+38,hotel_1,URBANopt::Scenario::CreateBarMapper
+39,hotel_2,URBANopt::Scenario::CreateBarMapper
+40,res_6,URBANopt::Scenario::CreateBarMapper
+41,res_5,URBANopt::Scenario::CreateBarMapper
+42,res_4,URBANopt::Scenario::CreateBarMapper
+43,res_3,URBANopt::Scenario::CreateBarMapper
+44,res_2,URBANopt::Scenario::CreateBarMapper
+45,res_1,URBANopt::Scenario::CreateBarMapper
+46,res_8,URBANopt::Scenario::CreateBarMapper
+47,res_9,URBANopt::Scenario::CreateBarMapper
+48,res_10,URBANopt::Scenario::CreateBarMapper
+49,res_11,URBANopt::Scenario::CreateBarMapper
+50,res_12,URBANopt::Scenario::CreateBarMapper
+51,res_13,URBANopt::Scenario::CreateBarMapper
+52,res_14,URBANopt::Scenario::CreateBarMapper
+53,res_15,URBANopt::Scenario::CreateBarMapper
+54,res_16,URBANopt::Scenario::CreateBarMapper
+55,res_17,URBANopt::Scenario::CreateBarMapper
+56,res_18,URBANopt::Scenario::CreateBarMapper
+57,res_19,URBANopt::Scenario::CreateBarMapper
+58,res_20,URBANopt::Scenario::CreateBarMapper
+59,res_21,URBANopt::Scenario::CreateBarMapper
+60,res_22,URBANopt::Scenario::CreateBarMapper
+61,res_23,URBANopt::Scenario::CreateBarMapper
+62,res_24,URBANopt::Scenario::CreateBarMapper
+63,res_25,URBANopt::Scenario::CreateBarMapper
+64,res_26,URBANopt::Scenario::CreateBarMapper
+65,res_27,URBANopt::Scenario::CreateBarMapper
+66,res_28,URBANopt::Scenario::CreateBarMapper
+67,res_29,URBANopt::Scenario::CreateBarMapper
+68,res_30,URBANopt::Scenario::CreateBarMapper
+69,res_31,URBANopt::Scenario::CreateBarMapper
+70,res_32,URBANopt::Scenario::CreateBarMapper
+71,res_33,URBANopt::Scenario::CreateBarMapper
+72,res_34,URBANopt::Scenario::CreateBarMapper
+73,res_35,URBANopt::Scenario::CreateBarMapper
+74,res_36,URBANopt::Scenario::CreateBarMapper
+75,res_37,URBANopt::Scenario::CreateBarMapper
+76,res_38,URBANopt::Scenario::CreateBarMapper
+77,res_39,URBANopt::Scenario::CreateBarMapper
+78,res_40,URBANopt::Scenario::CreateBarMapper
+79,res_41,URBANopt::Scenario::CreateBarMapper
+80,res_42,URBANopt::Scenario::CreateBarMapper
+81,res_43,URBANopt::Scenario::CreateBarMapper
+82,res_44,URBANopt::Scenario::CreateBarMapper
+83,res_45,URBANopt::Scenario::CreateBarMapper
+84,res_46,URBANopt::Scenario::CreateBarMapper
+85,res_47,URBANopt::Scenario::CreateBarMapper
+86,res_48,URBANopt::Scenario::CreateBarMapper
+87,res_49,URBANopt::Scenario::CreateBarMapper
+88,res_50,URBANopt::Scenario::CreateBarMapper
+89,res_51,URBANopt::Scenario::CreateBarMapper
+90,res_52,URBANopt::Scenario::CreateBarMapper
+91,res_53,URBANopt::Scenario::CreateBarMapper
+92,res_54,URBANopt::Scenario::CreateBarMapper
+93,res_55,URBANopt::Scenario::CreateBarMapper
+94,res_56,URBANopt::Scenario::CreateBarMapper
+95,res_57,URBANopt::Scenario::CreateBarMapper
+96,res_58,URBANopt::Scenario::CreateBarMapper
+97,res_59,URBANopt::Scenario::CreateBarMapper
+98,res_60,URBANopt::Scenario::CreateBarMapper
+99,res_61,URBANopt::Scenario::CreateBarMapper
+100,res_62,URBANopt::Scenario::CreateBarMapper
+101,res_63,URBANopt::Scenario::CreateBarMapper
+102,res_64,URBANopt::Scenario::CreateBarMapper
+103,res_65,URBANopt::Scenario::CreateBarMapper
+104,res_66,URBANopt::Scenario::CreateBarMapper
+105,res_67,URBANopt::Scenario::CreateBarMapper
+106,res_68,URBANopt::Scenario::CreateBarMapper
+107,res_69,URBANopt::Scenario::CreateBarMapper
+108,res_70,URBANopt::Scenario::CreateBarMapper
+109,res_71,URBANopt::Scenario::CreateBarMapper
+110,res_72,URBANopt::Scenario::CreateBarMapper
+111,res_73,URBANopt::Scenario::CreateBarMapper
+112,res_74,URBANopt::Scenario::CreateBarMapper
+113,res_75,URBANopt::Scenario::CreateBarMapper
+114,res_76,URBANopt::Scenario::CreateBarMapper
+115,res_77,URBANopt::Scenario::CreateBarMapper
+116,res_78,URBANopt::Scenario::CreateBarMapper
+117,res_79,URBANopt::Scenario::CreateBarMapper
+118,res_80,URBANopt::Scenario::CreateBarMapper
+119,res_81,URBANopt::Scenario::CreateBarMapper
+120,res_82,URBANopt::Scenario::CreateBarMapper
+121,res_83,URBANopt::Scenario::CreateBarMapper
+122,res_84,URBANopt::Scenario::CreateBarMapper
+123,res_85,URBANopt::Scenario::CreateBarMapper
+124,res_86,URBANopt::Scenario::CreateBarMapper
+125,res_87,URBANopt::Scenario::CreateBarMapper
+126,res_88,URBANopt::Scenario::CreateBarMapper
+127,res_89,URBANopt::Scenario::CreateBarMapper
+128,res_90,URBANopt::Scenario::CreateBarMapper
+129,res_91,URBANopt::Scenario::CreateBarMapper
+130,res_92,URBANopt::Scenario::CreateBarMapper
+131,res_93,URBANopt::Scenario::CreateBarMapper
+132,res_94,URBANopt::Scenario::CreateBarMapper
+133,res_95,URBANopt::Scenario::CreateBarMapper
+134,res_96,URBANopt::Scenario::CreateBarMapper
+135,res_97,URBANopt::Scenario::CreateBarMapper
+136,res_98,URBANopt::Scenario::CreateBarMapper
+137,res_99,URBANopt::Scenario::CreateBarMapper
+138,res_100,URBANopt::Scenario::CreateBarMapper
+139,res_101,URBANopt::Scenario::CreateBarMapper
+140,res_102,URBANopt::Scenario::CreateBarMapper
+141,res_103,URBANopt::Scenario::CreateBarMapper
+142,res_104,URBANopt::Scenario::CreateBarMapper
+143,res_105,URBANopt::Scenario::CreateBarMapper
+144,res_106,URBANopt::Scenario::CreateBarMapper
+145,res_107,URBANopt::Scenario::CreateBarMapper
+146,res_108,URBANopt::Scenario::CreateBarMapper
+147,res_109,URBANopt::Scenario::CreateBarMapper
+148,res_110,URBANopt::Scenario::CreateBarMapper
+149,res_111,URBANopt::Scenario::CreateBarMapper
+150,res_112,URBANopt::Scenario::CreateBarMapper
+151,res_113,URBANopt::Scenario::CreateBarMapper
+152,res_114,URBANopt::Scenario::CreateBarMapper
+153,res_115,URBANopt::Scenario::CreateBarMapper
+154,res_116,URBANopt::Scenario::CreateBarMapper
+155,res_117,URBANopt::Scenario::CreateBarMapper
+156,res_118,URBANopt::Scenario::CreateBarMapper
+157,res_119,URBANopt::Scenario::CreateBarMapper
+158,res_120,URBANopt::Scenario::CreateBarMapper
+159,res_121,URBANopt::Scenario::CreateBarMapper
+160,res_122,URBANopt::Scenario::CreateBarMapper
+161,res_123,URBANopt::Scenario::CreateBarMapper
+162,res_124,URBANopt::Scenario::CreateBarMapper
+163,res_125,URBANopt::Scenario::CreateBarMapper
+164,res_126,URBANopt::Scenario::CreateBarMapper
+165,res_127,URBANopt::Scenario::CreateBarMapper
+166,res_128,URBANopt::Scenario::CreateBarMapper
+167,res_129,URBANopt::Scenario::CreateBarMapper
+168,res_130,URBANopt::Scenario::CreateBarMapper
+169,res_131,URBANopt::Scenario::CreateBarMapper
+170,res_132,URBANopt::Scenario::CreateBarMapper
+171,res_133,URBANopt::Scenario::CreateBarMapper
+172,res_134,URBANopt::Scenario::CreateBarMapper
+173,res_135,URBANopt::Scenario::CreateBarMapper
+174,res_136,URBANopt::Scenario::CreateBarMapper
+175,res_137,URBANopt::Scenario::CreateBarMapper
+176,res_138,URBANopt::Scenario::CreateBarMapper
+177,res_139,URBANopt::Scenario::CreateBarMapper
+178,res_140,URBANopt::Scenario::CreateBarMapper
+179,res_141,URBANopt::Scenario::CreateBarMapper
+180,res_142,URBANopt::Scenario::CreateBarMapper
+181,res_143,URBANopt::Scenario::CreateBarMapper
