@@ -109,7 +109,7 @@ def thermal_storage_scenario(json, csv)
   return scenario
 end
 
-def flexiblehotwater_scenario(json, csv)
+def flexible_hot_water_scenario(json, csv)
   name = 'Flexible Hot Water Scenario'
   run_dir = File.join(root_dir, 'run/flexiblehotwater_scenario/')
   feature_file_path = File.join(root_dir, json)
