@@ -57,10 +57,10 @@ else
   gem 'urbanopt-reopt', '0.6.0'
 end
 
-if allow_local && File.exist?('../openstudio-load-flexibiltiy-measures-gem')
-  gem 'openstudio-load-flexibiltiy-measures-gem', path: '../openstudio-load-flexibiltiy-measures-gem'
+if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
+  gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
 elsif allow_local
-  gem 'openstudio-load-flexibiltiy-measures-gem', github: 'NREL/openstudio-load-flexibiltiy-measures-gem', branch: 'master'
+  gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'master'
 else
-  gem 'openstudio-load-flexibiltiy-measures-gem', '0.3.2'
+  gem 'openstudio-load-flexibility-measures', '0.3.2'
 end
