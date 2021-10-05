@@ -490,11 +490,40 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   scenario_base = default_post_processor.scenario_base
   reopt_post_processor = URBANopt::REopt::REoptPostProcessor.new(scenario_report, scenario_base.scenario_reopt_assumptions_file, scenario_base.reopt_feature_assumptions, DEVELOPER_NREL_KEY)
 
+  # Add community photovoltaic if present in the Feature File
+  community_photovoltaic = []
+  feature_file = JSON.parse(File.read(File.expand_path(json)), symbolize_names: true)
+  feature_file[:features].each do |feature|
+    begin
+      if feature[:properties][:district_system_type] 
+        if feature[:properties][:district_system_type] == 'Community Photovoltaic'
+          community_photovoltaic << feature
+        end
+      end
+    rescue
+    end
+  end
+
   # Run Aggregate Scenario
-  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization')
+  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization', run_resilience: true, community_photovoltaic: community_photovoltaic)
+
+  # Add groundmount photovoltaic if present in the Feature File
+  groundmount_photovoltaic = {}
+  feature_file = JSON.parse(File.read(File.expand_path(json)), symbolize_names: true)
+  feature_file[:features].each do |feature|
+    begin
+      if feature[:properties][:district_system_type] 
+        if feature[:properties][:district_system_type] == 'Ground Mount Photovoltaic'
+          groundmount_photovoltaic[feature[:properties][:associated_building_id]] = feature[:properties][:footprint_area]
+        end
+      end
+    rescue
+    end
+  end
 
   # Run features individually - this is an alternative approach to the previous step, in your analysis depending on project ojectives you maye only need to run one
-  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt']* scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization')
+  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt']* scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: true,
+    keep_existing_output: false,  groundmount_photovoltaic: groundmount_photovoltaic)
 end
 
 ### Mixed
