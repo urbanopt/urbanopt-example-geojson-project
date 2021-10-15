@@ -962,7 +962,7 @@ module URBANopt
               # set weekday modify 
               begin
                 if weekday_flag == 2
-                  OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'modify_wknd_op_hrs', true, 'create_typical_building_from_model 1')
+                  OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'modify_wkdy_op_hrs', true, 'create_typical_building_from_model 1')
                 end
               rescue
               end
