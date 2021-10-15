@@ -52,7 +52,7 @@ end
 if allow_local && File.exist?('../urbanopt-reopt-gem')
   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
 elsif allow_local
-  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
+  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'comm_sol_enhance'
 else
   gem 'urbanopt-reopt', '0.6.0'
 end
