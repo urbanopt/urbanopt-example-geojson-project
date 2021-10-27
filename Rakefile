@@ -186,11 +186,16 @@ def visualize_scenarios
   scenario_folders = []
   scenario_report_exists = false
   Dir.glob(File.join(run_dir, '/*_scenario')) do |scenario_folder|
-    scenario_report = File.join(scenario_folder, 'default_scenario_report.csv')
-    if File.exist?(scenario_report)
-      scenario_folders << scenario_folder
+    scenario_report = File.join(scenario_folder, 'scenario_optimization.csv')
+    # Check if Scenario Optimization REopt file exists and add that
+    if File.exist?(File.join(scenario_folder, 'scenario_optimization.csv'))
+      scenario_folders << File.join(scenario_folder, 'scenario_optimization.csv')
       scenario_report_exists = true
-    else
+    # Check if Default Feature Report exists and add that
+    elsif File.exist?(File.join(scenario_folder, 'default_scenario_report.csv'))
+      scenario_folders << File.join(scenario_folder, 'default_scenario_report.csv')
+      scenario_report_exists = true
+    elsif
       puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
     end
   end
@@ -226,11 +231,14 @@ def visualize_features(scenario_file)
   feature_folders = []
   # loop through building feature ids from scenario csv
   csv['Feature Id'].each do |feature|
-    feature_report = File.join(run_dir, feature, 'feature_reports')
-    if File.exist?(feature_report)
+    # Check if Feature Optimization REopt file exists and add that
+    if File.exist?(File.join(run_dir, feature, 'feature_reports/feature_optimization.csv'))
       feature_report_exists = true
-      feature_folders << File.join(run_dir, feature)
-    else
+      feature_folders << File.join(run_dir, feature, 'feature_reports/feature_optimization.csv')
+    elsif File.exist?(File.join(run_dir, feature, 'feature_reports/default_feature_report.csv'))
+      feature_report_exists = true
+      feature_folders << File.join(run_dir, feature, 'feature_reports/default_feature_report.csv')
+    elsif
       puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
     end
   end
@@ -463,7 +471,7 @@ desc 'Run REopt Scenario'
 task :run_reopt, [:json, :csv] do |t, args|
   puts 'Running REopt Scenario...'
 
-  json = 'example_project_combined.json' if args[:json].nil?
+  json = 'example_project_with_PV.json' if args[:json].nil?
   csv = 'reopt_scenario.csv' if args[:csv].nil?
 
   configure_project
@@ -476,7 +484,7 @@ desc 'Post Process REopt Scenario'
 task :post_process_reopt, [:json, :csv] do |t, args|
   puts 'Post Processing REopt Scenario...'
 
-  json = 'example_project_combined.json' if args[:json].nil?
+  json = 'example_project_with_PV.json' if args[:json].nil?
   csv = 'reopt_scenario.csv' if args[:csv].nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(reopt_scenario(json, csv))
@@ -490,11 +498,28 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   scenario_base = default_post_processor.scenario_base
   reopt_post_processor = URBANopt::REopt::REoptPostProcessor.new(scenario_report, scenario_base.scenario_reopt_assumptions_file, scenario_base.reopt_feature_assumptions, DEVELOPER_NREL_KEY)
 
+  community_photovoltaic = []
+  groundmount_photovoltaic = {}
+  feature_file = JSON.parse(File.read(File.join(root_dir, json)), symbolize_names: true)
+  feature_file[:features].each do |feature|
+    begin
+      # Add community photovoltaic if present in the Feature File
+      if feature[:properties][:district_system_type] == 'Community Photovoltaic'
+        community_photovoltaic << feature
+      # Add groundmount photovoltaic if present in the Feature File
+      elsif feature[:properties][:district_system_type] == 'Ground Mount Photovoltaic'
+        groundmount_photovoltaic[feature[:properties][:associated_building_id]] = feature[:properties][:footprint_area]
+      end
+    rescue
+    end
+  end
+
   # Run Aggregate Scenario
-  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization')
+  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization', run_resilience: true, community_photovoltaic: community_photovoltaic)
 
   # Run features individually - this is an alternative approach to the previous step, in your analysis depending on project ojectives you maye only need to run one
-  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt']* scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization')
+  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt']* scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: true,
+    keep_existing_output: false,  groundmount_photovoltaic: groundmount_photovoltaic)
 end
 
 ### Mixed
