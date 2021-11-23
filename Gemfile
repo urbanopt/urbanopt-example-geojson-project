@@ -25,9 +25,6 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
 
-# temporary
-gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'OS_3.3'
-
 if allow_local && File.exist?('../urbanopt-scenario-gem')
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 elsif allow_local
@@ -51,8 +48,7 @@ if allow_local && File.exist?('../urbanopt-geojson-gem')
 elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
-  # gem 'urbanopt-geojson', '~> 0.7.0'
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'OS_3.3'
+  gem 'urbanopt-geojson', '~> 0.7.0'
 end
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
