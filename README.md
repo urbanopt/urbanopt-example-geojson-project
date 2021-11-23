@@ -36,7 +36,7 @@ An overview of the commands:
 *To view all rake tasks*
 
 ```ruby
-rake -T
+bundle exec rake -T
 ```
 
 **Running the projects**
@@ -44,21 +44,21 @@ rake -T
 *To run all projects and scenarios*
 
 ```ruby
-bundle exec run_all
+bundle exec rake run_all
 ```
 
 *To run a specific scenario for a project*
 
 ```ruby
-bundle exec run_baseline[json,csv]
+bundle exec rake run_baseline[json,csv]
 ```
 
 ```ruby
-bundle exec run_high_efficiency[json,csv]
+bundle exec rake run_high_efficiency[json,csv]
 ```
 
 ```ruby
-bundle exec run_mixed[json,csv]
+bundle exec rake run_mixed[json,csv]
 ```
 
 Where, `json` is the name of the FeatureFile  `csv` is the name of the
@@ -69,7 +69,7 @@ the `example_project.json` as json and `createbar_scenario.csv` as csv.
 *To run the thermal storage scenario*
 
 ```ruby
-bundle exec run_thermal_storage[json,csv]
+bundle exec rake run_thermal_storage[json,csv]
 ```
 
 Where, `json` is the `example_project.json` FeatureFile and `csv` is the name of the
@@ -80,7 +80,7 @@ baseline, high efficiency or mixed csv for this feature file.
 *To post-process all projects and scenarios*
 
 ```ruby
-bundle exec post_process_all[json,csv]
+bundle exec rake post_process_all[json,csv]
 ```
 *To post-process a specific scenario for a project*
 
@@ -129,7 +129,7 @@ bundle exec rake visualize_scenarios
 *To clear all projects and scenarios*
 
 ```ruby
-bundle exec clear_all[json,csv]
+bundle exec rake clear_all[json,csv]
 ```
 
 *To clear a specific scenario for a project*
