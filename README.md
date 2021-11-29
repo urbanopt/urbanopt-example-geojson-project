@@ -16,6 +16,9 @@ include:
 - [URBANopt Scenario Gem](https://github.com/urbanopt/urbanopt-scenario-gem)
   allows the user to specify, run and compare multiple district-scale energy scenarios.
 
+- [URBANopt Reporting Gem](https://github.com/urbanopt/urbanopt-reporting-gem)
+  generates the URBANopt results according to a consistent schema.
+
 - [OpenStudio Common Measures Gem](https://github.com/NREL/openstudio-common-measures-gem) , [OpenStudio Model Articulation Gem](https://github.com/NREL/openstudio-model-articulation-gem) and
   [OpenStudio Standards Gem](https://github.com/NREL/openstudio-standards) modules are
   part of the OpenStudio SDK.
