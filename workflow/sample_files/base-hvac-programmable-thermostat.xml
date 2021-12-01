@@ -346,9 +346,17 @@
           </HVACPlant>
           <HVACControl>
             <SystemIdentifier id='HVACControl1'/>
-            <ControlType>manual thermostat</ControlType>
+            <ControlType>programmable thermostat</ControlType>
             <SetpointTempHeatingSeason>68.0</SetpointTempHeatingSeason>
+            <SetbackTempHeatingSeason>66.0</SetbackTempHeatingSeason>
+            <TotalSetbackHoursperWeekHeating>49</TotalSetbackHoursperWeekHeating>
+            <SetupTempCoolingSeason>80.0</SetupTempCoolingSeason>
             <SetpointTempCoolingSeason>78.0</SetpointTempCoolingSeason>
+            <TotalSetupHoursperWeekCooling>42</TotalSetupHoursperWeekCooling>
+            <extension>
+              <SetbackStartHourHeating>23</SetbackStartHourHeating>
+              <SetupStartHourCooling>9</SetupStartHourCooling>
+            </extension>
           </HVACControl>
           <HVACDistribution>
             <SystemIdentifier id='HVACDistribution1'/>
@@ -392,14 +400,13 @@
         <WaterHeating>
           <WaterHeatingSystem>
             <SystemIdentifier id='WaterHeatingSystem1'/>
-            <FuelType>natural gas</FuelType>
+            <FuelType>electricity</FuelType>
             <WaterHeaterType>storage water heater</WaterHeaterType>
             <Location>living space</Location>
-            <TankVolume>50.0</TankVolume>
+            <TankVolume>40.0</TankVolume>
             <FractionDHWLoadServed>1.0</FractionDHWLoadServed>
-            <HeatingCapacity>40000.0</HeatingCapacity>
-            <EnergyFactor>0.59</EnergyFactor>
-            <RecoveryEfficiency>0.76</RecoveryEfficiency>
+            <HeatingCapacity>18767.0</HeatingCapacity>
+            <EnergyFactor>0.95</EnergyFactor>
             <HotWaterTemperature>125.0</HotWaterTemperature>
           </WaterHeatingSystem>
           <HotWaterDistribution>

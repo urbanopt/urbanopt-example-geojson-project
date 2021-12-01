@@ -906,9 +906,7 @@ If a PTAC with non-heat pump (e.g., electric resistance) heating is specified, a
   ``AnnualHeatingEfficiency[Units="Percent"]/Value``  double  frac       0 - 1        No        1.0      Efficiency
   ==================================================  ======  =========  ===========  ========  =======  ==================================
 
-.. note::
-
-  A cooling system of type "packaged terminal air conditioner" must be specified in ``/HPXML/Building/BuildingDetails/Systems/HVAC/HVACPlant/CoolingSystem``.
+  .. [#] A cooling system of type "packaged terminal air conditioner" must be specified in ``/HPXML/Building/BuildingDetails/Systems/HVAC/HVACPlant/CoolingSystem``.
 
 Furnace
 ~~~~~~~
@@ -1846,7 +1844,7 @@ If a conventional storage water heater is specified, additional information is e
   ``HeatingCapacity``                                               double             Btuh           > 0              No        See [#]_  Heating capacity
   ``UniformEnergyFactor`` or ``EnergyFactor`` or ``YearInstalled``  double or integer  frac or #      < 1 or > 1600    Yes       See [#]_  EnergyGuide label rated efficiency or Year installed
   ``UsageBin`` or ``FirstHourRating``                               string or double   str or gal/hr  See [#]_ or > 0  No        See [#]_  EnergyGuide label usage bin/first hour rating
-  ``RecoveryEfficiency``                                            double             frac           0 - 1 [#]_       No        See [#]_  Recovery efficiency
+  ``RecoveryEfficiency``                                            double             frac           0 - 1            No        See [#]_  Recovery efficiency
   ``WaterHeaterInsulation/Jacket/JacketRValue``                     double             F-ft2-hr/Btu   >= 0             No        0         R-value of additional tank insulation wrap
   ================================================================  =================  =============  ===============  ========  ========  ====================================================
   
@@ -1858,7 +1856,6 @@ If a conventional storage water heater is specified, additional information is e
   .. [#] UsageBin/FirstHourRating are only used for water heaters that use UniformEnergyFactor.
          If neither UsageBin nor FirstHourRating provided, UsageBin defaults to "medium".
          If FirstHourRating provided and UsageBin not provided, UsageBin is determined based on the FirstHourRating value.
-  .. [#] RecoveryEfficiency must also be greater than the EnergyFactor (or UniformEnergyFactor).
   .. [#] If RecoveryEfficiency not provided, defaults as follows based on a regression analysis of `AHRI certified water heaters <https://www.ahridirectory.org/NewSearch?programId=24&searchTypeId=3>`_:
   
          - **Electric**: 0.98
