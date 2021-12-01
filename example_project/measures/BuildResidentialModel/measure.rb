@@ -16,7 +16,7 @@ require File.join(resources_path, 'meta_measure')
 # start the measure
 class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
   # human readable name
-  def name
+  def name 
     return 'Build Residential Model'
   end
 
