@@ -432,6 +432,12 @@ module URBANopt
 
             args = {}
 
+            # Custom HPXML Files
+            begin
+              args[:hpxml_directory] = feature.hpxml_directory
+            rescue
+            end
+
             # Simulation Control
             args[:simulation_control_timestep] = 60
             begin
@@ -712,7 +718,7 @@ module URBANopt
 
             args.keys.each do |arg_name|
               unless default_args.keys.include? arg_name
-                next if [:feature_id, :schedules_type, :schedules_variation, :geometry_num_floors_above_grade].include?(arg_name)
+                next if [:feature_id, :schedules_type, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_directory].include?(arg_name)
 
                 puts "Argument '#{arg_name}' is unknown."
               end
