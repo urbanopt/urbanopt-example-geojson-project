@@ -434,7 +434,7 @@ module URBANopt
 
             # Custom HPXML Files
             begin
-              args[:hpxml_directory] = feature.hpxml_directory
+              args[:hpxml_dir] = feature.hpxml_directory
             rescue
             end
 
@@ -545,7 +545,8 @@ module URBANopt
               feature_ids << feature.id
             end
 
-            args[:feature_id] = feature_ids.index(feature_id)
+            args[:feature_id] = feature_id
+            args[:schedules_random_seed] = feature_ids.index(feature_id)
             args[:schedules_type] = 'stochastic' # smooth or stochastic
             args[:schedules_variation] = 'unit' # building or unit
 
@@ -718,7 +719,7 @@ module URBANopt
 
             args.keys.each do |arg_name|
               unless default_args.keys.include? arg_name
-                next if [:feature_id, :schedules_type, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_directory].include?(arg_name)
+                next if [:feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir].include?(arg_name)
 
                 puts "Argument '#{arg_name}' is unknown."
               end

@@ -3,8 +3,8 @@
   <schema_version>3.0</schema_version>
   <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
-  <version_id>4b1a5ba1-4a8f-4956-913a-085eff8469c7</version_id>
-  <version_modified>20220228T220931Z</version_modified>
+  <version_id>d1ed2d57-8e96-4f88-94b0-78508dd6afc5</version_id>
+  <version_modified>20220302T215635Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
   <class_name>BuildResidentialModel</class_name>
   <display_name>Build Residential Model</display_name>
@@ -39,6 +39,15 @@
       </choices>
     </argument>
     <argument>
+      <name>schedules_random_seed</name>
+      <display_name>Schedules: Random Seed</display_name>
+      <description>This numeric field is the seed for the random number generator. Only applies if the schedules type is 'stochastic'.</description>
+      <type>Integer</type>
+      <units>#</units>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+    </argument>
+    <argument>
       <name>schedules_variation</name>
       <display_name>Schedules: Variation</display_name>
       <description>How the schedules vary.</description>
@@ -66,9 +75,9 @@
       <model_dependent>false</model_dependent>
     </argument>
     <argument>
-      <name>hpxml_directory</name>
+      <name>hpxml_dir</name>
       <display_name>Custom HPXML Files</display_name>
-      <description>TODO.</description>
+      <description>The name of the folder containing HPXML files, relative to the xml_building folder.</description>
       <type>String</type>
       <required>false</required>
       <model_dependent>false</model_dependent>
@@ -5949,17 +5958,6 @@
   </attributes>
   <files>
     <file>
-      <version>
-        <software_program>OpenStudio</software_program>
-        <identifier>2.9.1</identifier>
-        <min_compatible>2.9.1</min_compatible>
-      </version>
-      <filename>measure.rb</filename>
-      <filetype>rb</filetype>
-      <usage_type>script</usage_type>
-      <checksum>2157707D</checksum>
-    </file>
-    <file>
       <filename>constants.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
@@ -5982,6 +5980,17 @@
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
       <checksum>ECE5603C</checksum>
+    </file>
+    <file>
+      <version>
+        <software_program>OpenStudio</software_program>
+        <identifier>2.9.1</identifier>
+        <min_compatible>2.9.1</min_compatible>
+      </version>
+      <filename>measure.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>script</usage_type>
+      <checksum>41DA52D8</checksum>
     </file>
   </files>
 </measure>
