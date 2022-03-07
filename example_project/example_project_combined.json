@@ -778,7 +778,8 @@
         "system_type": "Residential - furnace and room air conditioner",
         "heating_system_fuel_type": "fuel oil",
         "number_of_residential_units": 4,
-        "template": "Residential IECC 2015 - Customizable Template Sep 2020"
+        "template": "Residential IECC 2015 - Customizable Template Sep 2020",
+        "hpxml_directory": "17"
       },
       "geometry": {
         "type": "Polygon",

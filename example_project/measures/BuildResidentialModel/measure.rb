@@ -49,6 +49,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg.setDefaultValue('smooth')
     args << arg
 
+    arg = OpenStudio::Measure::OSArgument.makeIntegerArgument('schedules_random_seed', true)
+    arg.setDisplayName('Schedules: Random Seed')
+    arg.setUnits('#')
+    arg.setDescription("This numeric field is the seed for the random number generator. Only applies if the schedules type is 'stochastic'.")
+    args << arg
+
     schedules_variation_choices = OpenStudio::StringVector.new
     schedules_variation_choices << 'unit'
     schedules_variation_choices << 'building'
@@ -61,7 +67,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg = OpenStudio::Measure::OSArgument::makeIntegerArgument('geometry_num_floors_above_grade', true)
     arg.setDisplayName('Geometry: Number of Floors Above Grade')
     arg.setUnits('#')
-    arg.setDescription("The number of floors above grade.")
+    arg.setDescription('The number of floors above grade.')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeStringArgument('hpxml_dir', false)
+    arg.setDisplayName('Custom HPXML Files')
+    arg.setDescription('The name of the folder containing HPXML files, relative to the xml_building folder.')
     args << arg
 
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
@@ -118,49 +129,76 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     model.getSite.remove
     model.getTimestep.remove
 
-    units = get_unit_positions(runner, args)
-    if units.empty?
-      return false
+    # either create units or get pre-made units
+    if args['hpxml_dir'].nil?
+      units = get_unit_positions(runner, args)
+      if units.empty?
+        return false
+      end
+    else
+      hpxml_dir = File.join(File.dirname(__FILE__), "../../xml_building/#{args['hpxml_dir']}")
+
+      if !File.exist?(hpxml_dir)
+        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} was specified for feature ID = #{args['feature_id']}, but could not be found.")
+        return false
+      end
+
+      units = []
+      Dir["#{hpxml_dir}/*.xml"].each do |hpxml_path|
+        name, ext = File.basename(hpxml_path).split('.')
+        units << {'name' => name, 'hpxml_path' => hpxml_path}
+      end
+    end
+
+    if args.keys.include?('geometry_building_num_units')
+      if args['geometry_building_num_units'] != units.size
+        runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{args['geometry_building_num_units']}).")
+        return false
+      end
     end
 
     units.each_with_index do |unit, unit_num|
       unit_model = OpenStudio::Model::Model.new
 
-      hpxml_path = File.expand_path("../#{unit['name']}.xml")
-
       measures = {}
+      hpxml_path = File.expand_path("../#{unit['name']}.xml")
+      if !unit.keys.include?('hpxml_path')
 
-      # BuildResidentialHPXML
-      measure_subdir = 'BuildResidentialHPXML'
-      full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
-      check_file_exists(full_measure_path, runner)
-      measures[measure_subdir] = []
+        # BuildResidentialHPXML
+        measure_subdir = 'BuildResidentialHPXML'
+        full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+        check_file_exists(full_measure_path, runner)
+        measures[measure_subdir] = []
 
-      measure_args = args.clone
-      measure_args['hpxml_path'] = hpxml_path
-      begin
-        measure_args['software_info_program_used'] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
-      rescue
+        measure_args = args.clone
+        measure_args['hpxml_path'] = hpxml_path
+        begin
+          measure_args['software_info_program_used'] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
+        rescue
+        end
+        begin
+          version_rb File.absolute_path(File.join(File.dirname(__FILE__), '../../../lib/uo_cli/version.rb'))
+          require version_rb
+          measure_args['software_info_program_version'] = URBANopt::CLI::VERSION
+        rescue
+        end
+        measure_args['geometry_unit_left_wall_is_adiabatic'] = unit['geometry_unit_left_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_left_wall_is_adiabatic')
+        measure_args['geometry_unit_right_wall_is_adiabatic'] = unit['geometry_unit_right_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_right_wall_is_adiabatic')
+        measure_args['geometry_unit_front_wall_is_adiabatic'] = unit['geometry_unit_front_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_front_wall_is_adiabatic')
+        measure_args['geometry_unit_back_wall_is_adiabatic'] = unit['geometry_unit_back_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_back_wall_is_adiabatic')
+        measure_args['geometry_foundation_type'] = unit['geometry_foundation_type'] if unit.keys.include?('geometry_foundation_type')
+        measure_args['geometry_attic_type'] = unit['geometry_attic_type'] if unit.keys.include?('geometry_attic_type')
+        measure_args['geometry_unit_orientation'] = unit['geometry_unit_orientation'] if unit.keys.include?('geometry_unit_orientation')
+        measure_args.delete('feature_id')
+        measure_args.delete('schedules_type')
+        measure_args.delete('schedules_random_seed')
+        measure_args.delete('schedules_variation')
+        measure_args.delete('geometry_num_floors_above_grade')
+
+        measures[measure_subdir] << measure_args
+      else
+        FileUtils.cp(File.expand_path(unit['hpxml_path']), hpxml_path)
       end
-      begin
-        version_rb File.absolute_path(File.join(File.dirname(__FILE__), '../../../lib/uo_cli/version.rb'))
-        require version_rb
-        measure_args['software_info_program_version'] = URBANopt::CLI::VERSION
-      rescue
-      end
-      measure_args['geometry_unit_left_wall_is_adiabatic'] = unit['geometry_unit_left_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_left_wall_is_adiabatic')
-      measure_args['geometry_unit_right_wall_is_adiabatic'] = unit['geometry_unit_right_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_right_wall_is_adiabatic')
-      measure_args['geometry_unit_front_wall_is_adiabatic'] = unit['geometry_unit_front_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_front_wall_is_adiabatic')
-      measure_args['geometry_unit_back_wall_is_adiabatic'] = unit['geometry_unit_back_wall_is_adiabatic'] if unit.keys.include?('geometry_unit_back_wall_is_adiabatic')
-      measure_args['geometry_foundation_type'] = unit['geometry_foundation_type'] if unit.keys.include?('geometry_foundation_type')
-      measure_args['geometry_attic_type'] = unit['geometry_attic_type'] if unit.keys.include?('geometry_attic_type')
-      measure_args['geometry_unit_orientation'] = unit['geometry_unit_orientation'] if unit.keys.include?('geometry_unit_orientation')
-      measure_args.delete('feature_id')
-      measure_args.delete('schedules_type')
-      measure_args.delete('schedules_variation')
-      measure_args.delete('geometry_num_floors_above_grade')
-
-      measures[measure_subdir] << measure_args
 
       # BuildResidentialScheduleFile
       measure_subdir = 'BuildResidentialScheduleFile'
@@ -172,7 +210,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args['hpxml_path'] = hpxml_path
       measure_args['hpxml_output_path'] = hpxml_path
       measure_args['schedules_type'] = args['schedules_type']
-      measure_args['schedules_random_seed'] = args['feature_id'] # variation by building; deterministic
+      measure_args['schedules_random_seed'] = args['schedules_random_seed'] # variation by building; deterministic
       if args['schedules_variation'] == 'unit' 
         measure_args['schedules_random_seed'] *= (unit_num + 1) # variation across units; deterministic
       end
