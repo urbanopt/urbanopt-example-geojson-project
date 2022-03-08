@@ -150,11 +150,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
     end
 
+    standards_number_of_living_units = 1
     if args.keys.include?('geometry_building_num_units')
-      if args['geometry_building_num_units'] != units.size
-        runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{args['geometry_building_num_units']}).")
-        return false
-      end
+      standards_number_of_living_units = Integer(args['geometry_building_num_units'])
+    end
+
+    if standards_number_of_living_units != units.size
+      runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{standards_number_of_living_units}).")
+      return false
     end
 
     units.each_with_index do |unit, unit_num|
@@ -244,11 +247,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         if ['ConditionedBasement'].include?(args['geometry_foundation_type'])
           number_of_conditioned_stories += 1
         end
-      end
-
-      standards_number_of_living_units = 1
-      if args.keys.include?('geometry_building_num_units')
-        standards_number_of_living_units = Integer(args['geometry_building_num_units'])
       end
 
       case args['geometry_unit_type']
@@ -423,41 +421,71 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
   end
 
   def prefix_all_unit_model_objects(unit_model, unit)
+    # EMS objects
     ems_map = {}
+
     unit_model.getEnergyManagementSystemSensors.each do |sensor|
-      ems_map["#{sensor.name}"] = "#{unit['name'].gsub(' ', '_')}_#{sensor.name}"
-      sensor.setKeyName("#{unit['name']} #{sensor.keyName}") unless sensor.keyName.empty?
+      old_sensor_name = sensor.name.to_s
+      new_sensor_name = make_variable_name("#{unit['name']}_#{sensor.name}")
+
+      ems_map[old_sensor_name] = new_sensor_name
+
+      old_sensor_key_name = sensor.keyName.to_s
+      new_sensor_key_name = make_variable_name("#{unit['name']}_#{sensor.keyName}") unless sensor.keyName.empty?
+      sensor.setKeyName(new_sensor_key_name) unless sensor.keyName.empty?
     end
+
     unit_model.getEnergyManagementSystemActuators.each do |actuator|
-      ems_map["#{actuator.name}"] = "#{unit['name'].gsub(' ', '_')}_#{actuator.name}"
+      old_actuator_name = actuator.name.to_s
+      new_actuator_name = make_variable_name("#{unit['name']}_#{actuator.name}")
+
+      ems_map[old_actuator_name] = new_actuator_name
     end
+
     unit_model.getEnergyManagementSystemOutputVariables.each do |output_variable|
-      ems_map["#{output_variable.emsVariableName}"] = "#{unit['name'].gsub(' ', '_')}_#{output_variable.emsVariableName}"
-      output_variable.setEMSVariableName("#{unit['name'].gsub(' ', '_')}_#{output_variable.emsVariableName}")
+      next if output_variable.emsVariableObject.is_initialized
+
+      old_ems_variable_name = output_variable.emsVariableName.to_s
+      new_ems_variable_name = make_variable_name("#{unit['name']}_#{output_variable.emsVariableName}")
+
+      ems_map[old_ems_variable_name] = new_ems_variable_name
+      output_variable.setEMSVariableName(new_ems_variable_name)
     end
 
     # variables in program lines don't get updated automatically
+    characters = ['', ' ', ',', '(', ')', '+', '-', '*', '/', ';']
     unit_model.getEnergyManagementSystemPrograms.each do |program|
+      old_program_name = program.name.to_s
+      new_program_name = make_variable_name("#{unit['name']}_#{program.name}")
+
       new_lines = []
       program.lines.each_with_index do |line, i|
         ems_map.each do |old_name, new_name|
-          line = line.gsub(" #{old_name}", " #{new_name}") if line.include?(" #{old_name}")
-          line = line.gsub("(#{old_name} ", "(#{new_name} ") if line.include?("(#{old_name} ")
-          line = line.gsub(" #{old_name})", " #{new_name})") if line.include?(" #{old_name})")
-          line = line.gsub("-#{old_name})", "-#{new_name})") if line.include?("-#{old_name})")
-          line = line.gsub("+#{old_name})", "+#{new_name})") if line.include?("+#{old_name})")
-          line = line.gsub("*#{old_name})", "*#{new_name})") if line.include?("*#{old_name})")
+          # old_name between at least 1 character, with the exception of '' on left and ' ' on right
+          characters.each do |lhs|
+            characters.each do |rhs|
+              next if lhs == '' && (['', ' '].include?(rhs))
+
+              line = line.gsub("#{lhs}#{old_name}#{rhs}", "#{lhs}#{new_name}#{rhs}") if line.include?("#{lhs}#{old_name}#{rhs}")
+            end
+          end
         end
         new_lines << line
       end
       program.setLines(new_lines)
     end
 
+    # All model objects
     unit_model.objects.each do |model_object|
       next if model_object.name.nil?
 
-      model_object.setName("#{unit['name']} #{model_object.name.to_s}")
+      new_model_object_name = make_variable_name("#{unit['name']}_#{model_object.name}")
+      model_object.setName(new_model_object_name)
     end
+  end
+
+  def make_variable_name(str)
+    return str.gsub(' ', '_').gsub('-', '_')
   end
 end
 
