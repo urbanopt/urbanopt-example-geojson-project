@@ -277,9 +277,28 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       else # for single-family attached and multifamily, add "almost" everything
 
+        y_shift = 100.0 * unit_num # meters
+
         # shift the unit so it's not right on top of the previous one
         unit_model.getSpaces.sort.each do |space|
-          space.setYOrigin(100.0 * unit_num) # meters
+          space.setYOrigin(y_shift)
+        end
+
+        # shift shading surfaces
+        m = OpenStudio::Matrix.new(4, 4, 0)
+        m[0, 0] = 1
+        m[1, 1] = 1
+        m[2, 2] = 1
+        m[3, 3] = 1
+        m[1, 3] = y_shift
+        t = OpenStudio::Transformation.new(m)
+
+        unit_model.getShadingSurfaceGroups.each do |shading_surface_group|
+          next if shading_surface_group.space.is_initialized # already got shifted
+
+          shading_surface_group.shadingSurfaces.each do |shading_surface|
+            shading_surface.setVertices(t * shading_surface.vertices)
+          end
         end
 
         # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
