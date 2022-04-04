@@ -428,6 +428,13 @@ module URBANopt
             rescue
             end
 
+            # Occupancy Calculation Type
+            args[:occupancy_calculation_type] = 'asset'
+            begin
+              args[:occupancy_calculation_type] = feature.occupancy_calculation_type
+            rescue
+            end
+
             # Simulation Control
             args[:simulation_control_timestep] = 60
             begin

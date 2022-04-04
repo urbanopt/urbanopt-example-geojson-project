@@ -39,6 +39,15 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg.setDescription('The feature ID passed from Baseline.rb.')
     args << arg
 
+    occupancy_calculation_type_choices = OpenStudio::StringVector.new
+    occupancy_calculation_type_choices << 'asset'
+    occupancy_calculation_type_choices << 'operational'
+
+    arg = OpenStudio::Measure::OSArgument.makeChoiceArgument('occupancy_calculation_type', occupancy_calculation_type_choices, true)
+    arg.setDisplayName('Occupancy Calculation Type')
+    arg.setDescription("The type of occupancy calculation type. If 'asset' is chosen, usages of plug loads, appliances, hot water, etc. are based on number of bedrooms or conditioned floor area. If 'operational' is chosen, these usages are adjusted based on the number of occupants.")
+    args << arg
+
     schedules_type_choices = OpenStudio::StringVector.new
     schedules_type_choices << 'smooth'
     schedules_type_choices << 'stochastic'
