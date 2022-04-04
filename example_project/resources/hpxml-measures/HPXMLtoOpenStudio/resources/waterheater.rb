@@ -357,7 +357,7 @@ class Waterheater
       # ProgramCallingManagers
       program_calling_manager = OpenStudio::Model::EnergyManagementSystemProgramCallingManager.new(model)
       program_calling_manager.setName("#{combi_sys_id} ProgramManager")
-      program_calling_manager.setCallingPoint('BeginTimestepBeforePredictor')
+      program_calling_manager.setCallingPoint('BeginZoneTimestepAfterInitHeatBalance')
       program_calling_manager.addProgram(combi_ctrl_program)
     end
   end
@@ -551,7 +551,6 @@ class Waterheater
     if (solar_thermal_system.collector_type == HPXML::SolarThermalTypeICS) || (fluid_type == Constants.FluidWater) # Use a 60 gal tank dummy tank for direct systems, storage volume for ICS is assumed to be collector volume
       storage_tank.setTankVolume(0.2271)
       storage_tank.setTankHeight(1.3755)
-      storage_tank.setTankPerimeter(0.120)
       storage_tank.setUseSideOutletHeight(1.3755)
       storage_tank.setSourceSideInletHeight(1.3755 / 3.0)
     else
@@ -559,7 +558,6 @@ class Waterheater
       storage_ht = 3.0 * storage_diam # ft
       storage_tank.setTankVolume(UnitConversions.convert(solar_thermal_system.storage_volume, 'gal', 'm^3'))
       storage_tank.setTankHeight(UnitConversions.convert(storage_ht, 'ft', 'm'))
-      storage_tank.setTankPerimeter(Math::PI * UnitConversions.convert(storage_diam, 'in', 'm'))
       storage_tank.setUseSideOutletHeight(UnitConversions.convert(storage_ht, 'ft', 'm'))
       storage_tank.setSourceSideInletHeight(UnitConversions.convert(storage_ht, 'ft', 'm') / 3.0)
     end
@@ -1299,7 +1297,8 @@ class Waterheater
       ec_adj_program.addLine("Set dhw_e_cons = #{ec_adj_oncyc_sensor.name} + #{ec_adj_offcyc_sensor.name}")
       ec_adj_program.addLine('Set htg_e_cons = dhw_e_cons')
       ec_adj_program.addLine("If #{ec_adj_sensor_boiler_heating.name} > 0")
-      ec_adj_program.addLine("  Set dhw_frac = (@Abs #{ec_adj_sensor_hx.name}) / #{ec_adj_sensor_boiler_heating.name}")
+      ec_adj_program.addLine("  Set dhw_frac = (@Abs #{ec_adj_sensor_hx.name} / #{ec_adj_sensor_boiler_heating.name})")
+      ec_adj_program.addLine('  Set dhw_frac = (@Min dhw_frac 1)')
       ec_adj_program.addLine("  Set dhw_e_cons = dhw_e_cons + dhw_frac * #{ec_adj_sensor_boiler.name}")
       ec_adj_program.addLine("  Set htg_e_cons = htg_e_cons + (1.0 - dhw_frac) * #{ec_adj_sensor_boiler.name}")
       ec_adj_program.addLine('EndIf')
@@ -1311,6 +1310,7 @@ class Waterheater
       ec_adj_program.addLine("Set dhw_e_cons = #{ec_adj_sensor.name} + #{ec_adj_oncyc_sensor.name} + #{ec_adj_offcyc_sensor.name}")
     end
     ec_adj_program.addLine("Set #{ec_adj_actuator.name} = #{adjustment} * dhw_e_cons")
+    ec_adj_program.addLine("Set ec_adj_energy = #{ec_adj_actuator.name} * 3600 * SystemTimeStep")
 
     # Program Calling Manager
     program_calling_manager = OpenStudio::Model::EnergyManagementSystemProgramCallingManager.new(model)
@@ -1318,13 +1318,8 @@ class Waterheater
     program_calling_manager.setCallingPoint('EndOfSystemTimestepBeforeHVACReporting')
     program_calling_manager.addProgram(ec_adj_program)
 
-    # Sensor for EMS reporting
-    ec_adj_object_sensor = OpenStudio::Model::EnergyManagementSystemSensor.new(model, "Other Equipment #{EPlus.fuel_type(fuel_type)} Energy")
-    ec_adj_object_sensor.setName("#{ec_adj_object.name} energy consumption")
-    ec_adj_object_sensor.setKeyName(ec_adj_object.name.to_s)
-
     # EMS Output Variable for EC_adj reporting
-    ec_adj_output_var = OpenStudio::Model::EnergyManagementSystemOutputVariable.new(model, ec_adj_object_sensor)
+    ec_adj_output_var = OpenStudio::Model::EnergyManagementSystemOutputVariable.new(model, 'ec_adj_energy')
     ec_adj_output_var.setName("#{Constants.ObjectNameWaterHeaterAdjustment(heater.name)} outvar")
     ec_adj_output_var.setTypeOfDataInVariable('Summed')
     ec_adj_output_var.setUpdateFrequency('SystemTimestep')
@@ -1716,7 +1711,7 @@ class Waterheater
 
     value = nil
     lookup_year = 0
-    CSV.foreach(File.join(File.dirname(__FILE__), 'lu_water_heater_efficiency.csv'), headers: true) do |row|
+    CSV.foreach(File.join(File.dirname(__FILE__), 'data', 'water_heater_efficiency.csv'), headers: true) do |row|
       next unless row['fuel_primary_id'] == fuel_primary_id
 
       row_year = Integer(row['year'])

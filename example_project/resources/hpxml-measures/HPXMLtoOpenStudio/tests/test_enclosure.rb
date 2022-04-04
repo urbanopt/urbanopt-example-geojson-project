@@ -372,13 +372,13 @@ class HPXMLtoOpenStudioEnclosureTest < MiniTest::Test
 
     hpxml = _create_hpxml('base-foundation-vented-crawlspace.xml')
     ceilings_values.each do |ceiling_values|
-      hpxml.frame_floors[0].insulation_assembly_r_value = ceiling_values[:assembly_r]
+      hpxml.frame_floors[1].insulation_assembly_r_value = ceiling_values[:assembly_r]
       XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
       model, hpxml = _test_measure(args_hash)
 
       # Check properties
-      os_surface = model.getSurfaces.select { |s| s.name.to_s == hpxml.frame_floors[0].id }[0]
-      _check_surface(hpxml.frame_floors[0], os_surface, ceiling_values[:layer_names])
+      os_surface = model.getSurfaces.select { |s| s.name.to_s == hpxml.frame_floors[1].id }[0]
+      _check_surface(hpxml.frame_floors[1], os_surface, ceiling_values[:layer_names])
     end
 
     # Floors
@@ -388,13 +388,13 @@ class HPXMLtoOpenStudioEnclosureTest < MiniTest::Test
 
     hpxml = _create_hpxml('base-foundation-vented-crawlspace.xml')
     floors_values.each do |floor_values|
-      hpxml.frame_floors[1].insulation_assembly_r_value = floor_values[:assembly_r]
+      hpxml.frame_floors[0].insulation_assembly_r_value = floor_values[:assembly_r]
       XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
       model, hpxml = _test_measure(args_hash)
 
       # Check properties
-      os_surface = model.getSurfaces.select { |s| s.name.to_s == hpxml.frame_floors[1].id }[0]
-      _check_surface(hpxml.frame_floors[1], os_surface, floor_values[:layer_names])
+      os_surface = model.getSurfaces.select { |s| s.name.to_s == hpxml.frame_floors[0].id }[0]
+      _check_surface(hpxml.frame_floors[0], os_surface, floor_values[:layer_names])
     end
   end
 
@@ -447,6 +447,26 @@ class HPXMLtoOpenStudioEnclosureTest < MiniTest::Test
 
       assert_equal(window.shgc, os_simple_glazing.solarHeatGainCoefficient)
       assert_in_epsilon(window.ufactor, UnitConversions.convert(os_simple_glazing.uFactor, 'W/(m^2*K)', 'Btu/(hr*ft^2*F)'), 0.001)
+    end
+
+    # Storm windows
+    args_hash = {}
+    args_hash['hpxml_path'] = File.absolute_path(@tmp_hpxml_path)
+    hpxml = _create_hpxml('base.xml')
+    hpxml.windows.each do |window|
+      window.ufactor = 0.6
+      window.storm_type = HPXML::WindowGlassTypeLowE
+    end
+    XMLHelper.write_file(hpxml.to_oga, @tmp_hpxml_path)
+    model, hpxml = _test_measure(args_hash)
+
+    # Check window properties
+    hpxml.windows.each do |window|
+      os_window = model.getSubSurfaces.select { |w| w.name.to_s == window.id }[0]
+      os_simple_glazing = os_window.construction.get.to_LayeredConstruction.get.getLayer(0).to_SimpleGlazing.get
+
+      assert_equal(0.36, os_simple_glazing.solarHeatGainCoefficient)
+      assert_in_epsilon(0.2936, UnitConversions.convert(os_simple_glazing.uFactor, 'W/(m^2*K)', 'Btu/(hr*ft^2*F)'), 0.001)
     end
 
     # Check window shading

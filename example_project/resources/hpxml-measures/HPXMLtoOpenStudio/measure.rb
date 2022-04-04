@@ -133,8 +133,8 @@ class HPXMLtoOpenStudio < OpenStudio::Measure::ModelMeasure
       if skip_validation
         stron_paths = []
       else
-        stron_paths = [File.join(File.dirname(__FILE__), 'resources', 'HPXMLvalidator.xml'),
-                       File.join(File.dirname(__FILE__), 'resources', 'EPvalidator.xml')]
+        stron_paths = [File.join(File.dirname(__FILE__), 'resources', 'hpxml_schematron', 'HPXMLvalidator.xml'),
+                       File.join(File.dirname(__FILE__), 'resources', 'hpxml_schematron', 'EPvalidator.xml')]
       end
       hpxml = HPXML.new(hpxml_path: hpxml_path, schematron_validators: stron_paths, building_id: building_id)
       hpxml.errors.each do |error|
@@ -216,16 +216,17 @@ class OSModel
 
     # Init
 
-    weather, epw_file = Location.apply_weather_file(model, runner, epw_path, cache_path)
-    set_defaults_and_globals(runner, output_dir, epw_file, weather)
-    Location.apply(model, runner, weather, epw_file, @hpxml)
-    add_simulation_params(model)
+    check_file_references(hpxml_path)
+    @schedules_file = SchedulesFile.new(runner: runner, model: model,
+                                        schedules_paths: @hpxml.header.schedules_filepaths,
+                                        col_names: SchedulesFile.ColumnNames)
 
-    @schedules_file = nil
-    unless @hpxml.header.schedules_filepath.nil?
-      @schedules_file = SchedulesFile.new(runner: runner, model: model, year: hpxml.header.sim_calendar_year,
-                                          schedules_path: @hpxml.header.schedules_filepath)
-    end
+    weather, epw_file = Location.apply_weather_file(model, runner, epw_path, cache_path)
+    set_defaults_and_globals(runner, output_dir, epw_file, weather, @schedules_file)
+    validate_emissions_files()
+    @schedules_file.validate_schedules(year: @hpxml.header.sim_calendar_year) if not @schedules_file.nil?
+    Location.apply(model, weather, epw_file, @hpxml)
+    add_simulation_params(model)
 
     # Conditioned space/zone
 
@@ -299,7 +300,44 @@ class OSModel
 
   private
 
-  def self.set_defaults_and_globals(runner, output_dir, epw_file, weather)
+  def self.check_file_references(hpxml_path)
+    # Check/update file references
+    @hpxml.header.schedules_filepaths = @hpxml.header.schedules_filepaths.collect { |sfp|
+      FilePath.check_path(sfp,
+                          File.dirname(hpxml_path),
+                          'Schedules')
+    }
+
+    @hpxml.header.emissions_scenarios.each do |scenario|
+      if @hpxml.header.emissions_scenarios.select { |s| s.emissions_type == scenario.emissions_type && s.name == scenario.name }.size > 1
+        fail "Found multiple Emissions Scenarios with the Scenario Name=#{scenario.name} and Emissions Type=#{scenario.emissions_type}."
+      end
+      next if scenario.elec_schedule_filepath.nil?
+
+      scenario.elec_schedule_filepath = FilePath.check_path(scenario.elec_schedule_filepath,
+                                                            File.dirname(hpxml_path),
+                                                            'Emissions File')
+    end
+  end
+
+  def self.validate_emissions_files()
+    @hpxml.header.emissions_scenarios.each do |scenario|
+      next if scenario.elec_schedule_filepath.nil?
+
+      data = File.readlines(scenario.elec_schedule_filepath)
+      num_header_rows = scenario.elec_schedule_number_of_header_rows
+      col_index = scenario.elec_schedule_column_number - 1
+
+      if data.size != 8760 + num_header_rows
+        fail "Emissions File has invalid number of rows (#{data.size}). Expected 8760 plus #{num_header_rows} header row(s)."
+      end
+      if col_index > data[num_header_rows, 8760].map { |x| x.count(',') }.min
+        fail "Emissions File has too few columns. Cannot find column number (#{scenario.elec_schedule_column_number})."
+      end
+    end
+  end
+
+  def self.set_defaults_and_globals(runner, output_dir, epw_file, weather, schedules_file)
     # Initialize
     @remaining_heat_load_frac = 1.0
     @remaining_cool_load_frac = 1.0
@@ -315,7 +353,7 @@ class OSModel
     @default_azimuths = HPXMLDefaults.get_default_azimuths(@hpxml)
 
     # Apply defaults to HPXML object
-    HPXMLDefaults.apply(@hpxml, @eri_version, weather, epw_file: epw_file)
+    HPXMLDefaults.apply(@hpxml, @eri_version, weather, epw_file: epw_file, schedules_file: schedules_file)
 
     @frac_windows_operable = @hpxml.fraction_of_windows_operable()
 
@@ -545,7 +583,7 @@ class OSModel
     num_occ = @hpxml.building_occupancy.number_of_residents
     return if num_occ <= 0
 
-    Geometry.apply_occupants(model, @hpxml, num_occ, @cfa, spaces[HPXML::LocationLivingSpace], @schedules_file)
+    Geometry.apply_occupants(model, runner, @hpxml, num_occ, @cfa, spaces[HPXML::LocationLivingSpace], @schedules_file)
   end
 
   def self.create_or_get_space(model, spaces, location)
@@ -1338,6 +1376,8 @@ class OSModel
       window_length = window.area / window_height
       z_origin = @foundation_top
 
+      ufactor, shgc = Constructions.get_ufactor_shgc_adjusted_by_storms(window.storm_type, window.ufactor, window.shgc)
+
       if window.is_exterior
 
         # Create parent surface slightly bigger than window
@@ -1367,7 +1407,7 @@ class OSModel
         end
 
         # Apply construction
-        Constructions.apply_window(runner, model, sub_surface, 'WindowConstruction', window.ufactor, window.shgc)
+        Constructions.apply_window(runner, model, sub_surface, 'WindowConstruction', ufactor, shgc)
 
         # Apply interior/exterior shading (as needed)
         shading_vertices = Geometry.create_wall_vertices(window_length, window_height, z_origin, window.azimuth)
@@ -1402,7 +1442,7 @@ class OSModel
         # Apply construction
         inside_film = Material.AirFilmVertical
         outside_film = Material.AirFilmVertical
-        Constructions.apply_door(runner, model, [sub_surface], 'Window', window.ufactor, inside_film, outside_film)
+        Constructions.apply_door(runner, model, [sub_surface], 'Window', ufactor, inside_film, outside_film)
       end
     end
 
@@ -1421,6 +1461,8 @@ class OSModel
       width = Math::sqrt(skylight.area)
       length = skylight.area / width
       z_origin = @walls_top + 0.5 * Math.sin(Math.atan(tilt)) * width
+
+      ufactor, shgc = Constructions.get_ufactor_shgc_adjusted_by_storms(skylight.storm_type, skylight.ufactor, skylight.shgc)
 
       # Create parent surface slightly bigger than skylight
       vertices = Geometry.create_roof_vertices(length, width, z_origin, skylight.azimuth, tilt, add_buffer: true)
@@ -1443,7 +1485,7 @@ class OSModel
       sub_surface.setSubSurfaceType('Skylight')
 
       # Apply construction
-      Constructions.apply_skylight(runner, model, sub_surface, 'SkylightConstruction', skylight.ufactor, skylight.shgc)
+      Constructions.apply_skylight(runner, model, sub_surface, 'SkylightConstruction', ufactor, shgc)
 
       # Apply interior/exterior shading (as needed)
       shading_vertices = Geometry.create_roof_vertices(length, width, z_origin, skylight.azimuth, tilt)
@@ -1666,12 +1708,6 @@ class OSModel
       sys_id = heating_system.id
       if [HPXML::HVACTypeFurnace, HPXML::HVACTypePTACHeating].include? heating_system.heating_system_type
 
-        if heating_system.is_heat_pump_backup_system
-          # If we ever want to support this in the future, we have to address HVAC
-          # sizing related to 1) distribution losses and 2) calculating the airflow rate.
-          fail "Heat pump backup system cannot be of type '#{heating_system.heating_system_type}'."
-        end
-
         airloop_map[sys_id] = HVAC.apply_air_source_hvac_systems(model, runner, nil, heating_system,
                                                                  [0], sequential_heat_load_fracs,
                                                                  living_zone)
@@ -1862,13 +1898,14 @@ class OSModel
         obj_name = Constants.ObjectNameMiscElectricVehicleCharging
       elsif plug_load.plug_load_type == HPXML::PlugLoadTypeWellPump
         obj_name = Constants.ObjectNameMiscWellPump
+        plug_load.usage_multiplier *= @hpxml.header.additional_properties.misc_loads_adj_factor
       end
       if obj_name.nil?
         runner.registerWarning("Unexpected plug load type '#{plug_load.plug_load_type}'. The plug load will not be modeled.")
         next
       end
 
-      MiscLoads.apply_plug(model, plug_load, obj_name, spaces[HPXML::LocationLivingSpace], @apply_ashrae140_assumptions, @schedules_file)
+      MiscLoads.apply_plug(model, runner, plug_load, obj_name, spaces[HPXML::LocationLivingSpace], @apply_ashrae140_assumptions, @schedules_file)
     end
   end
 
@@ -1882,12 +1919,13 @@ class OSModel
       elsif fuel_load.fuel_load_type == HPXML::FuelLoadTypeFireplace
         obj_name = Constants.ObjectNameMiscFireplace
       end
+      fuel_load.usage_multiplier *= @hpxml.header.additional_properties.misc_loads_adj_factor
       if obj_name.nil?
         runner.registerWarning("Unexpected fuel load type '#{fuel_load.fuel_load_type}'. The fuel load will not be modeled.")
         next
       end
 
-      MiscLoads.apply_fuel(model, fuel_load, obj_name, spaces[HPXML::LocationLivingSpace], @schedules_file)
+      MiscLoads.apply_fuel(model, runner, fuel_load, obj_name, spaces[HPXML::LocationLivingSpace], @schedules_file)
     end
   end
 
@@ -1900,14 +1938,22 @@ class OSModel
     @hpxml.pools.each do |pool|
       next if pool.type == HPXML::TypeNone
 
+      pool.heater_usage_multiplier *= @hpxml.header.additional_properties.misc_loads_adj_factor if pool.heater_type != HPXML::TypeNone
       MiscLoads.apply_pool_or_hot_tub_heater(model, pool, Constants.ObjectNameMiscPoolHeater, spaces[HPXML::LocationLivingSpace], @schedules_file)
+      next if pool.pump_type == HPXML::TypeNone
+
+      pool.pump_usage_multiplier *= @hpxml.header.additional_properties.misc_loads_adj_factor
       MiscLoads.apply_pool_or_hot_tub_pump(model, pool, Constants.ObjectNameMiscPoolPump, spaces[HPXML::LocationLivingSpace], @schedules_file)
     end
 
     @hpxml.hot_tubs.each do |hot_tub|
       next if hot_tub.type == HPXML::TypeNone
 
+      hot_tub.heater_usage_multiplier *= @hpxml.header.additional_properties.misc_loads_adj_factor if hot_tub.heater_type != HPXML::TypeNone
       MiscLoads.apply_pool_or_hot_tub_heater(model, hot_tub, Constants.ObjectNameMiscHotTubHeater, spaces[HPXML::LocationLivingSpace], @schedules_file)
+      next if hot_tub.pump_type == HPXML::TypeNone
+
+      hot_tub.pump_usage_multiplier *= @hpxml.header.additional_properties.misc_loads_adj_factor
       MiscLoads.apply_pool_or_hot_tub_pump(model, hot_tub, Constants.ObjectNameMiscHotTubPump, spaces[HPXML::LocationLivingSpace], @schedules_file)
     end
   end
@@ -2030,6 +2076,11 @@ class OSModel
 
   def self.add_photovoltaics(runner, model)
     @hpxml.pv_systems.each do |pv_system|
+      next if pv_system.inverter_efficiency == @hpxml.pv_systems[0].inverter_efficiency
+
+      fail 'Expected all InverterEfficiency values to be equal.'
+    end
+    @hpxml.pv_systems.each do |pv_system|
       PV.apply(model, @nbeds, pv_system)
     end
   end
@@ -2058,6 +2109,10 @@ class OSModel
     additionalProperties.setFeature('hpxml_path', hpxml_path)
     additionalProperties.setFeature('hpxml_defaults_path', @hpxml_defaults_path)
     additionalProperties.setFeature('building_id', building_id.to_s)
+    emissions_scenario_names = @hpxml.header.emissions_scenarios.map { |s| s.name }.to_s
+    additionalProperties.setFeature('emissions_scenario_names', emissions_scenario_names)
+    emissions_scenario_types = @hpxml.header.emissions_scenarios.map { |s| s.emissions_type }.to_s
+    additionalProperties.setFeature('emissions_scenario_types', emissions_scenario_types)
   end
 
   def self.map_to_string(map)
