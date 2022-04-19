@@ -55,7 +55,7 @@
       "arguments": {
         "__SKIP__": false,
         "add_hvac": true,
-        "add_refrigeration": false,
+        "add_refrigeration": true,
         "system_type": "Inferred"
       }
     },{  
