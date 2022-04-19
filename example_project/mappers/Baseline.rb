@@ -1071,7 +1071,77 @@ module URBANopt
             raise "Building type #{building_type} not currently supported."
           end # building type == residential or commercial
 
+
+        
         end # feature_type == 'Building'
+
+
+        #call the add_ems_emissions_reporting measure 
+        OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
+        OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_subregion', 'RMPAc')
+        OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_subregion', 'Rocky Mountains')
+        OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_subregion', 'RMPA')
+        OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', '2020')
+        OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', '2019')
+        OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', '2019')
+
+
+        # # add EV loads
+        # emissions = nil
+
+        # begin
+        #   emissions = feature.emissions
+        # rescue
+        # end
+
+        # if emissions != true
+        #   puts "Emissions is not set to ture in the geojson file. Please set emissions to true to add emissions results."
+        # elsif emissions == true
+        #   OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
+        #   begin
+
+        #     #emissions_future_subregion
+        #     emissions_future_subregion = feature.emissions_future_subregion
+        #     if !emissions_future_subregionnil? && !emissions_future_subregion.empty?
+        #       OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_subregion', emissions_future_subregion)
+        #     end
+
+        #     #hourly_historical_subregion
+        #     hourly_historical_subregion = feature.hourly_historical_subregion
+        #     if !emissions_future_subregionnil? && !emissions_future_subregion.empty?
+        #       OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_subregion', hourly_historical_subregion)
+        #     end
+
+        #     #annual_historical_subregion
+        #     hourly_historical_subregion = feature.hourly_historical_subregion
+        #     if !annual_historical_subregion? && !annual_historical_subregion.empty?
+        #       OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_subregion', annual_historical_subregion)
+        #     end
+
+        #     #future_year
+        #     hourly_historical_subregion = feature.hourly_historical_subregion
+        #     if !annual_historical_subregion? && !annual_historical_subregion.empty?
+        #       OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', future_year)
+        #     end
+
+        #     #hourly_historical_year
+        #     hourly_historical_subregion = feature.hourly_historical_subregion
+        #     if !hourly_historical_year? && !hourly_historical_year.empty?
+        #       OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', hourly_historical_year)
+        #     end
+            
+        #     #annual_historical_year'
+        #     annual_historical_year = feature.annual_historical_year
+        #     if !hourly_historical_year? && !hourly_historical_year.empty?
+        #       OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', annual_historical_year)
+        #     end
+                        
+
+        #   rescue
+        #   end
+
+        # end
+
 
         # call the default feature reporting measure
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_id', feature_id)
