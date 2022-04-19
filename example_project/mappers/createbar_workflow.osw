@@ -129,7 +129,7 @@
         "check_domestic_hot_water_tol": 0.50,
         "check_mech_sys_efficiency": true,
         "check_mech_sys_efficiency_tol": 0.25,
-        "check_mech_sys_type": true,
+        "check_mech_sys_type": false,
         "check_supply_air_and_thermostat_temp_difference": true,
         "check_supply_air_and_thermostat_temp_difference_tol": 4.0,
         "__SKIP__": false
