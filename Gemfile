@@ -41,7 +41,7 @@ else
   gem 'urbanopt-reporting', '~> 0.5.0'
 end
 
-# Temporarily point to develop branch
+# TODO: uncomment post release of geojson gem 
 
 #if allow_local && File.exist?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
