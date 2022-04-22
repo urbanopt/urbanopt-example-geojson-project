@@ -1071,73 +1071,233 @@ module URBANopt
             raise "Building type #{building_type} not currently supported."
           end # building type == residential or commercial
 
-
-        
         end # feature_type == 'Building'
 
+        
+        #### Emissions Adition
+        
+        #REK:mapping to be completed (in progress)
+        def map_epw_to_egrid(feature)
 
-        # #call the add_ems_emissions_reporting measure 
-        # OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
-        # OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_subregion', 'RMPAc')
-        # OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_subregion', 'Rocky Mountains')
-        # OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_subregion', 'RMPA')
-        # OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', '2020')
-        # OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', '2019')
-        # OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', '2019')
+          future_emissions_mapping_hash =   
+          {'FL': 'FRCCc',
+          'MS': 'SRMVc',
+          'NE': 'MROWc',
+          'OR': 'NWPPc',
+          'CA': 'CAMXc',
+          'VA': 'RFCWc',
+          'AR': 'SRMVc',
+          'TX': 'ERCTc',
+          'OH': 'RFCWc',
+          'UT': 'NWPPc',
+          'MT': 'NWPPc',
+          'TN': 'SRTVc',
+          'ID': 'NWPPc',
+          'WI': 'MROWc',
+          'WV': 'RFCWc',
+          'NC': 'SRVCc',
+          'LA': 'SRMVc',
+          'IL': 'RFCWc',
+          'OK': 'SPSOc',
+          'IA': 'MROWc',
+          'WA': 'NWPPc',
+          'SD': 'MROWc',
+          'MN': 'MROWc',
+          'KY': 'SRTVc',
+          'MI': 'RFCMc',
+          'KS': 'SPNOc',
+          'NJ': 'RFCEc',
+          'NY': 'NYSTc',
+          'IN': 'RFCWc',
+          'VT': 'NEWEc',
+          'NM': 'AZNMc',
+          'WY': 'NWPPc',
+          'GA': 'SRSOc',
+          'MO': 'SRMWc',
+          'DC': 'RFCEc',
+          'SC': 'SRVCc',
+          'PA': 'RFCWc',
+          'CO': 'RMPAc',
+          'AZ': 'AZNMc',
+          'ME': 'NEWEc',
+          'AL': 'SRSOc',
+          'MD': 'RFCWc',
+          'NH': 'NEWEc',
+          'MA': 'NEWEc',
+          'ND': 'MROWc',
+          'NV': 'NWPPc',
+          'CT': 'NEWEc',
+          'DE': 'RFCEc',
+          'RI': 'NEWEc'}
 
+          #California, Carolinas, Central, Florida, Mid-Atlantic, Midwest, New England, New York, Northwest, Rocky Mountains, Southeast, Southwest, Tennessee, and Texas
+          hourly_historical_mapping_hash = 
+          {'FL': 'Florida',
+          'MS': 'SRMVc',
+          'NE': 'Midwest',
+          'OR': '',
+          'CA': '',
+          'VA': '',
+          'AR': '',
+          'TX': '',
+          'OH': '',
+          'UT': '',
+          'MT': '',
+          'TN': '',
+          'ID': '',
+          'WI': '',
+          'WV': '',
+          'NC': '',
+          'LA': '',
+          'IL': '',
+          'OK': '',
+          'IA': '',
+          'WA': '',
+          'SD': '',
+          'MN': '',
+          'KY': '',
+          'MI': '',
+          'KS': '',
+          'NJ': '',
+          'NY': '',
+          'IN': '',
+          'VT': '',
+          'NM': '',
+          'WY': '',
+          'GA': '',
+          'MO': '',
+          'DC': '',
+          'SC': '',
+          'PA': '',
+          'CO': '',
+          'AZ': '',
+          'ME': '',
+          'AL': '',
+          'MD': '',
+          'NH': '',
+          'MA': '',
+          'ND': '',
+          'NV': '',
+          'CT': '',
+          'DE': '',
+          'RI': ''}
 
-        # add EV loads
-        emissions = nil
+          annual_historical_mapping_hash = 
+          {'FL': 'FRCC',
+          'MS': 'SRMV',
+          'NE': 'MROW',
+          'OR': 'NWPP',
+          'CA': 'CAMX',
+          'VA': 'RFCW',
+          'AR': 'SRMV',
+          'TX': 'ERCT',
+          'OH': 'RFCW',
+          'UT': 'NWPP',
+          'MT': 'NWPP',
+          'TN': 'SRTV',
+          'ID': 'NWPP',
+          'WI': 'MROW',
+          'WV': 'RFCW',
+          'NC': 'SRVC',
+          'LA': 'SRMV',
+          'IL': 'RFCW',
+          'OK': 'SPSO',
+          'IA': 'MROW',
+          'WA': 'NWPP',
+          'SD': 'MROW',
+          'MN': 'MROW',
+          'KY': 'SRTV',
+          'MI': 'RFCM',
+          'KS': 'SPNO',
+          'NJ': 'RFCE',
+          'NY': 'NYST',
+          'IN': 'RFCW',
+          'VT': 'NEWE',
+          'NM': 'AZNM',
+          'WY': 'NWPP',
+          'GA': 'SRSO',
+          'MO': 'SRMW',
+          'DC': 'RFCE',
+          'SC': 'SRVC',
+          'PA': 'RFCW',
+          'CO': 'RMPA',
+          'AZ': 'AZNM',
+          'ME': 'NEWE',
+          'AL': 'SRSO',
+          'MD': 'RFCW',
+          'NH': 'NEWE',
+          'MA': 'NEWE',
+          'ND': 'MROW',
+          'NV': 'NWPP',
+          'CT': 'NEWE',
+          'DE': 'RFCE',
+          'RI': 'NEWE'}
 
-        begin
-          emissions = feature.emissions
-        rescue
+          #get the state from weather file
+          state = feature.weather_filename.split('_', 1)
+          
+          #apply emissions inputs based on the state
+          feature.emissions_future_subregion = future_emissions_mapping_hash[state]
+          feature.emissions_hourly_historical_subregion = hourly_historical_mapping_hash[state]
+          feature.emissions_annual_historical_subregion = annual_historical_mapping_hash[state]
+
         end
 
-        if emissions != true
-          puts "Emissions is not activated for this feature. Please set emissions to true in the the Feature properties in the GeoJSON file to add emissions results."
-        elsif emissions == true
-          OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
+        if feature_type == 'Building'
+
+          # add Emissions
+          emissions = nil
+
           begin
-
-            #emissions_future_subregion
-            emissions_future_subregion = feature.emissions_future_subregion
-            if !emissions_future_subregion.nil? && !emissions_future_subregion.empty?
-              OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_subregion', emissions_future_subregion)
-            end
-
-            #hourly_historical_subregion
-            emissions_hourly_historical_subregion = feature.emissions_hourly_historical_subregion
-            if !emissions_hourly_historical_subregion.nil? && !emissions_hourly_historical_subregion.empty?
-              OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_subregion', emissions_hourly_historical_subregion)
-            end
-
-            #annual_historical_subregion
-            emissions_annual_historical_subregion = feature.emissions_annual_historical_subregion
-            if !emissions_annual_historical_subregion.nil? && !emissions_annual_historical_subregion.empty?
-              OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_subregion', emissions_annual_historical_subregion)
-            end
-
-            #future_year
-            emissions_future_year = feature.emissions_future_year
-            if !emissions_future_year.nil? && !emissions_future_year?
-              OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', emissions_future_year)
-            end
-
-            #hourly_historical_year
-            emissions_hourly_historical_year = feature.emissions_hourly_historical_year
-            if !emissions_hourly_historical_year.nil? && !emissions_hourly_historical_year.empty?
-              OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', emissions_hourly_historical_year)
-            end
-            
-            #annual_historical_year'
-            emissions_annual_historical_year = feature.emissions_annual_historical_year
-            if !emissions_annual_historical_year.nil? && !emissions_annual_historical_year.empty?
-              OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', emissions_annual_historical_year)
-            end
-                        
-
+            emissions = feature.emissions
           rescue
+          end
+
+          if emissions != true
+            puts "Emissions is not activated for this feature. Please set emissions to true in the the Feature properties in the GeoJSON file to add emissions results."
+          elsif emissions == true
+            OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
+            begin
+
+              #emissions_future_subregion
+              emissions_future_subregion = feature.emissions_future_subregion
+              if !emissions_future_subregion.nil? && !emissions_future_subregion.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_subregion', emissions_future_subregion)
+              end
+
+              #hourly_historical_subregion
+              emissions_hourly_historical_subregion = feature.emissions_hourly_historical_subregion
+              if !emissions_hourly_historical_subregion.nil? && !emissions_hourly_historical_subregion.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_subregion', emissions_hourly_historical_subregion)
+              end
+
+              #annual_historical_subregion
+              emissions_annual_historical_subregion = feature.emissions_annual_historical_subregion
+              if !emissions_annual_historical_subregion.nil? && !emissions_annual_historical_subregion.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_subregion', emissions_annual_historical_subregion)
+              end
+
+              #future_year
+              emissions_future_year = feature.emissions_future_year
+              if !emissions_future_year.nil? && !emissions_future_year?
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', emissions_future_year)
+              end
+
+              #hourly_historical_year
+              emissions_hourly_historical_year = feature.emissions_hourly_historical_year
+              if !emissions_hourly_historical_year.nil? && !emissions_hourly_historical_year.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', emissions_hourly_historical_year)
+              end
+              
+              #annual_historical_year'
+              emissions_annual_historical_year = feature.emissions_annual_historical_year
+              if !emissions_annual_historical_year.nil? && !emissions_annual_historical_year.empty?
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', emissions_annual_historical_year)
+              end           
+
+            rescue
+            end
+
           end
 
         end

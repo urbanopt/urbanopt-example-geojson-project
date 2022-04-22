@@ -12,7 +12,14 @@
     "begin_date": "2017-01-01T07:00:00.000Z",
     "end_date": "2017-12-31T07:00:00.000Z",
     "timesteps_per_hour": 1,
-    "default_template": "90.1-2013"
+    "default_template": "90.1-2013",
+	"emissions" : true,
+	"emissions_future_subregion": "RMPAc",
+	"emissions_hourly_historical_subregion": "Rocky Mountains",
+	"emissions_annual_historical_subregion": "RMPA",
+	"emissions_future_year": 2020,
+	"emissions_hourly_historical_year": 2019,
+	"emissions_annual_historical_year": 2019
   },
   "features": [
     {
@@ -151,7 +158,14 @@
         "weekday_start_time": "11:00",
         "weekday_duration": "11:30",
         "weekend_start_time": "11:00",
-        "weekend_duration": "11:30"
+        "weekend_duration": "11:30",
+		"emissions" : true,
+		"emissions_future_subregion": "RMPAc",
+		"emissions_hourly_historical_subregion": "Rocky Mountains",
+		"emissions_annual_historical_subregion": "RMPA",
+		"emissions_future_year": 2020,
+		"emissions_hourly_historical_year": 2019,
+		"emissions_annual_historical_year": 2019
       },
       "geometry": {
         "type": "Polygon",
@@ -235,7 +249,14 @@
         "footprint_area": 8804,
         "number_of_stories": 1,
         "weekday_start_time": "06:00",
-        "weekday_duration": "16:00"
+        "weekday_duration": "16:00",
+		"emissions" : true,
+		"emissions_future_subregion": "RMPAc",
+		"emissions_hourly_historical_subregion": "Rocky Mountains",
+		"emissions_annual_historical_subregion": "RMPA",
+		"emissions_future_year": 2020,
+		"emissions_hourly_historical_year": 2019,
+		"emissions_annual_historical_year": 2019
       },
       "geometry": {
         "type": "Polygon",
@@ -312,14 +333,7 @@
         "type": "Building",
         "building_type": "Office",
         "number_of_stories": 6,
-        "detailed_model_filename": "7.osm",
-		"emissions" : true,
-		"emissions_future_subregion": "RMPAc",
-		"emissions_hourly_historical_subregion": "Rocky Mountains",
-		"emissions_annual_historical_subregion": "RMPA",
-		"emissions_future_year": 2020,
-		"emissions_hourly_historical_year": 2019,
-		"emissions_annual_historical_year": 2019
+        "detailed_model_filename": "7.osm"
       },
       "geometry": {
         "type": "Polygon",
