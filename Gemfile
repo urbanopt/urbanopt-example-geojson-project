@@ -42,9 +42,9 @@ else
 end
 
 #if allow_local && File.exist?('../urbanopt-reporting-gem')
-  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
+#  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 #elsif allow_local
-#  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
+  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'emissions'
 #else
 #  gem 'urbanopt-reporting', '~> 0.5.0'
 #end
