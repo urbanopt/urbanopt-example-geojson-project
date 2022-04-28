@@ -12,14 +12,7 @@
     "begin_date": "2017-01-01T07:00:00.000Z",
     "end_date": "2017-12-31T07:00:00.000Z",
     "timesteps_per_hour": 1,
-    "default_template": "90.1-2013",
-	"emissions" : true,
-	"emissions_future_subregion": "RMPAc",
-	"emissions_hourly_historical_subregion": "Rocky Mountains",
-	"emissions_annual_historical_subregion": "RMPA",
-	"emissions_future_year": 2020,
-	"emissions_hourly_historical_year": 2019,
-	"emissions_annual_historical_year": 2019
+    "default_template": "90.1-2013"
   },
   "features": [
     {
@@ -160,9 +153,6 @@
         "weekend_start_time": "11:00",
         "weekend_duration": "11:30",
 		"emissions" : true,
-		"emissions_future_subregion": "RMPAc",
-		"emissions_hourly_historical_subregion": "Rocky Mountains",
-		"emissions_annual_historical_subregion": "RMPA",
 		"emissions_future_year": 2020,
 		"emissions_hourly_historical_year": 2019,
 		"emissions_annual_historical_year": 2019
@@ -333,7 +323,11 @@
         "type": "Building",
         "building_type": "Office",
         "number_of_stories": 6,
-        "detailed_model_filename": "7.osm"
+        "detailed_model_filename": "7.osm",
+		"emissions" : true,
+		"emissions_future_year": 2020,
+		"emissions_hourly_historical_year": 2019,
+		"emissions_annual_historical_year": 2019
       },
       "geometry": {
         "type": "Polygon",
@@ -652,7 +646,11 @@
         "system_type": "Residential - furnace and central air conditioner",
         "heating_system_fuel_type": "natural gas",
         "onsite_parking_fraction": 1,
-        "template": "Residential IECC 2015 - Customizable Template Sep 2020"
+        "template": "Residential IECC 2015 - Customizable Template Sep 2020",
+		"emissions" : true,
+		"emissions_future_year": 2020,
+		"emissions_hourly_historical_year": 2019,
+		"emissions_annual_historical_year": 2019
       },
       "geometry": {
         "type": "Polygon",

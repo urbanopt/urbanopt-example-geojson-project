@@ -383,6 +383,215 @@ module URBANopt
         end
       end
 
+      # epw_state to subregions mapping methods
+      #REK: Maybe we can move these method to the geojson gem
+      def get_future_emissions_region(feature)
+        # Options are: AZNMc, CAMXc, ERCTc, FRCCc, MROEc, MROWc, NEWEc, NWPPc, NYSTc, RFCEc, RFCMc, RFCWc, RMPAc, SPNOc, SPSOc, SRMVc, SRMWc, SRSOc, SRTVc, and SRVCc
+        # egrid subregions can map directly to zipcodes but not to states. Some state might include multiple egrid subregions. the default mapper prioritize the egrid subregion that is most common in the state (covers the biggest number of zipcodes)
+        future_emissions_mapping_hash =   
+        {'FL': 'FRCCc', #['FRCCc', 'SRSOc']
+        'MS': 'SRMVc', #['SRMVc', 'SRTVc']
+        'NE': 'MROWc', #['MROWc', 'RMPAc']
+        'OR': 'NWPPc',
+        'CA': 'CAMXc', #['CAMXc', 'NWPPc']
+        'VA': 'SRVCc', #['SRVCc', 'RFCWc', 'RFCEc'],
+        'AR': 'SRMVc', #['SRMVc', 'SPSOc']
+        'TX': 'ERCTc', #['ERCTc', 'SRMVc', 'SPSOc', 'AZNMc']
+        'OH': 'RFCWc', 
+        'UT': 'NWPPc',
+        'MT': 'NWPPc', #['NWPPc', 'MROWc']
+        'TN': 'SRTVc',
+        'ID': 'NWPPc',
+        'WI': 'MROEc', #['RFCWc', 'MROEc', 'MROWc']
+        'WV': 'RFCWc',
+        'NC': 'SRVCc',
+        'LA': 'SRMVc',
+        'IL': 'SRMWc', #['RFCWc', 'SRMWc']
+        'OK': 'SPSOc',
+        'IA': 'MROWc',
+        'WA': 'NWPPc',
+        'SD': 'MROWc', #['MROWc', 'RMPAc']
+        'MN': 'MROWc',
+        'KY': 'SRTVc', #['SRTVc', 'RFCWc']
+        'MI': 'RFCMc', #['RFCMc', 'MROEc']
+        'KS': 'SPNOc',
+        'NJ': 'RFCEc',
+        'NY': 'NYSTc',
+        'IN': 'RFCWc',
+        'VT': 'NEWEc',
+        'NM': 'AZNMc', #['AZNMc', 'SPSOc']
+        'WY': 'RMPAc', #['RMPAc', 'NWPPc']
+        'GA': 'SRSOc',
+        'MO': 'SRMWc', #['SRMWc', 'SPNOc']
+        'DC': 'RFCEc',
+        'SC': 'SRVCc',
+        'PA': 'RFCEc', #['RFCEc', 'RFCWc']
+        'CO': 'RMPAc',
+        'AZ': 'AZNMc',
+        'ME': 'NEWEc',
+        'AL': 'SRSOc',
+        'MD': 'RFCEc', #['RFCEc', 'RFCWc']
+        'NH': 'NEWEc',
+        'MA': 'NEWEc',
+        'ND': 'MROWc',
+        'NV': 'NWPPc', #['NWPPc', 'AZNMc']
+        'CT': 'NEWEc',
+        'DE': 'RFCEc',
+        'RI': 'NEWEc'}
+
+        #get the state from weather file
+        state = feature.weather_filename.split('_', -1)[1]
+        puts "state = #{state}"
+      
+        #find region input based on the state
+        region = future_emissions_mapping_hash[state.to_sym]
+
+        puts "emissions_future_subregion for #{state} is assigned to: #{region}"
+        puts "You can overwrite this assigned input by specifiying the emissions_future_subregion input in the FeatureFile"
+
+        return region
+
+      end
+
+      def get_hourly_historical_emissions_region(feature)
+      
+        # Options are: California, Carolinas, Central, Florida, Mid-Atlantic, Midwest, New England, New York, Northwest, Rocky Mountains, Southeast, Southwest, Tennessee, and Texas
+        # There is no "correct" mapping of eGrid to AVERT regions as they are both large geographical areas that partially overlap. 
+        # Mapping is done using mapping tools from eGrid and AVERT (ZipCode for eGrid and fraction of state for AVERT). 
+        # Mapped based on the maps of each set of regions:
+        hourly_historical_mapping_hash = 
+        {'FL': 'Florida',
+        'MS': 'Midwest',
+        'NE': 'Midwest',#MRWO could be Midwest / Central
+        'OR': 'Northwest',
+        'CA': 'California',
+        'VA': 'Carolinas',
+        'AR': 'Midwest',
+        'TX': 'Texas',
+        'OH': 'Midwest',#RFCW could be Midwest / Mid Atlantic
+        'UT': 'Northwest',
+        'MT': 'Northwest',
+        'TN': 'Tennessee',
+        'ID': 'Northwest',
+        'WI': 'Midwest',
+        'WV': 'Midwest', #RFCW could be Midwest / Mid Atlantic
+        'NC': 'Carolinas',
+        'LA': 'Midwest',
+        'IL': 'Midwest',
+        'OK': 'Central',
+        'IA': 'Midwest', #MRWO could be Midwest / Central
+        'WA': 'Northwest',
+        'SD': 'Midwest',#MRWO could be Midwest / Central
+        'MN': 'Midwest',#MRWO could be Midwest / Central
+        'KY': 'Tennessee',
+        'MI': 'Midwest',
+        'KS': 'Central',
+        'NJ': 'Mid-Atlantic',
+        'NY': 'New York',
+        'IN': 'Midwest', #RFCW could be Midwest / Mid Atlantic
+        'VT': 'New England',
+        'NM': 'Southwest',
+        'WY': 'Rocky Mountains',
+        'GA': 'SRSO',
+        'MO': 'Midwest',
+        'DC': 'Mid-Atlantic',
+        'SC': 'Carolinas',
+        'PA': 'Mid-Atlantic',
+        'CO': 'Rocky Mountains',
+        'AZ': 'Southwest',
+        'ME': 'New England',
+        'AL': 'Southeast',
+        'MD': 'Mid-Atlantic',
+        'NH': 'New England',
+        'MA': 'New England',
+        'ND': 'Midwest',#MRWO could be Midwest / Central
+        'NV': 'Northwest',
+        'CT': 'New England',
+        'DE': 'Mid-Atlantic',
+        'RI': 'New England'}
+
+        #get the state from weather file
+        state = feature.weather_filename.split('_', -1)[1]
+        puts "state = #{state}"
+
+        #find region input based on the state
+        region = hourly_historical_mapping_hash[state.to_sym]       
+        puts "emissions_hourly_historical_subregion for #{state} is assigned to: #{region}"
+        puts "You can overwrite this assigned input by specifiying the emissions_hourly_historical_subregion input in the FeatureFile"
+
+        return region   
+
+      end
+
+
+      def get_annual_historical_emissions_region(feature)
+      
+        # Options are: AKGD, AKMS, AZNM, CAMX, ERCT, FRCC, HIMS, HIOA, MROE, MROW, NEWE, NWPP, NYCW, NYLI, NYUP, RFCE, RFCM, RFCW, RMPA, SPNO, SPSO, SRMV, SRMW, SRSO, SRTV, and SRVC
+        # egrid subregions can map directly to zipcodes but not to states. Some state might include multiple egrid subregions. the default mapper prioritize the egrid subregion that is most common in the state (covers the biggest number of zipcodes)
+        annual_historical_mapping_hash = 
+        {'FL': 'FRCC',
+        'MS': 'SRMV',
+        'NE': 'MROW',
+        'OR': 'NWPP',
+        'CA': 'CAMX',
+        'VA': 'SRVC',
+        'AR': 'SRMV',
+        'TX': 'ERCT',
+        'OH': 'RFCW',
+        'UT': 'NWPP',
+        'MT': 'NWPP',
+        'TN': 'SRTV',
+        'ID': 'NWPP',
+        'WI': 'MROE',
+        'WV': 'RFCW',
+        'NC': 'SRVC',
+        'LA': 'SRMV',
+        'IL': 'SRMW',
+        'OK': 'SPSO',
+        'IA': 'MROW',
+        'WA': 'NWPP',
+        'SD': 'MROW',
+        'MN': 'MROW',
+        'KY': 'SRTV',
+        'MI': 'RFCM',
+        'KS': 'SPNO',
+        'NJ': 'RFCE',
+        'NY': 'NYCW',
+        'IN': 'RFCW',
+        'VT': 'NEWE',
+        'NM': 'AZNM',
+        'WY': 'RMPA',
+        'GA': 'SRSO',
+        'MO': 'SRMW',
+        'DC': 'RFCE',
+        'SC': 'SRVC',
+        'PA': 'RFCE',
+        'CO': 'RMPA',
+        'AZ': 'AZNM',
+        'ME': 'NEWE',
+        'AL': 'SRSO',
+        'MD': 'RFCE',
+        'NH': 'NEWE',
+        'MA': 'NEWE',
+        'ND': 'MROW',
+        'NV': 'NWPP',
+        'CT': 'NEWE',
+        'DE': 'RFCE',
+        'RI': 'NEWE'}
+        #get the state from weather file
+        state = feature.weather_filename.split('_', -1)[1]
+        puts "state = #{state}"
+      
+        #finf region input based on the state
+        region = annual_historical_mapping_hash[state.to_sym]
+
+        puts "emissions_annual_historical_subregion for #{state} is assigned to: #{region}"
+        puts "You can overwrite this assigned input by specifiying the emissions_annual_historical_subregion input in the FeatureFile"
+        
+        return region
+
+      end
+
       def create_osw(scenario, features, feature_names)
         
         if features.size != 1
@@ -1076,172 +1285,6 @@ module URBANopt
         
         #### Emissions Adition
         
-        #REK:mapping to be completed (in progress)
-        def map_epw_to_egrid(feature)
-
-          future_emissions_mapping_hash =   
-          {'FL': 'FRCCc',
-          'MS': 'SRMVc',
-          'NE': 'MROWc',
-          'OR': 'NWPPc',
-          'CA': 'CAMXc',
-          'VA': 'RFCWc',
-          'AR': 'SRMVc',
-          'TX': 'ERCTc',
-          'OH': 'RFCWc',
-          'UT': 'NWPPc',
-          'MT': 'NWPPc',
-          'TN': 'SRTVc',
-          'ID': 'NWPPc',
-          'WI': 'MROWc',
-          'WV': 'RFCWc',
-          'NC': 'SRVCc',
-          'LA': 'SRMVc',
-          'IL': 'RFCWc',
-          'OK': 'SPSOc',
-          'IA': 'MROWc',
-          'WA': 'NWPPc',
-          'SD': 'MROWc',
-          'MN': 'MROWc',
-          'KY': 'SRTVc',
-          'MI': 'RFCMc',
-          'KS': 'SPNOc',
-          'NJ': 'RFCEc',
-          'NY': 'NYSTc',
-          'IN': 'RFCWc',
-          'VT': 'NEWEc',
-          'NM': 'AZNMc',
-          'WY': 'NWPPc',
-          'GA': 'SRSOc',
-          'MO': 'SRMWc',
-          'DC': 'RFCEc',
-          'SC': 'SRVCc',
-          'PA': 'RFCWc',
-          'CO': 'RMPAc',
-          'AZ': 'AZNMc',
-          'ME': 'NEWEc',
-          'AL': 'SRSOc',
-          'MD': 'RFCWc',
-          'NH': 'NEWEc',
-          'MA': 'NEWEc',
-          'ND': 'MROWc',
-          'NV': 'NWPPc',
-          'CT': 'NEWEc',
-          'DE': 'RFCEc',
-          'RI': 'NEWEc'}
-
-          #California, Carolinas, Central, Florida, Mid-Atlantic, Midwest, New England, New York, Northwest, Rocky Mountains, Southeast, Southwest, Tennessee, and Texas
-          hourly_historical_mapping_hash = 
-          {'FL': 'Florida',
-          'MS': 'SRMVc',
-          'NE': 'Midwest',
-          'OR': '',
-          'CA': '',
-          'VA': '',
-          'AR': '',
-          'TX': '',
-          'OH': '',
-          'UT': '',
-          'MT': '',
-          'TN': '',
-          'ID': '',
-          'WI': '',
-          'WV': '',
-          'NC': '',
-          'LA': '',
-          'IL': '',
-          'OK': '',
-          'IA': '',
-          'WA': '',
-          'SD': '',
-          'MN': '',
-          'KY': '',
-          'MI': '',
-          'KS': '',
-          'NJ': '',
-          'NY': '',
-          'IN': '',
-          'VT': '',
-          'NM': '',
-          'WY': '',
-          'GA': '',
-          'MO': '',
-          'DC': '',
-          'SC': '',
-          'PA': '',
-          'CO': '',
-          'AZ': '',
-          'ME': '',
-          'AL': '',
-          'MD': '',
-          'NH': '',
-          'MA': '',
-          'ND': '',
-          'NV': '',
-          'CT': '',
-          'DE': '',
-          'RI': ''}
-
-          annual_historical_mapping_hash = 
-          {'FL': 'FRCC',
-          'MS': 'SRMV',
-          'NE': 'MROW',
-          'OR': 'NWPP',
-          'CA': 'CAMX',
-          'VA': 'RFCW',
-          'AR': 'SRMV',
-          'TX': 'ERCT',
-          'OH': 'RFCW',
-          'UT': 'NWPP',
-          'MT': 'NWPP',
-          'TN': 'SRTV',
-          'ID': 'NWPP',
-          'WI': 'MROW',
-          'WV': 'RFCW',
-          'NC': 'SRVC',
-          'LA': 'SRMV',
-          'IL': 'RFCW',
-          'OK': 'SPSO',
-          'IA': 'MROW',
-          'WA': 'NWPP',
-          'SD': 'MROW',
-          'MN': 'MROW',
-          'KY': 'SRTV',
-          'MI': 'RFCM',
-          'KS': 'SPNO',
-          'NJ': 'RFCE',
-          'NY': 'NYST',
-          'IN': 'RFCW',
-          'VT': 'NEWE',
-          'NM': 'AZNM',
-          'WY': 'NWPP',
-          'GA': 'SRSO',
-          'MO': 'SRMW',
-          'DC': 'RFCE',
-          'SC': 'SRVC',
-          'PA': 'RFCW',
-          'CO': 'RMPA',
-          'AZ': 'AZNM',
-          'ME': 'NEWE',
-          'AL': 'SRSO',
-          'MD': 'RFCW',
-          'NH': 'NEWE',
-          'MA': 'NEWE',
-          'ND': 'MROW',
-          'NV': 'NWPP',
-          'CT': 'NEWE',
-          'DE': 'RFCE',
-          'RI': 'NEWE'}
-
-          #get the state from weather file
-          state = feature.weather_filename.split('_', 1)
-          
-          #apply emissions inputs based on the state
-          feature.emissions_future_subregion = future_emissions_mapping_hash[state]
-          feature.emissions_hourly_historical_subregion = hourly_historical_mapping_hash[state]
-          feature.emissions_annual_historical_subregion = annual_historical_mapping_hash[state]
-
-        end
 
         if feature_type == 'Building'
 
@@ -1252,47 +1295,79 @@ module URBANopt
             emissions = feature.emissions
           rescue
           end
-
+          
           if emissions != true
             puts "Emissions is not activated for this feature. Please set emissions to true in the the Feature properties in the GeoJSON file to add emissions results."
-          elsif emissions == true
-            OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
-            begin
 
-              #emissions_future_subregion
+          elsif emissions == true
+            
+            #activate emissions measure
+            OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
+
+
+            #get subregion inputs if they are available or get them from the mapping methods if the are not
+            begin
               emissions_future_subregion = feature.emissions_future_subregion
+            rescue
+              emissions_future_subregion =  get_future_emissions_region(feature)
+            end
+
+            begin
+              emissions_hourly_historical_subregion = feature.emissions_hourly_historical_subregion
+            rescue
+              emissions_hourly_historical_subregion =  get_hourly_historical_emissions_region(feature)
+            end
+
+            begin
+              emissions_annual_historical_subregion = feature.emissions_annual_historical_subregion
+            rescue
+              emissions_annual_historical_subregion =  get_annual_historical_emissions_region(feature)
+            end
+
+            puts " building #{feature_id} emissions_future_subregion = #{emissions_future_subregion}"
+            puts " building #{feature_id} emissions_hourly_historical_subregion = #{emissions_hourly_historical_subregion}"
+            puts " building #{feature_id} emissions_annual_historical_subregion = #{emissions_annual_historical_subregion}"
+
+
+            ## Assign the OS measure arguments
+            begin
+              #emissions_future_subregion
               if !emissions_future_subregion.nil? && !emissions_future_subregion.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_subregion', emissions_future_subregion)
               end
 
               #hourly_historical_subregion
-              emissions_hourly_historical_subregion = feature.emissions_hourly_historical_subregion
               if !emissions_hourly_historical_subregion.nil? && !emissions_hourly_historical_subregion.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_subregion', emissions_hourly_historical_subregion)
               end
 
               #annual_historical_subregion
-              emissions_annual_historical_subregion = feature.emissions_annual_historical_subregion
               if !emissions_annual_historical_subregion.nil? && !emissions_annual_historical_subregion.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_subregion', emissions_annual_historical_subregion)
               end
 
               #future_year
               emissions_future_year = feature.emissions_future_year
-              if !emissions_future_year.nil? && !emissions_future_year?
+              if !emissions_future_year.nil? && !emissions_future_year.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', emissions_future_year)
+              else
+                puts "emissions_future_year should be assigned !"
               end
 
               #hourly_historical_year
               emissions_hourly_historical_year = feature.emissions_hourly_historical_year
               if !emissions_hourly_historical_year.nil? && !emissions_hourly_historical_year.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', emissions_hourly_historical_year)
+              else
+                puts "emissions_hourly_historical_year should be assigned !"
               end
               
               #annual_historical_year'
               emissions_annual_historical_year = feature.emissions_annual_historical_year
               if !emissions_annual_historical_year.nil? && !emissions_annual_historical_year.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', emissions_annual_historical_year)
+              else
+                puts "emissions_annual_historical_year should be assigned !"
               end           
 
             rescue
