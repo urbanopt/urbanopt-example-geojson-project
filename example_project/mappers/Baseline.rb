@@ -441,7 +441,6 @@ module URBANopt
 
         #get the state from weather file
         state = feature.weather_filename.split('_', -1)[1]
-        puts "state = #{state}"
       
         #find region input based on the state
         region = future_emissions_mapping_hash[state.to_sym]
@@ -512,7 +511,6 @@ module URBANopt
 
         #get the state from weather file
         state = feature.weather_filename.split('_', -1)[1]
-        puts "state = #{state}"
 
         #find region input based on the state
         region = hourly_historical_mapping_hash[state.to_sym]       
@@ -580,7 +578,6 @@ module URBANopt
         'RI': 'NEWE'}
         #get the state from weather file
         state = feature.weather_filename.split('_', -1)[1]
-        puts "state = #{state}"
       
         #finf region input based on the state
         region = annual_historical_mapping_hash[state.to_sym]
@@ -1283,9 +1280,7 @@ module URBANopt
         end # feature_type == 'Building'
 
         
-        #### Emissions Adition
-        
-
+        ####### Emissions Adition
         if feature_type == 'Building'
 
           # add Emissions
@@ -1304,33 +1299,57 @@ module URBANopt
             #activate emissions measure
             OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', '__SKIP__', false)
 
-
-            #get subregion inputs if they are available or get them from the mapping methods if the are not
+            #get emissions inputs if they are available or get them from the mapping methods if the are not
             begin
               emissions_future_subregion = feature.emissions_future_subregion
             rescue
+              puts "\nemission_future_subregion is not assigned for feature #{feature_id}. Defining subregion based on the State...."
               emissions_future_subregion =  get_future_emissions_region(feature)
             end
 
             begin
               emissions_hourly_historical_subregion = feature.emissions_hourly_historical_subregion
             rescue
+              puts "\nemissions_hourly_historical_subregion is not assigned for feature #{feature_id}. Defining subregion based on the State...."
               emissions_hourly_historical_subregion =  get_hourly_historical_emissions_region(feature)
             end
 
             begin
               emissions_annual_historical_subregion = feature.emissions_annual_historical_subregion
             rescue
+              puts "\nemissions_annual_historical_subregion is not assigned for feature #{feature_id}. Defining subregion based on the State...."
               emissions_annual_historical_subregion =  get_annual_historical_emissions_region(feature)
             end
 
-            puts " building #{feature_id} emissions_future_subregion = #{emissions_future_subregion}"
-            puts " building #{feature_id} emissions_hourly_historical_subregion = #{emissions_hourly_historical_subregion}"
-            puts " building #{feature_id} emissions_annual_historical_subregion = #{emissions_annual_historical_subregion}"
+            begin
+              emissions_future_year = feature.emissions_future_year
+            rescue
+              puts "emissions_future_year should be assigned !"
+            end
 
+            begin
+              emissions_hourly_historical_year = feature.emissions_hourly_historical_year
+            rescue
+              puts "emissions_hourly_historical_year should be assigned !"
+            end
+
+            begin
+              emissions_annual_historical_year = feature.emissions_annual_historical_year
+            rescue
+              puts "emissions_annual_historical_year should be assigned !"
+            end
+
+            puts "\n building #{feature_id} emission inputs summarry: 
+              emissions_future_subregion = #{emissions_future_subregion}; 
+              emissions_hourly_historical_subregion = #{emissions_hourly_historical_subregion}; 
+              emissions_annual_historical_subregion = #{emissions_annual_historical_subregion}; 
+              emissions_future_year = #{emissions_future_year};
+              emissions_hourly_historical_year = #{emissions_hourly_historical_year};
+              emissions_annual_historical_year = #{emissions_annual_historical_year} \n "
 
             ## Assign the OS measure arguments
             begin
+              
               #emissions_future_subregion
               if !emissions_future_subregion.nil? && !emissions_future_subregion.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_subregion', emissions_future_subregion)
@@ -1347,28 +1366,21 @@ module URBANopt
               end
 
               #future_year
-              emissions_future_year = feature.emissions_future_year
               if !emissions_future_year.nil? && !emissions_future_year.empty?
-                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', emissions_future_year)
-              else
-                puts "emissions_future_year should be assigned !"
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'future_year', emissions_future_year)              
               end
 
               #hourly_historical_year
-              emissions_hourly_historical_year = feature.emissions_hourly_historical_year
               if !emissions_hourly_historical_year.nil? && !emissions_hourly_historical_year.empty?
                 OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', emissions_hourly_historical_year)
               else
-                puts "emissions_hourly_historical_year should be assigned !"
+                
               end
               
               #annual_historical_year'
-              emissions_annual_historical_year = feature.emissions_annual_historical_year
               if !emissions_annual_historical_year.nil? && !emissions_annual_historical_year.empty?
-                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', emissions_annual_historical_year)
-              else
-                puts "emissions_annual_historical_year should be assigned !"
-              end           
+                OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', emissions_annual_historical_year)                
+              end     
 
             rescue
             end

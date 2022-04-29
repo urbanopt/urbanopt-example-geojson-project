@@ -240,13 +240,7 @@
         "number_of_stories": 1,
         "weekday_start_time": "06:00",
         "weekday_duration": "16:00",
-		"emissions" : true,
-		"emissions_future_subregion": "RMPAc",
-		"emissions_hourly_historical_subregion": "Rocky Mountains",
-		"emissions_annual_historical_subregion": "RMPA",
-		"emissions_future_year": 2020,
-		"emissions_hourly_historical_year": 2019,
-		"emissions_annual_historical_year": 2019
+		"emissions" : false
       },
       "geometry": {
         "type": "Polygon",
@@ -648,6 +642,9 @@
         "onsite_parking_fraction": 1,
         "template": "Residential IECC 2015 - Customizable Template Sep 2020",
 		"emissions" : true,
+		"emissions_future_subregion": "RMPAc",
+        "emissions_hourly_historical_subregion": "Rocky Mountains",
+        "emissions_annual_historical_subregion": "RMPA",
 		"emissions_future_year": 2020,
 		"emissions_hourly_historical_year": 2019,
 		"emissions_annual_historical_year": 2019
