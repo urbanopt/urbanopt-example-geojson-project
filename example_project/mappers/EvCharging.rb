@@ -113,7 +113,7 @@ module URBANopt
 
           begin
             ev_use_model_occupancy = feature.ev_use_model_occupancy
-            if !ev_use_model_occupancy.nil? && !ev_use_model_occupancy.empty?
+            if !ev_use_model_occupancy.nil?
               OpenStudio::Extension.set_measure_argument(osw, 'add_ev_load', 'ev_use_model_occupancy', ev_use_model_occupancy)
             end
           rescue
