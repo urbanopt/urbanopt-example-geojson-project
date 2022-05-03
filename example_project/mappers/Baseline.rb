@@ -429,7 +429,7 @@ module URBANopt
             # need building type
             raise "Building type is not set"
           end
-          
+
           if residential_building_types.include? building_type
             debug = false
 
@@ -439,12 +439,11 @@ module URBANopt
             
             if not is_defined(feature, :hpxml_directory, false)
               # check additional fields when HPXML dir is not given
-              if !['Multifamily'].include?(building_type)
+              if ['Single-Family Detached', 'Single-Family Attached'].include?(building_type)
                 is_defined(feature, :attic_type)
               end
               is_defined(feature, :floor_area)
               is_defined(feature, :number_of_bedrooms)
-              
               if ['Single-Family Attached', 'Multifamily'].include?(building_type)
                 is_defined(feature, :number_of_residential_units)
               end
