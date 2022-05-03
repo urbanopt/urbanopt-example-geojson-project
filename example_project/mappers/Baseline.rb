@@ -383,6 +383,19 @@ module URBANopt
         end
       end
 
+      def is_defined(feature, method_name, raise_error=true)
+        begin
+          if feature.method_missing(method_name)
+            return true
+          end
+        rescue NoMethodError
+          if raise_error
+            raise "*** ERROR *** #{method_name} is not set on this feature"
+          end
+          return false
+        end
+      end
+
       def create_osw(scenario, features, feature_names)
         
         if features.size != 1
@@ -416,47 +429,24 @@ module URBANopt
             # need building type
             raise "Building type is not set"
           end
-
+          
           if residential_building_types.include? building_type
             debug = false
 
-            # Check for fields
-            begin
-              feature.number_of_stories_above_ground
-            rescue
-              raise "Number of stories above ground not set"
-            end
-            begin
-              feature.foundation_type
-            rescue
-              raise "Foundation type not set"
-            end
-            begin
-              feature.hpxml_directory
-            rescue
-              begin
-                if !['Multifamily'].include?(building_type)
-                  feature.attic_type
-                end
-              rescue
-                raise "Attic type not set"
+            # Check for required residential fields
+            is_defined(feature, :number_of_stories_above_ground)
+            is_defined(feature, :foundation_type)
+            
+            if not is_defined(feature, :hpxml_directory, false)
+              # check additional fields when HPXML dir is not given
+              if !['Multifamily'].include?(building_type)
+                is_defined(feature, :attic_type)
               end
-              begin
-                feature.floor_area
-              rescue
-                raise "Floor area not set"
-              end
-              begin
-                feature.number_of_bedrooms
-              rescue
-                raise "Number of bedrooms not set"
-              end
-              begin
-                if ['Single-Family Attached', 'Multifamily'].include?(building_type)
-                  feature.number_of_residential_units
-                end
-              rescue
-                raise "Number of residential units not set"
+              is_defined(feature, :floor_area)
+              is_defined(feature, :number_of_bedrooms)
+              
+              if ['Single-Family Attached', 'Multifamily'].include?(building_type)
+                is_defined(feature, :number_of_residential_units)
               end
             end
 
