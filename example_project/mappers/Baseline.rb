@@ -420,6 +420,41 @@ module URBANopt
           if residential_building_types.include? building_type
             debug = false
 
+            # Check for fields
+            begin
+              feature.number_of_stories_above_ground
+            rescue NoMethodError => e
+              raise "UNIQUE ERROR STATEMENT"
+            end
+            begin
+              feature.foundation_type
+            rescue
+            end
+            begin
+              feature.hpxml_directory
+            rescue
+              begin
+                if !['Multifamily'].include?(building_type)
+                  feature.attic_type
+                end
+              rescue
+              end
+              begin
+                feature.floor_area
+              rescue
+              end
+              begin
+                feature.number_of_bedrooms
+              rescue
+              end
+              begin
+                if ['Single-Family Attached', 'Multifamily'].include?(building_type)
+                  feature.number_of_residential_units
+                end
+              rescue
+              end
+            end
+
             args = {}
 
             # Custom HPXML Files
@@ -452,21 +487,36 @@ module URBANopt
 
             # Geometry
             args[:geometry_building_num_units] = 1
+            args[:geometry_unit_num_floors_above_grade] = 1
             case building_type
             when 'Single-Family Detached'
               args[:geometry_unit_type] = 'single-family detached'
-              args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
+              begin
+                args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
+              rescue
+              end
             when 'Single-Family Attached'
-              args[:geometry_building_num_units] = feature.number_of_residential_units
               args[:geometry_unit_type] = 'single-family attached'
-              args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
+              begin
+                args[:geometry_building_num_units] = feature.number_of_residential_units
+              rescue
+              end
+              begin
+                args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
+              rescue
+              end
             when 'Multifamily'
-              args[:geometry_building_num_units] = feature.number_of_residential_units
               args[:geometry_unit_type] = 'apartment unit'
-              args[:geometry_unit_num_floors_above_grade] = 1
+              begin
+                args[:geometry_building_num_units] = feature.number_of_residential_units
+              rescue
+              end
             end
 
-            args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
+            begin
+              args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
+            rescue
+            end
 
             args[:geometry_foundation_type] = 'SlabOnGrade'
             args[:geometry_foundation_height] = 0.0
@@ -502,9 +552,15 @@ module URBANopt
             rescue
             end
 
-            args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
+            begin
+              args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
+            rescue
+            end
 
-            args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
+            begin
+              args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
+            rescue
+            end
 
             args[:geometry_average_ceiling_height] = 8.0
             begin
