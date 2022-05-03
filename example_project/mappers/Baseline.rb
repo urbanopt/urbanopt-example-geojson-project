@@ -423,12 +423,13 @@ module URBANopt
             # Check for fields
             begin
               feature.number_of_stories_above_ground
-            rescue NoMethodError => e
-              raise "UNIQUE ERROR STATEMENT"
+            rescue
+              raise "Number of stories above ground not set"
             end
             begin
               feature.foundation_type
             rescue
+              raise "Foundation type not set"
             end
             begin
               feature.hpxml_directory
@@ -438,20 +439,24 @@ module URBANopt
                   feature.attic_type
                 end
               rescue
+                raise "Attic type not set"
               end
               begin
                 feature.floor_area
               rescue
+                raise "Floor area not set"
               end
               begin
                 feature.number_of_bedrooms
               rescue
+                raise "Number of bedrooms not set"
               end
               begin
                 if ['Single-Family Attached', 'Multifamily'].include?(building_type)
                   feature.number_of_residential_units
                 end
               rescue
+                raise "Number of residential units not set"
               end
             end
 
