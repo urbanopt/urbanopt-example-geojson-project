@@ -765,8 +765,8 @@
         "name": "Residential 4",
         "type": "Building",
         "building_type": "Single-Family Attached",
-        "foundation_type": "slab",
         "number_of_stories_above_ground": 2,
+        "foundation_type": "slab",
         "hpxml_directory": "17"
       },
       "geometry": {
