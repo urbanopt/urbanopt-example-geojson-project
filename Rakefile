@@ -37,6 +37,8 @@ require 'urbanopt/reopt'
 require 'urbanopt/reopt_scenario'
 require_relative 'developer_nrel_key'
 
+RuboCop::RakeTask.new
+
 module URBANopt
   module ExampleGeoJSONProject
     class ExampleGeoJSONProject < OpenStudio::Extension::Extension
