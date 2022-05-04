@@ -30,6 +30,7 @@
 
 require 'openstudio/extension'
 require 'openstudio/extension/rake_task'
+require 'rubocop/rake_task'
 require 'urbanopt/scenario'
 require 'urbanopt/geojson'
 require 'urbanopt/reopt'
@@ -39,7 +40,6 @@ require_relative 'developer_nrel_key'
 module URBANopt
   module ExampleGeoJSONProject
     class ExampleGeoJSONProject < OpenStudio::Extension::Extension
-
       # number of datapoints(features) you want to run in parallel
       # based on the number of available processors on your local machine.
       # This does not seem to function, instead added line to code for runner.config file
@@ -55,7 +55,7 @@ module URBANopt
 
       # Return the absolute path of the measures or empty string if there is none, can be used when configuring OSWs
       def measures_dir
-        ""
+        ''
       end
 
       # Relevant files such as weather data, design days, etc.
@@ -63,7 +63,6 @@ module URBANopt
       def files_dir
         return File.absolute_path(File.join(@root_dir, 'weather'))
       end
-
     end
   end
 end
