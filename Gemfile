@@ -2,8 +2,8 @@ source 'http://rubygems.org'
 
 ruby '~> 2.7.0'
 gem 'rubocop', '~> 1.15.0', require: false
-gem 'rubocop-performance', '~> 1.11.3'
 gem 'rubocop-checkstyle_formatter', '~> 0.4.0'
+gem 'rubocop-performance', '~> 1.11.3'
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
@@ -45,13 +45,13 @@ else
 end
 
 # TODO: Uncomment and revert changes once gem is released
-#if allow_local && File.exist?('../urbanopt-geojson-gem')
+# if allow_local && File.exist?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-#elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-#else
+# elsif allow_local
+gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+# else
 #  gem 'urbanopt-geojson', '~> 0.7.0'
-#end
+# end
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
