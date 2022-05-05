@@ -153,9 +153,9 @@
         "weekend_start_time": "11:00",
         "weekend_duration": "11:30",
 		"emissions" : true,
-		"emissions_future_year": 2020,
-		"emissions_hourly_historical_year": 2019,
-		"emissions_annual_historical_year": 2019
+		"emissions_future_year": "2020",
+		"emissions_hourly_historical_year": "2019",
+		"emissions_annual_historical_year": "2019"
       },
       "geometry": {
         "type": "Polygon",
@@ -319,9 +319,12 @@
         "number_of_stories": 6,
         "detailed_model_filename": "7.osm",
 		"emissions" : true,
-		"emissions_future_year": 2020,
-		"emissions_hourly_historical_year": 2019,
-		"emissions_annual_historical_year": 2019
+		"emissions_future_subregion": "RMPAc",
+        "emissions_hourly_historical_subregion": "Rocky Mountains",
+        "emissions_annual_historical_subregion": "RMPA",
+		"emissions_future_year": "2020",
+		"emissions_hourly_historical_year": "2019",
+		"emissions_annual_historical_year": "2019"
       },
       "geometry": {
         "type": "Polygon",
@@ -645,9 +648,9 @@
 		"emissions_future_subregion": "RMPAc",
         "emissions_hourly_historical_subregion": "Rocky Mountains",
         "emissions_annual_historical_subregion": "RMPA",
-		"emissions_future_year": 2020,
-		"emissions_hourly_historical_year": 2019,
-		"emissions_annual_historical_year": 2019
+		"emissions_future_year": "2020",
+		"emissions_hourly_historical_year": "2019",
+		"emissions_annual_historical_year": "2019"
       },
       "geometry": {
         "type": "Polygon",
