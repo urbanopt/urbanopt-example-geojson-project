@@ -152,11 +152,9 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     end
 
     standards_number_of_living_units = units.size
-    if args['hpxml_dir'].nil? && args.keys.include?('geometry_building_num_units')
-      if standards_number_of_living_units != Integer(args['geometry_building_num_units'])
-        runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{standards_number_of_living_units}).")
-        return false
-      end
+    if args['hpxml_dir'].nil? && args.key?('geometry_building_num_units') && (standards_number_of_living_units != Integer(args['geometry_building_num_units']))
+      runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{standards_number_of_living_units}).")
+      return false
     end
 
     units.each_with_index do |unit, unit_num|
