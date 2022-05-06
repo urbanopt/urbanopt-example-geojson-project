@@ -1,6 +1,9 @@
 source 'http://rubygems.org'
 
 ruby '~> 2.7.0'
+gem 'rubocop', '~> 1.15.0', require: false
+gem 'rubocop-checkstyle_formatter', '~> 0.4.0'
+gem 'rubocop-performance', '~> 1.11.3'
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
@@ -18,6 +21,11 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # elsif allow_local
 #   gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
 # end
+
+gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
+gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
+gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'develop'
+gem 'openstudio-calibration', github: 'NREL/openstudio-calibration-gem', branch: 'develop'
 
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #   gem 'urbanopt-core', path: '../urbanopt-core-gem'
@@ -41,15 +49,16 @@ else
   gem 'urbanopt-reporting', '~> 0.5.0'
 end
 
-# TODO: uncomment post release of geojson gem 
 
-#if allow_local && File.exist?('../urbanopt-geojson-gem')
+# TODO: Uncomment and revert changes once gem is released
+# if allow_local && File.exist?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-#elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-#else
+# elsif allow_local
+gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+# else
 #  gem 'urbanopt-geojson', '~> 0.7.0'
-#end
+# end
+
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
