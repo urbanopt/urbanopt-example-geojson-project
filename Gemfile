@@ -49,6 +49,7 @@ else
   gem 'urbanopt-reporting', '~> 0.5.0'
 end
 
+
 # TODO: Uncomment and revert changes once gem is released
 # if allow_local && File.exist?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
@@ -57,6 +58,7 @@ gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develo
 # else
 #  gem 'urbanopt-geojson', '~> 0.7.0'
 # end
+
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
