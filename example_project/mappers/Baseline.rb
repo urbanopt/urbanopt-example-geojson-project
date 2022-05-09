@@ -551,6 +551,7 @@ module URBANopt
 
             args[:geometry_roof_type] = 'gable'
             begin
+              case feature.roof_type
               when 'Hip'
                 args[:geometry_roof_type] = 'hip'
               end
