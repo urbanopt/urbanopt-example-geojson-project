@@ -12,6 +12,9 @@
       <SimulationControl>
         <Timestep>60</Timestep>
       </SimulationControl>
+      <AdditionalProperties>
+        <ParentHPXMLFile>base.xml</ParentHPXMLFile>
+      </AdditionalProperties>
     </extension>
   </SoftwareInfo>
   <Building>
@@ -82,6 +85,7 @@
             <AtticType>
               <CathedralCeiling/>
             </AtticType>
+            <AttachedToRoof idref='Roof1'/>
           </Attic>
         </Attics>
         <Foundations>

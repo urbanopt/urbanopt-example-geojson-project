@@ -168,6 +168,7 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
                             'invalid-shared-vent-in-unit-flowrate' => ['Expected RatedFlowRate to be greater than extension/InUnitFlowRate [context: /HPXML/Building/BuildingDetails/Systems/MechanicalVentilation/VentilationFans/VentilationFan[UsedForWholeBuildingVentilation="true" and IsSharedSystem="true"], id: "VentilationFan1"]'],
                             'invalid-timezone-utcoffset-low' => ['Expected TimeZone/UTCOffset to be greater than or equal to -12'],
                             'invalid-timezone-utcoffset-high' => ['Expected TimeZone/UTCOffset to be less than or equal to 14'],
+                            'invalid-ventilation-fan' => ['Expected 1 element(s) for xpath: UsedForWholeBuildingVentilation[text()="true"] | UsedForLocalVentilation[text()="true"] | UsedForSeasonalCoolingLoadReduction[text()="true"] | UsedForGarageVentilation[text()="true"]'],
                             'invalid-window-height' => ['Expected DistanceToBottomOfWindow to be greater than DistanceToTopOfWindow [context: /HPXML/Building/BuildingDetails/Enclosure/Windows/Window/Overhangs[number(Depth) > 0], id: "Window2"]'],
                             'lighting-fractions' => ['Expected sum(LightingGroup/FractionofUnitsInLocation) for Location="interior" to be less than or equal to 1 [context: /HPXML/Building/BuildingDetails/Lighting]'],
                             'missing-distribution-cfa-served' => ['Expected 1 element(s) for xpath: ../../../ConditionedFloorAreaServed [context: /HPXML/Building/BuildingDetails/Systems/HVAC/HVACDistribution/DistributionSystemType/AirDistribution/Ducts[not(DuctSurfaceArea)], id: "HVACDistribution1"]'],
@@ -176,6 +177,7 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
                             'missing-elements' => ['Expected 1 element(s) for xpath: SoftwareInfo/extension/OccupancyCalculationType[text()="asset" or text()="operational"]',
                                                    'Expected 1 element(s) for xpath: NumberofConditionedFloors [context: /HPXML/Building/BuildingDetails/BuildingSummary/BuildingConstruction]',
                                                    'Expected 1 element(s) for xpath: ConditionedFloorArea [context: /HPXML/Building/BuildingDetails/BuildingSummary/BuildingConstruction]'],
+                            'missing-num-residents' => ['Expected 1 element(s) for xpath: NumberofResidents'],
                             'multifamily-reference-appliance' => ['There are references to "other housing unit" but ResidentialFacilityType is not "single-family attached" or "apartment unit".'],
                             'multifamily-reference-duct' => ['There are references to "other multifamily buffer space" but ResidentialFacilityType is not "single-family attached" or "apartment unit".'],
                             'multifamily-reference-surface' => ['There are references to "other heated space" but ResidentialFacilityType is not "single-family attached" or "apartment unit".'],
@@ -420,6 +422,9 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
       elsif ['invalid-timezone-utcoffset-high'].include? error_case
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base.xml'))
         hpxml.header.time_zone_utc_offset = 15
+      elsif ['invalid-ventilation-fan'].include? error_case
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-mechvent-exhaust.xml'))
+        hpxml.ventilation_fans[0].used_for_garage_ventilation = true
       elsif ['invalid-window-height'].include? error_case
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-enclosure-overhangs.xml'))
         hpxml.windows[1].overhangs_distance_to_bottom_of_window = 1.0
@@ -443,6 +448,9 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
         hpxml.header.occupancy_calculation_type = nil
         hpxml.building_construction.number_of_conditioned_floors = nil
         hpxml.building_construction.conditioned_floor_area = nil
+      elsif ['missing-num-residents'].include? error_case
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-calctype-operational.xml'))
+        hpxml.building_occupancy.number_of_residents = nil
       elsif ['multifamily-reference-appliance'].include? error_case
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base.xml'))
         hpxml.clothes_washers[0].location = HPXML::LocationOtherHousingUnit
@@ -507,6 +515,7 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
                                                          'EnergyFactor should typically be greater than or equal to 0.45.',
                                                          'No space cooling specified, the model will not include space cooling energy use.'],
                               'dhw-setpoint-low' => ['Hot water setpoint should typically be greater than or equal to 110 deg-F.'],
+                              'garage-ventilation' => ['Ventilation fans for the garage are not currently modeled.'],
                               'hvac-dse-low' => ['Heating DSE should typically be greater than or equal to 0.5.',
                                                  'Cooling DSE should typically be greater than or equal to 0.5.'],
                               'hvac-capacities-low' => ['Heating capacity should typically be greater than or equal to 1000 Btu/hr.',
@@ -547,7 +556,12 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
                                                         'Cooling setpoint should typically be less than or equal to 86 deg-F.'],
                               'hvac-setpoints-low' => ['Heating setpoint should typically be greater than or equal to 58 deg-F.',
                                                        'Cooling setpoint should typically be greater than or equal to 68 deg-F.'],
-                              'slab-zero-exposed-perimeter' => ['Slab has zero exposed perimeter, this may indicate an input error.'] }
+                              'slab-zero-exposed-perimeter' => ['Slab has zero exposed perimeter, this may indicate an input error.'],
+                              'wrong-units' => ['Thickness is greater than 12 inches; this may indicate incorrect units.',
+                                                'Thickness is less than 1 inch; this may indicate incorrect units.',
+                                                'Depth is greater than 72 feet; this may indicate incorrect units.',
+                                                'DistanceToTopOfWindow is greater than 12 feet; this may indicate incorrect units.',
+                                                'DistanceToBottomOfWindow is greater than 12 feet; this may indicate incorrect units.'] }
 
     all_expected_warnings.each_with_index do |(warning_case, expected_warnings), i|
       puts "[#{i + 1}/#{all_expected_warnings.size}] Testing #{warning_case}..."
@@ -575,6 +589,10 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
       elsif ['dhw-setpoint-low'].include? warning_case
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base.xml'))
         hpxml.water_heating_systems[0].temperature = 100
+      elsif ['garage-ventilation'].include? warning_case
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base.xml'))
+        hpxml.ventilation_fans.add(id: 'VentilationFan1',
+                                   used_for_garage_ventilation: true)
       elsif ['hvac-dse-low'].include? warning_case
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-hvac-dse.xml'))
         hpxml.hvac_distributions[0].annual_heating_dse = 0.1
@@ -632,6 +650,13 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
       elsif ['slab-zero-exposed-perimeter'].include? warning_case
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base.xml'))
         hpxml.slabs[0].exposed_perimeter = 0
+      elsif ['wrong-units'].include? warning_case
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-enclosure-overhangs.xml'))
+        hpxml.slabs[0].thickness = 0.5
+        hpxml.foundation_walls[0].thickness = 72.0
+        hpxml.windows[0].overhangs_depth = 120.0
+        hpxml.windows[0].overhangs_distance_to_top_of_window = 24.0
+        hpxml.windows[0].overhangs_distance_to_bottom_of_window = 48.0
       else
         fail "Unhandled case: #{warning_case}."
       end
@@ -900,32 +925,32 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
         hpxml.water_heating_systems << hpxml.water_heating_systems[0].dup
         hpxml.water_heating_systems[1].id = "WaterHeatingSystem#{hpxml.water_heating_systems.size}"
       elsif ['schedule-detailed-bad-values-max-not-one'].include? error_case
-        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-stochastic.xml'))
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic.xml'))
         csv_data = CSV.read(File.join(File.dirname(hpxml.hpxml_path), hpxml.header.schedules_filepaths[0]))
         csv_data[1][1] = 1.1
         File.write(@tmp_csv_path, csv_data.map(&:to_csv).join)
         hpxml.header.schedules_filepaths = [@tmp_csv_path]
       elsif ['schedule-detailed-bad-values-negative'].include? error_case
-        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-stochastic.xml'))
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic.xml'))
         csv_data = CSV.read(File.join(File.dirname(hpxml.hpxml_path), hpxml.header.schedules_filepaths[0]))
         csv_data[1][1] = -0.5
         File.write(@tmp_csv_path, csv_data.map(&:to_csv).join)
         hpxml.header.schedules_filepaths = [@tmp_csv_path]
       elsif ['schedule-detailed-bad-values-non-numeric'].include? error_case
-        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-stochastic.xml'))
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic.xml'))
         csv_data = CSV.read(File.join(File.dirname(hpxml.hpxml_path), hpxml.header.schedules_filepaths[0]))
         csv_data[1][1] = 'NA'
         File.write(@tmp_csv_path, csv_data.map(&:to_csv).join)
         hpxml.header.schedules_filepaths = [@tmp_csv_path]
       elsif ['schedule-detailed-duplicate-columns'].include? error_case
-        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-stochastic.xml'))
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic.xml'))
         csv_data = CSV.read(File.join(File.dirname(hpxml.hpxml_path), hpxml.header.schedules_filepaths[0]))
         File.write(@tmp_csv_path, csv_data.map(&:to_csv).join)
         hpxml.header.schedules_filepaths = []
         hpxml.header.schedules_filepaths << @tmp_csv_path
         hpxml.header.schedules_filepaths << @tmp_csv_path
       elsif ['schedule-detailed-wrong-columns'].include? error_case
-        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-stochastic.xml'))
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic.xml'))
         csv_data = CSV.read(File.join(File.dirname(hpxml.hpxml_path), hpxml.header.schedules_filepaths[0]))
         csv_data[0][1] = 'lighting'
         File.write(@tmp_csv_path, csv_data.map(&:to_csv).join)
@@ -934,7 +959,7 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base.xml'))
         hpxml.header.schedules_filepaths << 'invalid-wrong-filename.csv'
       elsif ['schedule-detailed-wrong-rows'].include? error_case
-        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-stochastic.xml'))
+        hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic.xml'))
         csv_data = CSV.read(File.join(File.dirname(hpxml.hpxml_path), hpxml.header.schedules_filepaths[0]))
         File.write(@tmp_csv_path, csv_data[0..-2].map(&:to_csv).join)
         hpxml.header.schedules_filepaths = [@tmp_csv_path]
@@ -1069,7 +1094,7 @@ class HPXMLtoOpenStudioValidationTest < MiniTest::Test
       # Create HPXML object
       if ['schedule-file-and-weekday-weekend-multipliers'].include? warning_case
         hpxml = HPXML.new(hpxml_path: File.join(@sample_files_path, 'base-schedules-simple.xml'))
-        hpxml.header.schedules_filepaths << 'HPXMLtoOpenStudio/resources/schedule_files/smooth.csv'
+        hpxml.header.schedules_filepaths << 'HPXMLtoOpenStudio/resources/schedule_files/occupancy-smooth.csv'
       else
         fail "Unhandled case: #{warning_case}."
       end
