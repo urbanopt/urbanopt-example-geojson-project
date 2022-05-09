@@ -438,9 +438,7 @@ module URBANopt
             
             if not is_defined(feature, :hpxml_directory, false)
               # check additional fields when HPXML dir is not given
-              if ['Single-Family Detached', 'Single-Family Attached'].include?(building_type)
-                is_defined(feature, :attic_type)
-              end
+              is_defined(feature, :attic_type)
               is_defined(feature, :number_of_bedrooms)
               if ['Single-Family Attached', 'Multifamily'].include?(building_type)
                 is_defined(feature, :number_of_residential_units)
@@ -528,18 +526,35 @@ module URBANopt
               args[:geometry_foundation_height] = 8.0
             end
 
-            args[:geometry_attic_type] = 'FlatRoof'
+            case feature.attic_type
+            when 'attic - vented'
+              args[:geometry_attic_type] = 'VentedAttic'
+              begin
+                args[:geometry_roof_type] = feature.roof_type
+              rescue
+              end
+            when 'attic - unvented'
+              args[:geometry_attic_type] = 'UnventedAttic'
+              begin
+                args[:geometry_roof_type] = feature.roof_type
+              rescue
+              end
+            when 'attic - conditioned'
+              args[:geometry_attic_type] = 'ConditionedAttic'
+              begin
+                args[:geometry_roof_type] = feature.roof_type
+              rescue
+              end
+            when 'flat roof'
+              args[:geometry_attic_type] = 'FlatRoof'
+            end
+
             args[:geometry_roof_type] = 'gable'
             begin
-              case feature.attic_type
-              when 'attic - vented'
-                args[:geometry_attic_type] = 'VentedAttic'
-              when 'attic - unvented'
-                args[:geometry_attic_type] = 'UnventedAttic'
-              when 'attic - conditioned'
-                args[:geometry_attic_type] = 'ConditionedAttic'
+              when 'Hip'
+                args[:geometry_roof_type] = 'hip'
               end
-            rescue StandardError
+            rescue
             end
 
             begin
