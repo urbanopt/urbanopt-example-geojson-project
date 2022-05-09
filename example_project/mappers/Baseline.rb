@@ -441,7 +441,6 @@ module URBANopt
               if ['Single-Family Detached', 'Single-Family Attached'].include?(building_type)
                 is_defined(feature, :attic_type)
               end
-              is_defined(feature, :floor_area)
               is_defined(feature, :number_of_bedrooms)
               if ['Single-Family Attached', 'Multifamily'].include?(building_type)
                 is_defined(feature, :number_of_residential_units)
