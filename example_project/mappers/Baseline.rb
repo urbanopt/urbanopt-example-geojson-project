@@ -515,6 +515,9 @@ module URBANopt
             when 'crawlspace - unvented'
               args[:geometry_foundation_type] = 'UnventedCrawlspace'
               args[:geometry_foundation_height] = 3.0
+            when 'crawlspace - conditioned'
+              args[:geometry_foundation_type] = 'ConditionedCrawlspace'
+              args[:geometry_foundation_height] = 3.0
             when 'basement - unconditioned'
               args[:geometry_foundation_type] = 'UnconditionedBasement'
               args[:geometry_foundation_height] = 8.0
