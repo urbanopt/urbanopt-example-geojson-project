@@ -41,14 +41,12 @@ require 'rexml/document'
 module URBANopt
   module Scenario
     class BaselineMapper < SimulationMapperBase
-
       # class level variables
       @@instance_lock = Mutex.new
       @@osw = nil
       @@geometry = nil
 
-      def initialize()
-
+      def initialize
         # do initialization of class variables in thread safe way
         @@instance_lock.synchronize do
           if @@osw.nil?
@@ -72,145 +70,144 @@ module URBANopt
       end
 
       def lookup_building_type(building_type, template, footprint_area, number_of_stories)
-        if template.include? "DEER"
+        if template.include? 'DEER'
           case building_type
-          when "Education"
-            return "EPr"
-          when "Enclosed mall"
-            return "RtL"
-          when "Food sales"
-            return "RSD"
-          when "Food service"
-            return "RSD"
-          when "Inpatient health care"
-            return "Nrs"
-          when "Laboratory"
-            return "Hsp"
-          when "Lodging"
-            return "Htl"
-          when "Mixed use"
-            return "ECC"
-          when "Mobile Home"
-            return "DMo"
-          when "Multifamily (2 to 4 units)"
-            return "MFm"
-          when "Multifamily (5 or more units)"
-            return "MFm"
-          when "Nonrefrigerated warehouse"
-            return "SUn"
-          when "Nursing"
-            return "Nrs"
-          when "Office"
+          when 'Education'
+            return 'EPr'
+          when 'Enclosed mall'
+            return 'RtL'
+          when 'Food sales'
+            return 'RSD'
+          when 'Food service'
+            return 'RSD'
+          when 'Inpatient health care'
+            return 'Nrs'
+          when 'Laboratory'
+            return 'Hsp'
+          when 'Lodging'
+            return 'Htl'
+          when 'Mixed use'
+            return 'ECC'
+          when 'Mobile Home'
+            return 'DMo'
+          when 'Multifamily (2 to 4 units)'
+            return 'MFm'
+          when 'Multifamily (5 or more units)'
+            return 'MFm'
+          when 'Nonrefrigerated warehouse'
+            return 'SUn'
+          when 'Nursing'
+            return 'Nrs'
+          when 'Office'
             if footprint_area
               if footprint_area.to_f > 100000
-                return "OfL"
+                return 'OfL'
               else
-                return "OfS"
+                return 'OfS'
               end
             else
-              raise "footprint_area required to map office building type"
+              raise 'footprint_area required to map office building type'
             end
-          when "Outpatient health care"
-            return "Nrs"
-          when "Public assembly"
-            return "Asm"
-          when "Public order and safety"
-            return "Asm"
-          when "Refrigerated warehouse"
-            return "WRf"
-          when "Religious worship"
-            return "Asm"
-          when "Retail other than mall"
-            return "RtS"
-          when "Service"
-            return "MLI"
-          when "Single-Family"
-            return "MFm"
-          when "Strip shopping mall"
-            return "RtL"
-          when "Vacant"
-            return "SUn"
+          when 'Outpatient health care'
+            return 'Nrs'
+          when 'Public assembly'
+            return 'Asm'
+          when 'Public order and safety'
+            return 'Asm'
+          when 'Refrigerated warehouse'
+            return 'WRf'
+          when 'Religious worship'
+            return 'Asm'
+          when 'Retail other than mall'
+            return 'RtS'
+          when 'Service'
+            return 'MLI'
+          when 'Single-Family'
+            return 'MFm'
+          when 'Strip shopping mall'
+            return 'RtL'
+          when 'Vacant'
+            return 'SUn'
           else
-           raise "building type #{building_type} cannot be mapped to a DEER building type"
+            raise "building type #{building_type} cannot be mapped to a DEER building type"
           end
 
         else
           # default: ASHRAE
           case building_type
-          when "Education"
+          when 'Education'
             return 'SecondarySchool'
-          when "Enclosed mall"
-            return "RetailStripmall"
-          when "Food sales"
-            return "FullServiceRestaurant"
-          when "Food service"
-            return "FullServiceRestaurant"
-          when "Inpatient health care"
-            return "Hospital"
-          when "Laboratory"
-            return "Laboratory"
-          when "Lodging"
+          when 'Enclosed mall'
+            return 'RetailStripmall'
+          when 'Food sales'
+            return 'FullServiceRestaurant'
+          when 'Food service'
+            return 'FullServiceRestaurant'
+          when 'Inpatient health care'
+            return 'Hospital'
+          when 'Laboratory'
+            return 'Laboratory'
+          when 'Lodging'
             if number_of_stories
               if number_of_stories.to_i > 3
-                return "LargeHotel"
+                return 'LargeHotel'
               else
-                return "SmallHotel"
+                return 'SmallHotel'
               end
             end
-            return "LargeHotel"
-          when "Mixed use"
-            return "Mixed use"
-          when "Mobile Home"
-            return "MidriseApartment"
-          when "Multifamily (2 to 4 units)"
-            return "MidriseApartment"
-          when "Multifamily (5 or more units)"
-            return "MidriseApartment"
-          when "Nonrefrigerated warehouse"
-            return "Warehouse"
-          when "Nursing"
-            return "Outpatient"
-          when "Office"
+            return 'LargeHotel'
+          when 'Mixed use'
+            return 'Mixed use'
+          when 'Mobile Home'
+            return 'MidriseApartment'
+          when 'Multifamily (2 to 4 units)'
+            return 'MidriseApartment'
+          when 'Multifamily (5 or more units)'
+            return 'MidriseApartment'
+          when 'Nonrefrigerated warehouse'
+            return 'Warehouse'
+          when 'Nursing'
+            return 'Outpatient'
+          when 'Office'
             if footprint_area
               if footprint_area.to_f < 20000
-                value = "SmallOffice"
+                value = 'SmallOffice'
               elsif footprint_area.to_f > 100000
-                value = "LargeOffice"
+                value = 'LargeOffice'
               else
-                value = "MediumOffice"
+                value = 'MediumOffice'
               end
             else
-              raise "Floor area required to map office building type"
+              raise 'Floor area required to map office building type'
             end
-          when "Outpatient health care"
-            return "Outpatient"
-          when "Public assembly"
-            return "MediumOffice"
-          when "Public order and safety"
-            return "MediumOffice"
-          when "Refrigerated warehouse"
-            return "Warehouse"
-          when "Religious worship"
-            return "MediumOffice"
-          when "Retail other than mall"
-            return "RetailStandalone"
-          when "Service"
-            return "MediumOffice"
-          when "Single-Family"
-            return "MidriseApartment"
-          when "Strip shopping mall"
-            return "RetailStripmall"
-          when "Vacant"
-            return "Warehouse"
+          when 'Outpatient health care'
+            return 'Outpatient'
+          when 'Public assembly'
+            return 'MediumOffice'
+          when 'Public order and safety'
+            return 'MediumOffice'
+          when 'Refrigerated warehouse'
+            return 'Warehouse'
+          when 'Religious worship'
+            return 'MediumOffice'
+          when 'Retail other than mall'
+            return 'RetailStandalone'
+          when 'Service'
+            return 'MediumOffice'
+          when 'Single-Family'
+            return 'MidriseApartment'
+          when 'Strip shopping mall'
+            return 'RetailStripmall'
+          when 'Vacant'
+            return 'Warehouse'
           else
             raise "building type #{building_type} cannot be mapped to an ASHRAE building type"
           end
         end
       end
 
-      def lookup_template_by_year_built(template,  year_built)
-
-        if template.include? "DEER"
+      def lookup_template_by_year_built(template, year_built)
+        if template.include? 'DEER'
           if year_built <= 1996
             return 'DEER 1985'
           elsif year_built <= 2003
@@ -272,7 +269,7 @@ module URBANopt
           'Food service',
           'Inpatient health care',
           'Nursing',
-          'Lodging',          
+          'Lodging',
           'Strip shopping mall',
           'Enclosed mall',
           'Retail other than mall',
@@ -305,11 +302,12 @@ module URBANopt
         rows = []
         headers = []
         units = []
-        CSV.foreach(filepath, { :col_sep => "\t" }) do |row|
+        CSV.foreach(filepath, { col_sep: "\t" }) do |row|
           if headers.empty?
             row.each do |header|
               next if header == 'Source'
-              if args.keys.include?(header.gsub('Dependency=', '').to_sym)
+
+              if args.key?(header.gsub('Dependency=', '').to_sym)
                 header = header.gsub('Dependency=', '')
               end
               unless header.include?('Dependency=')
@@ -334,18 +332,19 @@ module URBANopt
 
       def get_lookup_row(args, rows, template_vals)
         rows.each do |row|
-          if row.keys.include?('Dependency=Climate Zone')
-            next if row['Dependency=Climate Zone'] != template_vals[:climate_zone]
+          if row.key?('Dependency=Climate Zone') && (row['Dependency=Climate Zone'] != template_vals[:climate_zone])
+            next
           end
-          if row.keys.include?('Dependency=IECC Year')
-            next if row['Dependency=IECC Year'] != template_vals[:iecc_year]
+          if row.key?('Dependency=IECC Year') && (row['Dependency=IECC Year'] != template_vals[:iecc_year])
+            next
           end
-          if row.keys.include?('Dependency=Template Month')
-            next if row['Dependency=Template Month'] != template_vals[:t_month]
+          if row.key?('Dependency=Template Month') && (row['Dependency=Template Month'] != template_vals[:t_month])
+            next
           end
-          if row.keys.include?('Dependency=Template Year')
-            next if row['Dependency=Template Year'] != template_vals[:t_year]
+          if row.key?('Dependency=Template Year') && (row['Dependency=Template Year'] != template_vals[:t_year])
+            next
           end
+
           row.delete('Dependency=Climate Zone')
           row.delete('Dependency=IECC Year')
           row.delete('Dependency=Template Month')
@@ -373,7 +372,7 @@ module URBANopt
       end
 
       def get_climate_zone_iecc(epw)
-        headers = CSV.open(epw, 'r') { |csv| csv.first }
+        headers = CSV.open(epw, 'r', &:first)
         wmo = headers[5]
         zones_csv = File.join(File.dirname(__FILE__), '../resources/hpxml-measures/HPXMLtoOpenStudio/resources/data/climate_zones.csv')
         CSV.foreach(zones_csv) do |row|
@@ -383,11 +382,24 @@ module URBANopt
         end
       end
 
-      def create_osw(scenario, features, feature_names)
-        
-        if features.size != 1
-          raise "Baseline currently cannot simulate more than one feature."
+      def is_defined(feature, method_name, raise_error=true)
+        begin
+          if feature.method_missing(method_name)
+            return true
+          end
+        rescue NoMethodError
+          if raise_error
+            raise "*** ERROR *** #{method_name} is not set on this feature"
+          end
+          return false
         end
+      end
+
+      def create_osw(scenario, features, feature_names)
+        if features.size != 1
+          raise 'Baseline currently cannot simulate more than one feature.'
+        end
+
         feature = features[0]
         feature_id = feature.id
         feature_type = feature.type
@@ -414,18 +426,34 @@ module URBANopt
 
           if building_type.nil?
             # need building type
-            raise "Building type is not set"
+            raise 'Building type is not set'
           end
 
           if residential_building_types.include? building_type
             debug = false
+
+            # Check for required residential fields
+            is_defined(feature, :number_of_stories_above_ground)
+            is_defined(feature, :foundation_type)
+            
+            if not is_defined(feature, :hpxml_directory, false)
+              # check additional fields when HPXML dir is not given
+              if ['Single-Family Detached', 'Single-Family Attached'].include?(building_type)
+                is_defined(feature, :attic_type)
+              end
+              is_defined(feature, :floor_area)
+              is_defined(feature, :number_of_bedrooms)
+              if ['Single-Family Attached', 'Multifamily'].include?(building_type)
+                is_defined(feature, :number_of_residential_units)
+              end
+            end
 
             args = {}
 
             # Custom HPXML Files
             begin
               args[:hpxml_dir] = feature.hpxml_directory
-            rescue
+            rescue StandardError
             end
 
             # Occupancy Calculation Type
@@ -439,7 +467,7 @@ module URBANopt
             args[:simulation_control_timestep] = 60
             begin
               args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
-            rescue
+            rescue StandardError
             end
 
             args[:simulation_control_run_period] = 'Jan 1 - Dec 31'
@@ -452,25 +480,31 @@ module URBANopt
               end_day_of_month = feature.end_date[8, 2].to_i
               args[:simulation_control_run_period] = "#{begin_month} #{begin_day_of_month} - #{end_month} #{end_day_of_month}"
               args[:simulation_control_run_period_calendar_year] = feature.begin_date[0, 4].to_i
-            rescue
+            rescue StandardError
             end
 
             args[:weather_station_epw_filepath] = "../../../weather/#{feature.weather_filename}"
 
             # Geometry
             args[:geometry_building_num_units] = 1
+            args[:geometry_unit_num_floors_above_grade] = 1
             case building_type
             when 'Single-Family Detached'
               args[:geometry_unit_type] = 'single-family detached'
               args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
             when 'Single-Family Attached'
-              args[:geometry_building_num_units] = feature.number_of_residential_units
               args[:geometry_unit_type] = 'single-family attached'
+              begin
+                args[:geometry_building_num_units] = feature.number_of_residential_units
+              rescue
+              end
               args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
             when 'Multifamily'
-              args[:geometry_building_num_units] = feature.number_of_residential_units
               args[:geometry_unit_type] = 'apartment unit'
-              args[:geometry_unit_num_floors_above_grade] = 1
+              begin
+                args[:geometry_building_num_units] = feature.number_of_residential_units
+              rescue
+              end
             end
 
             args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
@@ -506,12 +540,18 @@ module URBANopt
               when 'attic - conditioned'
                 args[:geometry_attic_type] = 'ConditionedAttic'
               end
+            rescue StandardError
+            end
+
+            begin
+              args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
             rescue
             end
 
-            args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
-
-            args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
+            begin
+              args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
+            rescue
+            end
 
             args[:geometry_unit_num_occupants] = 'auto'
             begin
@@ -522,7 +562,7 @@ module URBANopt
             args[:geometry_average_ceiling_height] = 8.0
             begin
               args[:geometry_average_ceiling_height] = feature.maximum_roof_height / feature.number_of_stories_above_ground
-            rescue
+            rescue StandardError
             end
 
             begin
@@ -535,7 +575,7 @@ module URBANopt
               end
               args[:geometry_garage_width] = 12.0 * num_garage_spaces
               args[:geometry_garage_protrusion] = 1.0
-            rescue
+            rescue StandardError
             end
 
             args[:neighbor_left_distance] = 0.0
@@ -558,7 +598,7 @@ module URBANopt
             system_type = 'Residential - furnace and central air conditioner'
             begin
               system_type = feature.system_type
-            rescue
+            rescue StandardError
             end
 
             args[:heating_system_type] = 'none'
@@ -591,7 +631,7 @@ module URBANopt
             args[:heating_system_fuel] = 'natural gas'
             begin
               args[:heating_system_fuel] = feature.heating_system_fuel_type
-            rescue
+            rescue StandardError
             end
 
             if args[:heating_system_type] == 'ElectricResistance'
@@ -610,97 +650,95 @@ module URBANopt
             template = nil
             begin
               template = feature.template
-            rescue
+            rescue StandardError
             end
 
             # IECC / EnergyStar / Other
-            unless template.nil?
-              if template.include?('Residential IECC')
+            if !template.nil? && template.include?('Residential IECC')
 
-                captures = template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
-                template_vals = Hash[captures.names.zip( captures.captures ) ]
-                template_vals = Hash[template_vals.collect{ |k, v| [k.to_sym, v] }]
+              captures = template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
+              template_vals = Hash[captures.names.zip(captures.captures)]
+              template_vals = template_vals.transform_keys(&:to_sym)
 
-                epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
-                template_vals[:climate_zone] = get_climate_zone_iecc(epw)
+              epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
+              template_vals[:climate_zone] = get_climate_zone_iecc(epw)
 
-                # ENCLOSURE
+              # ENCLOSURE
 
-                enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
-                enclosure = get_lookup_tsv(args, enclosure_filepath)
-                row = get_lookup_row(args, enclosure, template_vals)
+              enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
+              enclosure = get_lookup_tsv(args, enclosure_filepath)
+              row = get_lookup_row(args, enclosure, template_vals)
 
-                # Determine which surfaces to place insulation on
-                if args[:geometry_foundation_type].include? 'Basement'
-                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
-                  row[:floor_over_foundation_assembly_r] = 2.1
-                  row[:floor_over_garage_assembly_r] = 2.1
-                elsif args[:geometry_foundation_type].include? 'Crawlspace'
-                  row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
-                  row[:floor_over_foundation_assembly_r] = 2.1
-                  row[:floor_over_garage_assembly_r] = 2.1
-                end
-                row.delete(:foundation_wall_assembly_r_basement)
-                row.delete(:foundation_wall_assembly_r_crawlspace)
-                if ["ConditionedAttic"].include?(args[:geometry_attic_type])
-                  row[:roof_assembly_r] = row[:ceiling_assembly_r]
-                  row[:ceiling_assembly_r] = 2.1
-                end
-                args.update(row) unless row.nil?
+              # Determine which surfaces to place insulation on
+              if args[:geometry_foundation_type].include? 'Basement'
+                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
+                row[:floor_over_foundation_assembly_r] = 2.1
+                row[:floor_over_garage_assembly_r] = 2.1
+              elsif args[:geometry_foundation_type].include? 'Crawlspace'
+                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
+                row[:floor_over_foundation_assembly_r] = 2.1
+                row[:floor_over_garage_assembly_r] = 2.1
+              end
+              row.delete(:foundation_wall_assembly_r_basement)
+              row.delete(:foundation_wall_assembly_r_crawlspace)
+              if ['ConditionedAttic'].include?(args[:geometry_attic_type])
+                row[:roof_assembly_r] = row[:ceiling_assembly_r]
+                row[:ceiling_assembly_r] = 2.1
+              end
+              args.update(row) unless row.nil?
 
-                # HVAC
+              # HVAC
 
-                if args[:heating_system_type] != 'none'
-                  heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
-                  heating_system = get_lookup_tsv(args, heating_system_filepath)
-                  row = get_lookup_row(args, heating_system, template_vals)
-                  args.update(row) unless row.nil?
-                end
-
-                if args[:cooling_system_type] != 'none'
-                  cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
-                  cooling_system = get_lookup_tsv(args, cooling_system_filepath)
-                  row = get_lookup_row(args, cooling_system, template_vals)
-                  args.update(row) unless row.nil?
-                end
-
-                if args[:heat_pump_type] != 'none'
-                  heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
-                  heat_pump = get_lookup_tsv(args, heat_pump_filepath)
-                  row = get_lookup_row(args, heat_pump, template_vals)
-                  args.update(row) unless row.nil?
-                end
-
-                # APPLIANCES
-
-                ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer'].each do |appliance|
-                  appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
-                  appliances = get_lookup_tsv(args, appliances_filepath)
-                  row = get_lookup_row(args, appliances, template_vals)
-                  args.update(row) unless row.nil?
-                end
-
-                # MECHANICAL VENTILATION
-
-                mechvent_filepath = File.join(File.dirname(__FILE__), 'residential/mechanical_ventilation.tsv')
-                mechvent = get_lookup_tsv(args, mechvent_filepath)
-                row = get_lookup_row(args, mechvent, template_vals)
-                args.update(row) unless row.nil?
-
-                # EXHAUST
-
-                exhaust_filepath = File.join(File.dirname(__FILE__), 'residential/exhaust.tsv')
-                exhaust = get_lookup_tsv(args, exhaust_filepath)
-                row = get_lookup_row(args, exhaust, template_vals)
-                args.update(row) unless row.nil?
-
-                # WATER HEATER
-
-                water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
-                water_heater = get_lookup_tsv(args, water_heater_filepath)
-                row = get_lookup_row(args, water_heater, template_vals)
+              if args[:heating_system_type] != 'none'
+                heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
+                heating_system = get_lookup_tsv(args, heating_system_filepath)
+                row = get_lookup_row(args, heating_system, template_vals)
                 args.update(row) unless row.nil?
               end
+
+              if args[:cooling_system_type] != 'none'
+                cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
+                cooling_system = get_lookup_tsv(args, cooling_system_filepath)
+                row = get_lookup_row(args, cooling_system, template_vals)
+                args.update(row) unless row.nil?
+              end
+
+              if args[:heat_pump_type] != 'none'
+                heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
+                heat_pump = get_lookup_tsv(args, heat_pump_filepath)
+                row = get_lookup_row(args, heat_pump, template_vals)
+                args.update(row) unless row.nil?
+              end
+
+              # APPLIANCES
+
+              ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer'].each do |appliance|
+                appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
+                appliances = get_lookup_tsv(args, appliances_filepath)
+                row = get_lookup_row(args, appliances, template_vals)
+                args.update(row) unless row.nil?
+              end
+
+              # MECHANICAL VENTILATION
+
+              mechvent_filepath = File.join(File.dirname(__FILE__), 'residential/mechanical_ventilation.tsv')
+              mechvent = get_lookup_tsv(args, mechvent_filepath)
+              row = get_lookup_row(args, mechvent, template_vals)
+              args.update(row) unless row.nil?
+
+              # EXHAUST
+
+              exhaust_filepath = File.join(File.dirname(__FILE__), 'residential/exhaust.tsv')
+              exhaust = get_lookup_tsv(args, exhaust_filepath)
+              row = get_lookup_row(args, exhaust, template_vals)
+              args.update(row) unless row.nil?
+
+              # WATER HEATER
+
+              water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
+              water_heater = get_lookup_tsv(args, water_heater_filepath)
+              row = get_lookup_row(args, water_heater, template_vals)
+              args.update(row) unless row.nil?
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults with template values
@@ -720,8 +758,8 @@ module URBANopt
               end
             end
 
-            args.keys.each do |arg_name|
-              unless default_args.keys.include? arg_name
+            args.each_key do |arg_name|
+              unless default_args.key?(arg_name)
                 next if [:feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir].include?(arg_name)
 
                 puts "Argument '#{arg_name}' is unknown."
@@ -731,11 +769,11 @@ module URBANopt
             default_args.each do |arg_name, arg_default|
               next if arg_default.nil?
 
-              if not args.keys.include? arg_name
+              if !args.key?(arg_name)
                 args[arg_name] = arg_default
               else
                 if debug
-                  if not arg_default.nil?
+                  if !arg_default.nil?
                     if args[arg_name] != arg_default
                       puts "Overriding #{arg_name} default '#{arg_default}' with '#{args[arg_name]}'."
                     end
@@ -746,7 +784,7 @@ module URBANopt
               end
             end
 
-            args.keys.each do |arg_name|
+            args.each_key do |arg_name|
               OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg_name, args[arg_name])
             end
 
@@ -760,7 +798,7 @@ module URBANopt
               if timesteps_per_hour
                 OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'timesteps_per_hour', timesteps_per_hour)
               else
-                puts "No timesteps_per_hours set in the feature file...using default"
+                puts 'No timesteps_per_hours set in the feature file...using default'
               end
             rescue StandardError
             end
@@ -773,7 +811,7 @@ module URBANopt
                 end
                 OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'begin_date', begin_date)
               else
-                puts "no simulation begin_date set in the feature file...using default"
+                puts 'no simulation begin_date set in the feature file...using default'
               end
             rescue StandardError
             end
@@ -786,7 +824,7 @@ module URBANopt
                 end
                 OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', 'end_date', end_date)
               else
-                puts "no simulation end_date set in the feature file...using default"
+                puts 'no simulation end_date set in the feature file...using default'
               end
             rescue StandardError
             end
@@ -819,8 +857,9 @@ module URBANopt
               end
               template = building_hash.key?(:template) ? building_hash[:template] : nil
               if template.nil?
-                raise "Template is not defined in the feature file"
+                raise 'Template is not defined in the feature file'
               end
+
               footprint_area = building_hash[:footprint_area]
 
               mapped_building_type_1 = lookup_building_type(building_type_1, template, footprint_area, number_of_stories)
@@ -885,13 +924,13 @@ module URBANopt
                   system_type = 'VAV air-cooled chiller with gas boiler reheat'
                 end
               else
-                system_type = "Inferred"
+                system_type = 'Inferred'
               end
 
               def time_mapping(time)
                 hour = time.split(':')[0]
                 minute = time.split(':')[1]
-                fraction = minute.to_f/60
+                fraction = minute.to_f / 60
                 fraction_roundup = fraction.round(2)
                 minute_fraction = fraction_roundup.to_s.split('.')[1]
                 new_time = [hour, minute_fraction].join('.')
@@ -907,20 +946,20 @@ module URBANopt
               begin
                 cec_climate_zone = feature.cec_climate_zone
                 if !cec_climate_zone.empty?
-                  cec_climate_zone = "CEC T24-CEC" + cec_climate_zone
+                  cec_climate_zone = "CEC T24-CEC#{cec_climate_zone}"
                   OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'climate_zone', cec_climate_zone)
                   cec_found = true
                 end
-              rescue
+              rescue StandardError
               end
               if !cec_found
                 begin
                   climate_zone = feature.climate_zone
                   if !climate_zone.empty?
-                    climate_zone = "ASHRAE 169-2013-" + climate_zone
+                    climate_zone = "ASHRAE 169-2013-#{climate_zone}"
                     OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'climate_zone', climate_zone)
-                 end
-                rescue
+                  end
+                rescue StandardError
                 end
               end
 
@@ -931,15 +970,15 @@ module URBANopt
                   OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', weather_filename)
                   puts "Setting weather_file_name to #{weather_filename} as specified in the FeatureFile"
                 end
-              rescue
-                puts "No weather_file specified on feature"
+              rescue StandardError
+                puts 'No weather_file specified on feature'
                 epw_file_path = Dir.glob(File.join(File.dirname(__FILE__), '../weather/*.epw'))[0]
                 if !epw_file_path.nil? && !epw_file_path.empty?
                   epw_file_name = File.basename(epw_file_path)
                   OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', 'weather_file_name', epw_file_name)
                   puts "Setting weather_file_name to first epw file found in the weather folder: #{epw_file_name}"
                 else
-                  puts "NO WEATHER FILES SPECIFIED...SIMULATIONS MAY FAIL"
+                  puts 'NO WEATHER FILES SPECIFIED...SIMULATIONS MAY FAIL'
                 end
               end
 
@@ -955,7 +994,7 @@ module URBANopt
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wkdy_op_hrs_start_time', new_weekday_start_time, 'create_typical_building_from_model 1')
                   weekday_flag += 1
                 end
-              rescue
+              rescue StandardError
               end
 
               # set weekday duration
@@ -966,15 +1005,15 @@ module URBANopt
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wkdy_op_hrs_duration', new_weekday_duration, 'create_typical_building_from_model 1')
                   weekday_flag += 1
                 end
-              rescue
+              rescue StandardError
               end
 
-              # set weekday modify 
+              # set weekday modify
               begin
                 if weekday_flag == 2
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'modify_wkdy_op_hrs', true, 'create_typical_building_from_model 1')
                 end
-              rescue
+              rescue StandardError
               end
 
               # set weekend start time
@@ -985,7 +1024,7 @@ module URBANopt
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wknd_op_hrs_start_time', new_weekend_start_time, 'create_typical_building_from_model 1')
                   weekend_flag += 1
                 end
-              rescue
+              rescue StandardError
               end
 
               # set weekend duration
@@ -996,17 +1035,17 @@ module URBANopt
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'wknd_op_hrs_duration', new_weekend_duration, 'create_typical_building_from_model 1')
                   weekend_flag += 1
                 end
-              rescue
+              rescue StandardError
               end
 
-              # set weekday modify 
+              # set weekday modify
               begin
                 if weekend_flag == 2
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'modify_wknd_op_hrs', true, 'create_typical_building_from_model 1')
                 end
-              rescue
+              rescue StandardError
               end
-              
+
               # template
               begin
                 new_template = nil
@@ -1024,12 +1063,12 @@ module URBANopt
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', new_template, 'create_typical_building_from_model 1')
                   OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', new_template, 'create_typical_building_from_model 2')
                 end
-              rescue
+              rescue StandardError
               end
-              
+
               # TODO: surface_elevation has no current mapping
               # TODO: tariff_filename has no current mapping
-              
+
               # create a bar building, will have spaces tagged with individual space types given the
               # input building types
               # set skip measure to false
@@ -1065,9 +1104,9 @@ module URBANopt
 
               # create a blended space type for each story
               OpenStudio::Extension.set_measure_argument(osw,
-                'blended_space_type_from_model', '__SKIP__', false)
+                                                         'blended_space_type_from_model', '__SKIP__', false)
               OpenStudio::Extension.set_measure_argument(osw,
-              'blended_space_type_from_model', 'blend_method', 'Building Story')
+                                                         'blended_space_type_from_model', 'blend_method', 'Building Story')
 
               # create geometry for the desired feature, this will reuse blended space types in the model for each story and remove the bar geometry
               OpenStudio::Extension.set_measure_argument(osw, 'urban_geometry_creation_zoning', '__SKIP__', false)
@@ -1082,9 +1121,9 @@ module URBANopt
 
           else
             raise "Building type #{building_type} not currently supported."
-          end # building type == residential or commercial
+          end
 
-        end # feature_type == 'Building'
+        end
 
         # call the default feature reporting measure
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_id', feature_id)
@@ -1093,7 +1132,7 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_location', feature_location)
 
         return osw
-      end # create_osw
-    end # BaselineMapper
-  end # Scenario
-end # URBANopt
+      end
+    end
+  end
+end
