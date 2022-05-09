@@ -457,7 +457,7 @@ module URBANopt
             args[:occupancy_calculation_type] = 'asset'
             begin
               args[:occupancy_calculation_type] = feature.occupancy_calculation_type
-            rescue
+            rescue StandardError
             end
 
             # Simulation Control
@@ -493,14 +493,14 @@ module URBANopt
               args[:geometry_unit_type] = 'single-family attached'
               begin
                 args[:geometry_building_num_units] = feature.number_of_residential_units
-              rescue
+              rescue StandardError
               end
               args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
             when 'Multifamily'
               args[:geometry_unit_type] = 'apartment unit'
               begin
                 args[:geometry_building_num_units] = feature.number_of_residential_units
-              rescue
+              rescue StandardError
               end
             end
 
@@ -529,27 +529,30 @@ module URBANopt
               args[:geometry_foundation_height] = 8.0
             end
 
-            case feature.attic_type
-            when 'attic - vented'
-              args[:geometry_attic_type] = 'VentedAttic'
-              begin
-                args[:geometry_roof_type] = feature.roof_type
-              rescue
+            begin
+              case feature.attic_type
+              when 'attic - vented'
+                args[:geometry_attic_type] = 'VentedAttic'
+                begin
+                  args[:geometry_roof_type] = feature.roof_type
+                rescue StandardError
+                end
+              when 'attic - unvented'
+                args[:geometry_attic_type] = 'UnventedAttic'
+                begin
+                  args[:geometry_roof_type] = feature.roof_type
+                rescue StandardError
+                end
+              when 'attic - conditioned'
+                args[:geometry_attic_type] = 'ConditionedAttic'
+                begin
+                  args[:geometry_roof_type] = feature.roof_type
+                rescue StandardError
+                end
+              when 'flat roof'
+                args[:geometry_attic_type] = 'FlatRoof'
               end
-            when 'attic - unvented'
-              args[:geometry_attic_type] = 'UnventedAttic'
-              begin
-                args[:geometry_roof_type] = feature.roof_type
-              rescue
-              end
-            when 'attic - conditioned'
-              args[:geometry_attic_type] = 'ConditionedAttic'
-              begin
-                args[:geometry_roof_type] = feature.roof_type
-              rescue
-              end
-            when 'flat roof'
-              args[:geometry_attic_type] = 'FlatRoof'
+            rescue
             end
 
             args[:geometry_roof_type] = 'gable'
@@ -558,23 +561,23 @@ module URBANopt
               when 'Hip'
                 args[:geometry_roof_type] = 'hip'
               end
-            rescue
+            rescue StandardError
             end
 
             begin
               args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
-            rescue
+            rescue StandardError
             end
 
             begin
               args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
-            rescue
+            rescue StandardError
             end
 
             args[:geometry_unit_num_occupants] = 'auto'
             begin
               args[:geometry_unit_num_occupants] = "#{feature.number_of_occupants / args[:geometry_building_num_units]}"
-            rescue
+            rescue StandardError
             end
 
             args[:geometry_average_ceiling_height] = 8.0
