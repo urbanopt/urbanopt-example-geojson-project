@@ -108,7 +108,12 @@
         "building_type": "Food service",
         "floor_area": 22313,
         "footprint_area": 22313,
-        "number_of_stories": 1
+        "number_of_stories": 1,
+        "ev_charging": true,
+        "ev_charging_behavior": "Business as Usual",
+        "ev_percent": 100,
+        "ev_curtailment_frac": 0.5,
+        "ev_use_model_occupancy": true
       },
       "geometry": {
         "type": "Polygon",
@@ -152,10 +157,12 @@
         "weekday_duration": "11:30",
         "weekend_start_time": "11:00",
         "weekend_duration": "11:30",
-		"emissions" : true,
-		"emissions_future_year": "2020",
-		"emissions_hourly_historical_year": "2019",
-		"emissions_annual_historical_year": "2019"
+		    "emissions" : true,
+		    "emissions_future_year": "2020",
+		    "emissions_hourly_historical_year": "2019",
+		    "emissions_annual_historical_year": "2019",
+        "ev_charging": true,
+        "ev_charging_station_type": "Typical Public"
       },
       "geometry": {
         "type": "Polygon",
@@ -198,7 +205,9 @@
         "weekday_start_time": "06:00",
         "weekday_duration": "07:00",
         "weekend_start_time": "08:00",
-        "weekend_duration": "05:00"
+        "weekend_duration": "05:00",
+        "ev_charging": true,
+        "ev_charging_station_type": "Typical Public"
       },
       "geometry": {
         "type": "Polygon",
@@ -240,7 +249,9 @@
         "number_of_stories": 1,
         "weekday_start_time": "06:00",
         "weekday_duration": "16:00",
-		"emissions" : false
+		    "emissions" : false,
+        "ev_charging": true,
+        "ev_charging_station_type": "Typical Work"
       },
       "geometry": {
         "type": "Polygon",
@@ -279,7 +290,8 @@
         "building_type": "Food service",
         "floor_area": 10689,
         "footprint_area": 10689,
-        "number_of_stories": 1
+        "number_of_stories": 1,
+        "ev_charging": true
       },
       "geometry": {
         "type": "Polygon",
@@ -318,13 +330,13 @@
         "building_type": "Office",
         "number_of_stories": 6,
         "detailed_model_filename": "7.osm",
-		"emissions" : true,
-		"emissions_future_subregion": "RMPAc",
+		    "emissions" : true,
+		    "emissions_future_subregion": "RMPAc",
         "emissions_hourly_historical_subregion": "Rocky Mountains",
         "emissions_annual_historical_subregion": "RMPA",
-		"emissions_future_year": "2020",
-		"emissions_hourly_historical_year": "2019",
-		"emissions_annual_historical_year": "2019"
+    		"emissions_future_year": "2020",
+    		"emissions_hourly_historical_year": "2019",
+    		"emissions_annual_historical_year": "2019"
       },
       "geometry": {
         "type": "Polygon",
