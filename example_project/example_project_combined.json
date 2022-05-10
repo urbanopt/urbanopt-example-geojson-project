@@ -731,7 +731,7 @@
       "type": "Feature",
       "properties": {
         "id": "16",
-        "name": "Residenital 3",
+        "name": "Residential 3",
         "type": "Building",
         "building_type": "Single-Family Detached",
         "floor_area": 5500,
@@ -790,6 +790,7 @@
         "name": "Residential 4",
         "type": "Building",
         "building_type": "Single-Family Attached",
+        "number_of_stories": 2,
         "number_of_stories_above_ground": 2,
         "foundation_type": "slab",
         "hpxml_directory": "17"
