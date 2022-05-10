@@ -108,7 +108,12 @@
         "building_type": "Food service",
         "floor_area": 22313,
         "footprint_area": 22313,
-        "number_of_stories": 1
+        "number_of_stories": 1,
+        "ev_charging": true,
+        "ev_charging_behavior": "Business as Usual",
+        "ev_percent": 100,
+        "ev_curtailment_frac": 0.5,
+        "ev_use_model_occupancy": true
       },
       "geometry": {
         "type": "Polygon",
@@ -151,7 +156,9 @@
         "weekday_start_time": "11:00",
         "weekday_duration": "11:30",
         "weekend_start_time": "11:00",
-        "weekend_duration": "11:30"
+        "weekend_duration": "11:30",
+        "ev_charging": true,
+        "ev_charging_station_type": "Typical Public"
       },
       "geometry": {
         "type": "Polygon",
@@ -194,7 +201,9 @@
         "weekday_start_time": "06:00",
         "weekday_duration": "07:00",
         "weekend_start_time": "08:00",
-        "weekend_duration": "05:00"
+        "weekend_duration": "05:00",
+        "ev_charging": true,
+        "ev_charging_station_type": "Typical Public"
       },
       "geometry": {
         "type": "Polygon",
@@ -235,7 +244,9 @@
         "footprint_area": 8804,
         "number_of_stories": 1,
         "weekday_start_time": "06:00",
-        "weekday_duration": "16:00"
+        "weekday_duration": "16:00",
+        "ev_charging": true,
+        "ev_charging_station_type": "Typical Work"
       },
       "geometry": {
         "type": "Polygon",
@@ -274,7 +285,8 @@
         "building_type": "Food service",
         "floor_area": 10689,
         "footprint_area": 10689,
-        "number_of_stories": 1
+        "number_of_stories": 1,
+        "ev_charging": true
       },
       "geometry": {
         "type": "Polygon",
