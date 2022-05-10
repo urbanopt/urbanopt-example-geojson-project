@@ -374,7 +374,7 @@ module URBANopt
       def get_climate_zone_iecc(epw)
         headers = CSV.open(epw, 'r', &:first)
         wmo = headers[5]
-        zones_csv = File.join(File.dirname(__FILE__), '../resources/hpxml-measures/HPXMLtoOpenStudio/resources/data_climate_zones.csv')
+        zones_csv = File.join(File.dirname(__FILE__), '../resources/hpxml-measures/HPXMLtoOpenStudio/resources/data/climate_zones.csv')
         CSV.foreach(zones_csv) do |row|
           if row[0].to_s == wmo.to_s
             return row[6].to_s
@@ -438,10 +438,7 @@ module URBANopt
             
             if not is_defined(feature, :hpxml_directory, false)
               # check additional fields when HPXML dir is not given
-              if ['Single-Family Detached', 'Single-Family Attached'].include?(building_type)
-                is_defined(feature, :attic_type)
-              end
-              is_defined(feature, :floor_area)
+              is_defined(feature, :attic_type)
               is_defined(feature, :number_of_bedrooms)
               if ['Single-Family Attached', 'Multifamily'].include?(building_type)
                 is_defined(feature, :number_of_residential_units)
@@ -453,6 +450,13 @@ module URBANopt
             # Custom HPXML Files
             begin
               args[:hpxml_dir] = feature.hpxml_directory
+            rescue StandardError
+            end
+
+            # Occupancy Calculation Type
+            args[:occupancy_calculation_type] = 'asset'
+            begin
+              args[:occupancy_calculation_type] = feature.occupancy_calculation_type
             rescue StandardError
             end
 
@@ -489,14 +493,14 @@ module URBANopt
               args[:geometry_unit_type] = 'single-family attached'
               begin
                 args[:geometry_building_num_units] = feature.number_of_residential_units
-              rescue
+              rescue StandardError
               end
               args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
             when 'Multifamily'
               args[:geometry_unit_type] = 'apartment unit'
               begin
                 args[:geometry_building_num_units] = feature.number_of_residential_units
-              rescue
+              rescue StandardError
               end
             end
 
@@ -511,6 +515,9 @@ module URBANopt
             when 'crawlspace - unvented'
               args[:geometry_foundation_type] = 'UnventedCrawlspace'
               args[:geometry_foundation_height] = 3.0
+            when 'crawlspace - conditioned'
+              args[:geometry_foundation_type] = 'ConditionedCrawlspace'
+              args[:geometry_foundation_height] = 3.0
             when 'basement - unconditioned'
               args[:geometry_foundation_type] = 'UnconditionedBasement'
               args[:geometry_foundation_height] = 8.0
@@ -522,28 +529,55 @@ module URBANopt
               args[:geometry_foundation_height] = 8.0
             end
 
-            args[:geometry_attic_type] = 'FlatRoof'
-            args[:geometry_roof_type] = 'gable'
             begin
               case feature.attic_type
               when 'attic - vented'
                 args[:geometry_attic_type] = 'VentedAttic'
+                begin
+                  args[:geometry_roof_type] = feature.roof_type
+                rescue StandardError
+                end
               when 'attic - unvented'
                 args[:geometry_attic_type] = 'UnventedAttic'
+                begin
+                  args[:geometry_roof_type] = feature.roof_type
+                rescue StandardError
+                end
               when 'attic - conditioned'
                 args[:geometry_attic_type] = 'ConditionedAttic'
+                begin
+                  args[:geometry_roof_type] = feature.roof_type
+                rescue StandardError
+                end
+              when 'flat roof'
+                args[:geometry_attic_type] = 'FlatRoof'
+              end
+            rescue
+            end
+
+            args[:geometry_roof_type] = 'gable'
+            begin
+              case feature.roof_type
+              when 'Hip'
+                args[:geometry_roof_type] = 'hip'
               end
             rescue StandardError
             end
 
             begin
               args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
-            rescue
+            rescue StandardError
             end
 
             begin
               args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
-            rescue
+            rescue StandardError
+            end
+
+            args[:geometry_unit_num_occupants] = 'auto'
+            begin
+              args[:geometry_unit_num_occupants] = "#{feature.number_of_occupants / args[:geometry_building_num_units]}"
+            rescue StandardError
             end
 
             args[:geometry_average_ceiling_height] = 8.0
