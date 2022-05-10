@@ -47,7 +47,7 @@ else
 end
 
 if allow_local && File.exist?('../openstudio-ee-gem')
-  gem 'openstudio-ee', path: '../openstudio-ee-gem'
+  gem 'openstudio-ee', path: '../opesntudio-ee-gem'
 elsif allow_local
   gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'develop'
 else

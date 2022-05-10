@@ -109,6 +109,17 @@
         "use_upstream_args": false
       }
     },{
+      "measure_dir_name": "add_ems_emissions_reporting",
+      "arguments": {
+        "__SKIP__": true,
+        "future_subregion": "RMPAc",
+        "hourly_historical_subregion": "Rocky Mountains",
+        "annual_historical_subregion": "RMPA",
+        "future_year": 2020,
+        "hourly_historical_year": 2019,
+        "annual_historical_year": 2019
+      }
+    },{
       "measure_dir_name":"PredictedMeanVote",
       "arguments":{
         "__SKIP__": true,

@@ -66,6 +66,7 @@ else
   gem 'openstudio-calibration', '~> 0.6.0'
 end
 
+
 # TODO : Uncomment to revert changes once gem is released
 # if allow_local && File.exists?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
