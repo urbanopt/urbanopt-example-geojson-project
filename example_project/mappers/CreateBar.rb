@@ -534,6 +534,7 @@ module URBANopt
               if new_template
                 OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'template', new_template)
                 OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', new_template, 'create_typical_building_from_model')
+                OpenStudio::Extension.set_measure_argument(osw, 'generic_qaqc', 'template', new_template)
               end
             rescue StandardError
             end
