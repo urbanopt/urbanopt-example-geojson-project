@@ -35,7 +35,7 @@ if allow_local && File.exist?('../openstudio-model-articulation-gem')
 elsif allow_local
   gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
 else
-  gem 'openstudio-model-articulation', '~> 0.6.0'
+  gem 'openstudio-model-articulation', '~> 0.6.1'
 end
 
 if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
