@@ -534,6 +534,7 @@ module URBANopt
               if new_template
                 OpenStudio::Extension.set_measure_argument(osw, 'create_bar_from_building_type_ratios', 'template', new_template)
                 OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'template', new_template, 'create_typical_building_from_model')
+                OpenStudio::Extension.set_measure_argument(osw, 'generic_qaqc', 'template', new_template)
               end
             rescue StandardError
             end
@@ -573,6 +574,11 @@ module URBANopt
             OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'system_type', system_type, 'create_typical_building_from_model')
 
           end
+
+          # enable reporting on commercial building types only
+          OpenStudio::Extension.set_measure_argument(osw, 'openstudio_results', '__SKIP__', false)
+          OpenStudio::Extension.set_measure_argument(osw, 'envelope_and_internal_load_breakdown', '__SKIP__', false)
+          OpenStudio::Extension.set_measure_argument(osw, 'generic_qaqc', '__SKIP__', false)
 
           # call the default feature reporting measure
           OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_id', feature_id)

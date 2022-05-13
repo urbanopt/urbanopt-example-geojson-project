@@ -151,12 +151,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
     end
 
-    standards_number_of_living_units = 1
-    if args.key?('geometry_building_num_units')
-      standards_number_of_living_units = Integer(args['geometry_building_num_units'])
-    end
-
-    if standards_number_of_living_units != units.size
+    standards_number_of_living_units = units.size
+    if args['hpxml_dir'].nil? && args.key?('geometry_building_num_units') && (standards_number_of_living_units != Integer(args['geometry_building_num_units']))
       runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{standards_number_of_living_units}).")
       return false
     end
@@ -319,6 +315,10 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         unit_model.getOutsideSurfaceConvectionAlgorithm.remove
         unit_model.getTimestep.remove
         unit_model.getFoundationKivaSettings.remove
+        unit_model.getOutputJSON.remove
+        unit_model.getOutputControlFiles.remove
+        unit_model.getPerformancePrecisionTradeoffs.remove
+
         unit_model_objects = []
         unit_model.objects.each do |obj|
           unit_model_objects << obj unless obj.to_Building.is_initialized # if we remove this, we lose all thermal zones
