@@ -11,18 +11,52 @@ class Constants
     return 32.174 # gravity (ft/s2)
   end
 
-  def self.MonthNumDays
-    return [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-  end
-
   def self.small
     return 1e-9
+  end
+
+  def self.NumDaysInMonths(year)
+    num_days_in_months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    num_days_in_months[1] += 1 if Date.leap?(year)
+    return num_days_in_months
+  end
+
+  def self.NumDaysInYear(year)
+    num_days_in_months = NumDaysInMonths(year)
+    num_days_in_year = num_days_in_months.sum
+    return num_days_in_year
+  end
+
+  def self.NumHoursInYear(year)
+    num_days_in_year = NumDaysInYear(year)
+    num_hours_in_year = num_days_in_year * 24
+    return num_hours_in_year
   end
 
   # Strings --------------------
 
   def self.AirFilm
     return 'AirFilm'
+  end
+
+  def self.Auto
+    return 'auto'
+  end
+
+  def self.AutoHERSForHP
+    return 'auto using HERS'
+  end
+
+  def self.AutoMaxLoadForHP
+    return 'auto using max load'
+  end
+
+  def self.CalcTypeCO2eRatedHome
+    return 'CO2e Rated Home'
+  end
+
+  def self.CalcTypeCO2eReferenceHome
+    return 'CO2e Reference Home'
   end
 
   def self.CalcTypeERIRatedHome
@@ -46,7 +80,24 @@ class Constants
   end
 
   def self.ERIVersions
-    return ['2014', '2014A', '2014AD', '2014ADE', '2014ADEG', '2014ADEGL', '2019', '2019A', '2019AB']
+    return ['2014', '2014A', '2014AE', '2014AEG', '2019', '2019A',
+            '2019AB', '2019ABC', '2019ABCD']
+  end
+
+  def self.FacadeFront
+    return 'front'
+  end
+
+  def self.FacadeBack
+    return 'back'
+  end
+
+  def self.FacadeLeft
+    return 'left'
+  end
+
+  def self.FacadeRight
+    return 'right'
   end
 
   def self.FluidWater
@@ -59,6 +110,20 @@ class Constants
 
   def self.FluidEthyleneGlycol
     return 'ethylene-glycol'
+  end
+
+  def self.FossilFuels
+    return [HPXML::FuelTypeNaturalGas,
+            HPXML::FuelTypePropane,
+            HPXML::FuelTypeOil,
+            HPXML::FuelTypeCoal,
+            HPXML::FuelTypeWoodCord,
+            HPXML::FuelTypeWoodPellets]
+  end
+
+  def self.IECCZones
+    return ['1A', '1B', '1C', '2A', '2B', '2C', '3A', '3B', '3C',
+            '4A', '4B', '4C', '5A', '5B', '5C', '6A', '6B', '6C', '7', '8']
   end
 
   def self.IsDuctLoadForReport
@@ -103,10 +168,6 @@ class Constants
 
   def self.ObjectNameClothesDryerExhaust
     return 'clothes dryer exhaust'
-  end
-
-  def self.ObjectNameCombiWaterHeatingEnergy(water_heater_name)
-    return "#{water_heater_name} dhw energy"
   end
 
   def self.ObjectNameComponentLoadsProgram
@@ -185,6 +246,10 @@ class Constants
     return 'furnace'
   end
 
+  def self.ObjectNamePTACHeating
+    return 'ptac heating'
+  end
+
   def self.ObjectNameFurniture
     return 'furniture'
   end
@@ -210,11 +275,7 @@ class Constants
   end
 
   def self.ObjectNameIdealAirSystem
-    return 'ideal'
-  end
-
-  def self.ObjectNameIdealAirSystemResidual
-    return 'ideal residual'
+    return 'ideal air system'
   end
 
   def self.ObjectNameInfiltration
@@ -233,8 +294,12 @@ class Constants
     return 'mech vent'
   end
 
-  def self.ObjectNameMechanicalVentilationPreconditioning
-    return 'mech vent preconditioning'
+  def self.ObjectNameMechanicalVentilationPrecooling
+    return 'mech vent precooling'
+  end
+
+  def self.ObjectNameMechanicalVentilationPreheating
+    return 'mech vent preheating'
   end
 
   def self.ObjectNameMechanicalVentilationHouseFan
@@ -259,6 +324,14 @@ class Constants
 
   def self.ObjectNameMiniSplitHeatPump
     return 'mini split heat pump'
+  end
+
+  def self.ObjectNamePTHP
+    return 'packaged terminal heat pump'
+  end
+
+  def self.ObjectNamePTAC
+    return 'packaged terminal air conditioner'
   end
 
   def self.ObjectNameMiscGrill
@@ -403,5 +476,59 @@ class Constants
 
   def self.ScheduleTypeLimitsTemperature
     return 'Temperature'
+  end
+
+  def self.StateCodesMap
+    return { 'AK' => 'Alaska',
+             'AL' => 'Alabama',
+             'AR' => 'Arkansas',
+             'AZ' => 'Arizona',
+             'CA' => 'California',
+             'CO' => 'Colorado',
+             'CT' => 'Connecticut',
+             'DC' => 'District of Columbia',
+             'DE' => 'Delaware',
+             'FL' => 'Florida',
+             'GA' => 'Georgia',
+             'HI' => 'Hawaii',
+             'IA' => 'Iowa',
+             'ID' => 'Idaho',
+             'IL' => 'Illinois',
+             'IN' => 'Indiana',
+             'KS' => 'Kansas',
+             'KY' => 'Kentucky',
+             'LA' => 'Louisiana',
+             'MA' => 'Massachusetts',
+             'MD' => 'Maryland',
+             'ME' => 'Maine',
+             'MI' => 'Michigan',
+             'MN' => 'Minnesota',
+             'MO' => 'Missouri',
+             'MS' => 'Mississippi',
+             'MT' => 'Montana',
+             'NC' => 'North Carolina',
+             'ND' => 'North Dakota',
+             'NE' => 'Nebraska',
+             'NH' => 'New Hampshire',
+             'NJ' => 'New Jersey',
+             'NM' => 'New Mexico',
+             'NV' => 'Nevada',
+             'NY' => 'New York',
+             'OH' => 'Ohio',
+             'OK' => 'Oklahoma',
+             'OR' => 'Oregon',
+             'PA' => 'Pennsylvania',
+             'RI' => 'Rhode Island',
+             'SC' => 'South Carolina',
+             'SD' => 'South Dakota',
+             'TN' => 'Tennessee',
+             'TX' => 'Texas',
+             'UT' => 'Utah',
+             'VA' => 'Virginia',
+             'VT' => 'Vermont',
+             'WA' => 'Washington',
+             'WI' => 'Wisconsin',
+             'WV' => 'West Virginia',
+             'WY' => 'Wyoming' }
   end
 end

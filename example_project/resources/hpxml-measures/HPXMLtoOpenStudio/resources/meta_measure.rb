@@ -48,11 +48,28 @@ def run_hpxml_workflow(rundir, measures, measures_dir, debug: false, output_vars
     om.setReportingFrequency(output_meter[1])
   end
 
+  # Remove unused objects automatically added by OpenStudio?
+  remove_objects = []
+  if model.alwaysOnContinuousSchedule.directUseCount == 0
+    remove_objects << ['Schedule:Constant', model.alwaysOnContinuousSchedule.name.to_s]
+  end
+  if model.alwaysOnDiscreteSchedule.directUseCount == 0
+    remove_objects << ['Schedule:Constant', model.alwaysOnDiscreteSchedule.name.to_s]
+  end
+  if model.alwaysOffDiscreteSchedule.directUseCount == 0
+    remove_objects << ['Schedule:Constant', model.alwaysOffDiscreteSchedule.name.to_s]
+  end
+
   # Translate model to workspace
   forward_translator = OpenStudio::EnergyPlus::ForwardTranslator.new
   forward_translator.setExcludeLCCObjects(true)
   workspace = forward_translator.translateModel(model)
   success = report_ft_errors_warnings(forward_translator, rundir)
+
+  # Remove objects
+  remove_objects.each do |remove_object|
+    workspace.getObjectByTypeAndName(remove_object[0].to_IddObjectType, remove_object[1]).get.remove
+  end
 
   if not success
     print "#{print_prefix}Creating input unsuccessful.\n"
@@ -116,20 +133,14 @@ def run_hpxml_workflow(rundir, measures, measures_dir, debug: false, output_vars
   print "#{print_prefix}Processing output...\n"
 
   # Apply reporting measures
-  runner.setLastEnergyPlusSqlFilePath(File.join(rundir, 'eplusout.sql'))
+  runner.setLastEpwFilePath(File.join(rundir, 'in.epw'))
   success = apply_measures(measures_dir, measures, runner, model, false, 'OpenStudio::Measure::ReportingMeasure')
   report_measure_errors_warnings(runner, rundir, debug)
   report_os_warnings(os_log, rundir)
-  runner.resetLastEnergyPlusSqlFilePath
+  runner.resetLastEpwFilePath
 
-  annual_csv_path = File.join(rundir, 'results_annual.csv')
-  if File.exist? annual_csv_path
-    print "#{print_prefix}Wrote output file: #{annual_csv_path}.\n"
-  end
-
-  timeseries_csv_path = File.join(rundir, 'results_timeseries.csv')
-  if File.exist? timeseries_csv_path
-    print "#{print_prefix}Wrote output file: #{timeseries_csv_path}.\n"
+  Dir[File.join(rundir, 'results_*.*')].each do |results_path|
+    print "#{print_prefix}Wrote output file: #{results_path}.\n"
   end
 
   if not success
@@ -145,7 +156,29 @@ def run_hpxml_workflow(rundir, measures, measures_dir, debug: false, output_vars
   return { success: true, runner: runner, sim_time: sim_time }
 end
 
-def apply_measures(measures_dir, measures, runner, model, show_measure_calls = true, measure_type = 'OpenStudio::Measure::ModelMeasure')
+def apply_measures(measures_dir, measures, runner, model, show_measure_calls = true, measure_type = 'OpenStudio::Measure::ModelMeasure', osw_out = nil)
+  if not osw_out.nil?
+    # Create a workflow based on the measures we're going to call. Convenient for debugging.
+    workflowJSON = OpenStudio::WorkflowJSON.new
+    workflowJSON.setOswPath(File.expand_path("../#{osw_out}"))
+    workflowJSON.addMeasurePath('measures')
+    workflowJSON.addMeasurePath('resources/hpxml-measures')
+    steps = OpenStudio::WorkflowStepVector.new
+    measures.each do |measure_subdir, args_array|
+      args_array.each do |args|
+        step = OpenStudio::MeasureStep.new(measure_subdir)
+        args.each do |k, v|
+          next if v.nil?
+
+          step.setArgument(k, "#{v}")
+        end
+        steps.push(step)
+      end
+    end
+    workflowJSON.setWorkflowSteps(steps)
+    workflowJSON.save
+  end
+
   # Call each measure in the specified order
   measures.keys.each do |measure_subdir|
     # Gather measure arguments and call measure
@@ -303,6 +336,20 @@ def get_value_from_workflow_step_value(step_value)
   end
 end
 
+def get_value_from_additional_properties(obj, feature_name)
+  additional_properties = obj.additionalProperties
+  feature_data_type = additional_properties.getFeatureDataType(feature_name).get if additional_properties.getFeatureDataType(feature_name).is_initialized
+  if feature_data_type == 'Boolean'
+    return additional_properties.getFeatureAsBoolean(feature_name).get if additional_properties.getFeatureAsBoolean(feature_name).is_initialized
+  elsif feature_data_type == 'Double'
+    return additional_properties.getFeatureAsDouble(feature_name).get if additional_properties.getFeatureAsDouble(feature_name).is_initialized
+  elsif feature_data_type == 'Integer'
+    return additional_properties.getFeatureAsInteger(feature_name).get if additional_properties.getFeatureAsInteger(feature_name).is_initialized
+  elsif feature_data_type == 'String'
+    return additional_properties.getFeatureAsString(feature_name).get if additional_properties.getFeatureAsString(feature_name).is_initialized
+  end
+end
+
 def run_measure(model, measure, argument_map, runner)
   begin
     # run the measure
@@ -312,7 +359,7 @@ def run_measure(model, measure, argument_map, runner)
     end
     if measure.class.superclass.name.to_s == 'OpenStudio::Measure::ReportingMeasure'
       runner_child.setLastOpenStudioModel(model)
-      runner_child.setLastEnergyPlusSqlFilePath(runner.lastEnergyPlusSqlFile.get.path)
+      runner_child.setLastEpwFilePath(runner.lastEpwFilePath.get)
       measure.run(runner_child, argument_map)
     else
       measure.run(model, runner_child, argument_map)
@@ -443,7 +490,6 @@ def report_os_warnings(os_log, rundir)
       next if s.logMessage.include? 'WorkflowStepResult value called with undefined stepResult'
       next if s.logMessage.include?("Object of type 'Schedule:Constant' and named 'Always") && s.logMessage.include?('points to an object named') && s.logMessage.include?('but that object cannot be located')
       next if s.logMessage.include? 'Appears there are no design condition fields in the EPW file'
-      next if s.logMessage.include?('Using EnergyPlusVersion version') && s.logMessage.include?("which should have 'Year' field, but it's always zero")
 
       f << "OS Message: #{s.logMessage}\n"
     end
@@ -500,7 +546,7 @@ def get_argument_values(runner, arguments, user_arguments)
       when 'Choice'.to_OSArgumentType
         args[argument.name] = runner.getOptionalStringArgumentValue(argument.name, user_arguments)
       when 'Boolean'.to_OSArgumentType
-        args[argument.name] = runner.getOptionalStringArgumentValue(argument.name, user_arguments)
+        args[argument.name] = runner.getOptionalBoolArgumentValue(argument.name, user_arguments)
       when 'Double'.to_OSArgumentType
         args[argument.name] = runner.getOptionalDoubleArgumentValue(argument.name, user_arguments)
       when 'Integer'.to_OSArgumentType

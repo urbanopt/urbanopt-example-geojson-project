@@ -1,5 +1,5 @@
-#*********************************************************************************
-# URBANopt™, Copyright (c) 2019-2020, Alliance for Sustainable Energy, LLC, and other
+# *********************************************************************************
+# URBANopt™, Copyright (c) 2019-2022, Alliance for Sustainable Energy, LLC, and other
 # contributors. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,
@@ -26,20 +26,22 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
-#*********************************************************************************
+# *********************************************************************************
 
 require 'openstudio/extension'
 require 'openstudio/extension/rake_task'
+require 'rubocop/rake_task'
 require 'urbanopt/scenario'
 require 'urbanopt/geojson'
 require 'urbanopt/reopt'
 require 'urbanopt/reopt_scenario'
 require_relative 'developer_nrel_key'
 
+RuboCop::RakeTask.new
+
 module URBANopt
   module ExampleGeoJSONProject
     class ExampleGeoJSONProject < OpenStudio::Extension::Extension
-
       # number of datapoints(features) you want to run in parallel
       # based on the number of available processors on your local machine.
       # This does not seem to function, instead added line to code for runner.config file
@@ -55,7 +57,7 @@ module URBANopt
 
       # Return the absolute path of the measures or empty string if there is none, can be used when configuring OSWs
       def measures_dir
-        ""
+        ''
       end
 
       # Relevant files such as weather data, design days, etc.
@@ -63,7 +65,6 @@ module URBANopt
       def files_dir
         return File.absolute_path(File.join(@root_dir, 'weather'))
       end
-
     end
   end
 end
@@ -109,6 +110,18 @@ def thermal_storage_scenario(json, csv)
   return scenario
 end
 
+def flexible_hot_water_scenario(json, csv)
+  name = 'Flexible Hot Water Scenario'
+  run_dir = File.join(root_dir, 'run/flexiblehotwater_scenario/')
+  feature_file_path = File.join(root_dir, json)
+  csv_file = File.join(root_dir, csv)
+  mapper_files_dir = File.join(root_dir, 'mappers/')
+  num_header_rows = 1
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
 def mixed_scenario(json, csv)
   name = 'Mixed Scenario'
   run_dir = File.join(root_dir, 'run/mixed_scenario/')
@@ -140,12 +153,12 @@ end
 def configure_project
   # write a runner.conf in project dir if it does not exist
   # delete runner.conf to automatically regenerate it
-  options = {gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, ".bundle/install"), num_parallel: 7}
- 
+  options = { gemfile_path: File.join(root_dir, 'Gemfile'), bundle_install_path: File.join(root_dir, '.bundle/install'), num_parallel: 7 }
+
   # write a runner.conf in project dir (if it does not already exist)
-  if !File.exists?(File.join(root_dir, 'runner.conf'))
-    puts "GENERATING runner.conf file"
-    OpenStudio::Extension::RunnerConfig.init(root_dir)  # itinialize the file with default values
+  if !File.exist?(File.join(root_dir, 'runner.conf'))
+    puts 'GENERATING runner.conf file'
+    OpenStudio::Extension::RunnerConfig.init(root_dir) # itinialize the file with default values
     run_config = OpenStudio::Extension::RunnerConfig.new(root_dir) # get the configs
     # update paths
     options.each do |key, val|
@@ -154,7 +167,7 @@ def configure_project
     # save back to disk
     run_config.save
   else
-    puts "USING existing runner.conf file"
+    puts 'USING existing runner.conf file'
   end
 end
 
@@ -164,12 +177,16 @@ def visualize_scenarios
   scenario_folders = []
   scenario_report_exists = false
   Dir.glob(File.join(run_dir, '/*_scenario')) do |scenario_folder|
-    scenario_report = File.join(scenario_folder, 'default_scenario_report.csv')
-    if File.exist?(scenario_report)
-      scenario_folders << scenario_folder
+    scenario_report = File.join(scenario_folder, 'scenario_optimization.csv')
+    # Check if Scenario Optimization REopt file exists and add that
+    if File.exist?(File.join(scenario_folder, 'scenario_optimization.csv'))
+      scenario_folders << File.join(scenario_folder, 'scenario_optimization.csv')
       scenario_report_exists = true
-    else
-      puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
+    # Check if Default Feature Report exists and add that
+    elsif File.exist?(File.join(scenario_folder, 'default_scenario_report.csv'))
+      scenario_folders << File.join(scenario_folder, 'default_scenario_report.csv')
+      scenario_report_exists = true
+    elsif puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
     end
   end
   if scenario_report_exists == true
@@ -199,17 +216,19 @@ def visualize_features(scenario_file)
   scenario_name = File.basename(scenario_file, File.extname(scenario_file))
   run_dir = File.join(root_dir, 'run', scenario_name.downcase)
   feature_report_exists = false
-  csv = CSV.read(File.join(root_dir, scenario_file), :headers => true)
+  csv = CSV.read(File.join(root_dir, scenario_file), headers: true)
   feature_names = csv['Feature Name']
   feature_folders = []
   # loop through building feature ids from scenario csv
   csv['Feature Id'].each do |feature|
-    feature_report = File.join(run_dir, feature, 'feature_reports')
-    if File.exist?(feature_report)
+    # Check if Feature Optimization REopt file exists and add that
+    if File.exist?(File.join(run_dir, feature, 'feature_reports/feature_optimization.csv'))
       feature_report_exists = true
-      feature_folders << File.join(run_dir, feature)
-    else
-      puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+      feature_folders << File.join(run_dir, feature, 'feature_reports/feature_optimization.csv')
+    elsif File.exist?(File.join(run_dir, feature, 'feature_reports/default_feature_report.csv'))
+      feature_report_exists = true
+      feature_folders << File.join(run_dir, feature, 'feature_reports/default_feature_report.csv')
+    elsif puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
     end
   end
   if feature_report_exists == true
@@ -378,6 +397,53 @@ task :post_process_thermal_storage, [:json, :csv] do |t, args|
   scenario_result.feature_reports.each(&:save_csv_report)
 end
 
+### Flexible Hot Water
+
+desc 'Clear Flexible Hot Water Scenario'
+task :clear_flexible_hot_water, [:json, :csv] do |t, args|
+  puts 'Clearing Flexible Hot Water Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'flexible_hot_water_scenario.csv' if csv.nil?
+
+  flexible_hot_water_scenario(json, csv).clear
+end
+
+desc 'Run Flexible Hot Water Scenario'
+task :run_flexible_hot_water, [:json, :csv] do |t, args|
+  puts 'Running Flexible Hot Water Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'flexible_hot_water_scenario.csv' if csv.nil?
+
+  configure_project
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(flexible_hot_water_scenario(json, csv))
+end
+
+desc 'Post Process Flexible Hot Water Scenario'
+task :post_process_flexible_hot_water, [:json, :csv] do |t, args|
+  puts 'Post Processing Flexible Hot Water Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'flexible_hot_water_scenario.csv' if csv.nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(flexible_hot_water_scenario(json, csv))
+  scenario_result = default_post_processor.run
+  # save scenario reports
+  scenario_result.save
+  # save feature reports
+  scenario_result.feature_reports.each(&:save_json_report)
+  scenario_result.feature_reports.each(&:save_csv_report)
+end
+
 ### REopt
 
 desc 'Clear REopt Scenario'
@@ -394,7 +460,7 @@ desc 'Run REopt Scenario'
 task :run_reopt, [:json, :csv] do |t, args|
   puts 'Running REopt Scenario...'
 
-  json = 'example_project_combined.json' if args[:json].nil?
+  json = 'example_project_with_PV.json' if args[:json].nil?
   csv = 'reopt_scenario.csv' if args[:csv].nil?
 
   configure_project
@@ -407,7 +473,7 @@ desc 'Post Process REopt Scenario'
 task :post_process_reopt, [:json, :csv] do |t, args|
   puts 'Post Processing REopt Scenario...'
 
-  json = 'example_project_combined.json' if args[:json].nil?
+  json = 'example_project_with_PV.json' if args[:json].nil?
   csv = 'reopt_scenario.csv' if args[:csv].nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(reopt_scenario(json, csv))
@@ -417,17 +483,32 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   # save feature reports
   scenario_report.feature_reports.each(&:save_json_report)
   scenario_report.feature_reports.each(&:save_csv_report)
-  
+
   scenario_base = default_post_processor.scenario_base
   reopt_post_processor = URBANopt::REopt::REoptPostProcessor.new(scenario_report, scenario_base.scenario_reopt_assumptions_file, scenario_base.reopt_feature_assumptions, DEVELOPER_NREL_KEY)
 
+  community_photovoltaic = []
+  groundmount_photovoltaic = {}
+  feature_file = JSON.parse(File.read(File.join(root_dir, json)), symbolize_names: true)
+  feature_file[:features].each do |feature|
+    # Add community photovoltaic if present in the Feature File
+    case feature[:properties][:district_system_type]
+    when 'Community Photovoltaic'
+      community_photovoltaic << feature
+    # Add groundmount photovoltaic if present in the Feature File
+    when 'Ground Mount Photovoltaic'
+      groundmount_photovoltaic[feature[:properties][:associated_building_id]] = feature[:properties][:footprint_area]
+    end
+  rescue StandardError
+  end
+
   # Run Aggregate Scenario
-  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization')
+  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization', run_resilience: true, community_photovoltaic: community_photovoltaic)
 
   # Run features individually - this is an alternative approach to the previous step, in your analysis depending on project ojectives you maye only need to run one
-  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt']* scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization')
+  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt'] * scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: true,
+                                                                               keep_existing_output: false, groundmount_photovoltaic: groundmount_photovoltaic)
 end
-
 
 ### Mixed
 
@@ -484,53 +565,55 @@ task :visualize_scenarios do
   visualize_scenarios
 end
 
-## Visualize feature results 
+## Visualize feature results
 
 desc 'Visualize and compare results for all Features in a Scenario'
 task :visualize_features, [:csv] do |t, args|
   puts 'Visualizing results for all Features in the Scenario...'
-  
+
   csv = args[:csv]
   csv = 'baseline_scenario.csv' if args[:csv].nil?
-  
+
   visualize_features(csv)
 end
 
 ### All
 
 desc 'Clear all scenarios'
-task :clear_all => [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_reopt, :clear_mixed] do
+task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task :run_all => [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_reopt, :run_mixed] do
+task run_all: [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task :post_process_all => [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_reopt, :post_process_mixed] do
+task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed] do
   # post_process all the scenarios
 end
 
 desc 'Visualize all scenarios'
 task :visualize_all do
   # visualize all features within each scenario, then visualize across all scenarios
-  Rake::Task['visualize_features'].invoke("baseline_scenario.csv")
-  Rake::Task["visualize_features"].reenable
-  Rake::Task["visualize_features"].invoke("high_efficiency_scenario.csv")
-  Rake::Task["visualize_features"].reenable
-  Rake::Task["visualize_features"].invoke("thermal_storage_scenario.csv")
-  Rake::Task["visualize_features"].reenable
-  Rake::Task["visualize_features"].invoke("reopt_scenario.csv")
-  Rake::Task["visualize_features"].reenable
-  Rake::Task["visualize_features"].invoke("mixed_scenario.csv")
-  Rake::Task["visualize_scenarios"].invoke()
+  Rake::Task['visualize_features'].invoke('baseline_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('high_efficiency_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('thermal_storage_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('flexible_hot_water_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('reopt_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('mixed_scenario.csv')
+  Rake::Task['visualize_scenarios'].invoke
 end
 
 desc 'Run and post process all scenarios'
-task :update_all => [:run_all, :post_process_all, :visualize_all] do
+task update_all: [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
 end
 
-task :default => :update_all
+task default: :update_all

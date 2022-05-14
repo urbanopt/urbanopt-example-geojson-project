@@ -26,6 +26,7 @@ out.txt
 
 # Ignore IDE files
 /.idea
+.vscode/
 
 # running config
 runner.conf
