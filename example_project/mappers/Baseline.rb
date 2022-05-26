@@ -686,7 +686,8 @@ module URBANopt
             rescue StandardError
             end
 
-            args[:weather_station_epw_filepath] = "../../../weather/#{feature.weather_filename}"
+            epw = File.expand_path(File.join(File.dirname(__FILE__), '../weather', feature.weather_filename))
+            args[:weather_station_epw_filepath] = epw
 
             # Geometry
             args[:geometry_building_num_units] = 1
