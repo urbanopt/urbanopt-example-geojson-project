@@ -84,7 +84,6 @@ else
   gem 'urbanopt-reporting', '~> 0.6.0'
 end
 
-TODO: Uncomment and revert changes once gem is released
 if allow_local && File.exist?('../urbanopt-geojson-gem')
  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 elsif allow_local
