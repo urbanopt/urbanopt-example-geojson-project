@@ -1,5 +1,5 @@
 
-name: CI
+name: nightly_build
 
 on:
   schedule:
@@ -19,6 +19,7 @@ on:
 jobs:
   weeknight-tests:
     runs-on: ubuntu-latest
+    # This env var should enforce develop branch of all dependenciesg
     env:
       FAVOR_LOCAL_GEMS: true
     steps:
@@ -34,3 +35,5 @@ jobs:
       # Is visualization a thing in CI?
       # - name: Run vizualization
       #   run: bundle exec rake visualize_all
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@1.1.3
