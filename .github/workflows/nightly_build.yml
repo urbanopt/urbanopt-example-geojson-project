@@ -29,6 +29,8 @@ jobs:
       FAVOR_LOCAL_GEMS: true
     steps:
       - uses: actions/checkout@v3
+      - name: Update gems
+        run: bundle update
       - name: Update measures
         run: bundle exec rake openstudio:update_measures
       - name: Run simulations
