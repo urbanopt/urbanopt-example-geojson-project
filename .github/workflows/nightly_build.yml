@@ -19,11 +19,13 @@ on:
 jobs:
   weeknight-tests:
     runs-on: ubuntu-latest
-    # This env var should enforce develop branch of all dependenciesg
+    # This env var should enforce develop branch of all dependencies
     env:
       FAVOR_LOCAL_GEMS: true
     steps:
       - uses: actions/checkout@v3
+      - name: Install bundler
+        run: gem install bundler
       - name: Update gems
         run: bundle update
       - name: Update measures
