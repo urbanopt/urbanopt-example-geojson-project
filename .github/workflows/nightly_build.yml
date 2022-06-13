@@ -33,7 +33,9 @@ jobs:
       - name: Run simulations
         run: bundle exec rake run_all
       - name: Run post-processing
-        run: bundle exec rake post_process_all
+        run: |
+          bundle exec certified-update
+          bundle exec rake post_process_all
       # Is visualization a thing in CI?
       # - name: Run vizualization
       #   run: bundle exec rake visualize_all
