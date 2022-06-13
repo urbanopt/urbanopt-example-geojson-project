@@ -29,10 +29,6 @@ jobs:
       FAVOR_LOCAL_GEMS: true
     steps:
       - uses: actions/checkout@v3
-      - uses: ruby/setup-ruby@v1  # https://github.com/ruby/setup-ruby
-        with:
-          ruby-version: '2.7' # Not needed with a .ruby-version file
-          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Update measures
         run: bundle exec rake openstudio:update_measures
       - name: Run simulations
