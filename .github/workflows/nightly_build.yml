@@ -22,6 +22,8 @@ jobs:
   # When `ubuntu-latest` updates to 22.04 we may need to use explicitly `ubuntu-20.04` because 22 only supports Ruby 3.1
   # https://github.com/ruby/setup-ruby#supported-platforms
     runs-on: ubuntu-latest
+    container:
+      image: docker://nrel/openstudio:3.4.0
     # This env var should enforce develop branch of all dependencies
     env:
       FAVOR_LOCAL_GEMS: true
