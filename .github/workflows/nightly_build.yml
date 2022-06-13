@@ -18,16 +18,18 @@ on:
 
 jobs:
   weeknight-tests:
+  # When `ubuntu-latest` updates to 22.04 we may need to use explicitly `ubuntu-20.04` because 22 only supports Ruby 3.1
+  # https://github.com/ruby/setup-ruby#supported-platforms
     runs-on: ubuntu-latest
     # This env var should enforce develop branch of all dependencies
     env:
       FAVOR_LOCAL_GEMS: true
     steps:
       - uses: actions/checkout@v3
-      - name: Install bundler
-        run: gem install bundler
-      - name: Update gems
-        run: bundle update
+      - uses: ruby/setup-ruby@v1  # https://github.com/ruby/setup-ruby
+        with:
+          ruby-version: '2.7' # Not needed with a .ruby-version file
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
       - name: Update measures
         run: bundle exec rake openstudio:update_measures
       - name: Run simulations
