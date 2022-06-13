@@ -8,10 +8,6 @@ on:
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
     # - cron: '* 5 * * 2-6'
 
-# Github runners only have 2 cores: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-env:
-  NUM_PARALLEL: 2
-
 # Cancels an existing job (of the same workflow) if it is still running
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
 # concurrency:
@@ -25,9 +21,11 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: docker://nrel/openstudio:3.4.0
-    # This env var should enforce develop branch of all dependencies
     env:
+      # This env var should enforce develop branch of all dependencies
       FAVOR_LOCAL_GEMS: true
+      # Github runners only have 2 cores: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+      NUM_PARALLEL: 2
     steps:
       - uses: actions/checkout@v3
       - name: Update gems
