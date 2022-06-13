@@ -8,8 +8,9 @@ on:
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
     # - cron: '* 5 * * 2-6'
 
-# env:
-  # NUM_PARALLEL: 7
+# Github runners only have 2 cores: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+env:
+  NUM_PARALLEL: 2
 
 # Cancels an existing job (of the same workflow) if it is still running
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
