@@ -16,20 +16,23 @@ on:
 
 jobs:
   weeknight-tests:
-  # When `ubuntu-latest` updates to 22.04 we may need to use explicitly `ubuntu-20.04` because 22 only supports Ruby 3.1
+  # Pinned to `ubuntu-20.04` because when ubuntu-latest adopts 22.04 this will break for us because 22 only supports Ruby 3.1
   # https://github.com/ruby/setup-ruby#supported-platforms
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container:
       image: docker://nrel/openstudio:3.4.0
     env:
       # This env var should enforce develop branch of all dependencies
       FAVOR_LOCAL_GEMS: true
       # Github runners only have 2 cores: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-      NUM_PARALLEL: 2
+      UO_NUM_PARALLEL: 2
     steps:
       - uses: actions/checkout@v3
       - name: Update gems
-        run: bundle update
+        run: |
+          echo $FAVOR_LOCAL_GEMS
+          echo $UO_NUM_PARALLEL
+          bundle update
       - name: Run simulations
         run: bundle exec rake run_all
       - name: Run post-processing
