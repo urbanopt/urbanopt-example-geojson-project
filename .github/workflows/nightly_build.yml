@@ -14,31 +14,34 @@ on:
 #   group: ${{ github.workflow }}-${{ github.ref }}
 #   cancel-in-progress: true
 
+env:
+  # This env var should enforce develop branch of all dependencies
+  FAVOR_LOCAL_GEMS: true
+  # Github runners only have 2 cores: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+  UO_NUM_PARALLEL: 2
+
 jobs:
   weeknight-tests:
-  # Pinned to `ubuntu-20.04` because when ubuntu-latest adopts 22.04 this will break for us because 22 only supports Ruby 3.1
-  # https://github.com/ruby/setup-ruby#supported-platforms
+    # Pinned to `ubuntu-20.04`. When ubuntu-latest adopts 22.04 it would break for us since 22 only supports Ruby 3.1
+    # https://github.com/ruby/setup-ruby#supported-platforms
     runs-on: ubuntu-20.04
     container:
       image: docker://nrel/openstudio:3.4.0
-    env:
-      # This env var should enforce develop branch of all dependencies
-      FAVOR_LOCAL_GEMS: true
-      # Github runners only have 2 cores: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-      UO_NUM_PARALLEL: 2
     steps:
       - uses: actions/checkout@v3
       - name: Update gems
+        run: bundle update
+      - name: Run simulations
         run: |
           echo $FAVOR_LOCAL_GEMS
           echo $UO_NUM_PARALLEL
-          bundle update
-      - name: Run simulations
-        run: bundle exec rake run_all
+          bundle exec rake run_baseline
       - name: Run post-processing
         run: |
+          echo $FAVOR_LOCAL_GEMS
+          echo $UO_NUM_PARALLEL
           bundle exec certified-update
-          bundle exec rake post_process_all
+          bundle exec rake post_process_baseline
       # Is visualization a thing in CI?
       # - name: Run vizualization
       #   run: bundle exec rake visualize_all
