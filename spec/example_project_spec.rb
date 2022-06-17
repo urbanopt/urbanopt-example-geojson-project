@@ -41,18 +41,21 @@
 # require 'json'
 require 'rake'
 
-run_dir = File.join(__dir__, '..', 'example_project', 'run')
+# example: https://stackoverflow.com/questions/6895179/running-rake-tasks-in-rspec-tests
+load File.expand_path('../Rakefile', __dir__)
 
-it 'runs a rake task' do
-  # example: https://stackoverflow.com/questions/6895179/running-rake-tasks-in-rspec-tests
-  load File.expand_path('../Rakefile', __dir__)
-  Rake::Task.define_task(:environment)
-  Rake::Task['run_all'].invoke
+RSpec.describe URBANopt::ExampleGeoJSONProject do
+  run_dir = File.join(__dir__, '..', 'example_project', 'run')
 
-  # Every feature in every scenario should finish successfully
-  Dir[run_dir].each do |scenario|
-    Dir[scenario].each do |feature|
-      expect(File.exist?(File.join(feature, 'finished.job'))).to be true
+  it 'runs a rake task' do
+    Rake::Task.define_task(:environment)
+    Rake::Task['run_all'].invoke
+
+    # Every feature in every scenario should finish successfully
+    Dir[run_dir].each do |scenario|
+      Dir[scenario].each do |feature|
+        expect(File.exist?(File.join(feature, 'finished.job'))).to be true
+      end
     end
   end
 end
