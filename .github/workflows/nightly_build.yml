@@ -7,36 +7,38 @@ on:
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
     - cron: '* 5 * * 2-6'
 
-# env:
-  # NUM_PARALLEL: 7
-
 # Cancels an existing job (of the same workflow) if it is still running
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
 # concurrency:
 #   group: ${{ github.workflow }}-${{ github.ref }}
 #   cancel-in-progress: true
 
+env:
+  # This env var should enforce develop branch of all dependencies
+  FAVOR_LOCAL_GEMS: true
+  GEM_DEVELOPER_KEY: ${{ secrets.GEM_DEVELOPER_KEY }}
+
 jobs:
   weeknight-tests:
-    runs-on: ubuntu-latest
-    # This env var should enforce develop branch of all dependenciesg
-    env:
-      FAVOR_LOCAL_GEMS: true
+    # Pinned to `ubuntu-20.04`. When ubuntu-latest adopts 22.04 it would break for us since 22 only supports Ruby 3.1
+    # https://github.com/ruby/setup-ruby#supported-platforms
+    runs-on: ubuntu-20.04
+    container:
+      image: docker://nrel/openstudio:3.4.0
     steps:
       - uses: actions/checkout@v3
       - name: Update gems
         run: bundle update
-      - name: Update measures
-        run: bundle exec rake openstudio:update_measures
       - name: Run simulations
         run: bundle exec rake run_all
       - name: Run post-processing
-        run: bundle exec rake post_process_all
-      # Is visualization a thing in CI?
-      # - name: Run vizualization
-      #   run: bundle exec rake visualize_all
-      # coveralls action docs: https://github.com/marketplace/actions/coveralls-github-action#inputs
-      - name: Coveralls GitHub Action
-        uses: coverallsapp/github-action@1.1.3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bundle exec certified-update
+          bundle exec rake post_process_all
+      - name: Run vizualization
+        run: bundle exec rake visualize_all
+      # coveralls action docs: https://github.com/marketplace/actions/coveralls-github-action
+      # - name: Coveralls
+      #   uses: coverallsapp/github-action@1.1.3
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}

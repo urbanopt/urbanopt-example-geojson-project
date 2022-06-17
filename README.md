@@ -1,5 +1,7 @@
 # URBANopt Example GeoJSON Project
 
+[![Coverage Status](https://coveralls.io/repos/github/urbanopt/urbanopt-example-geojson-project/badge.svg?branch=develop)](https://coveralls.io/github/urbanopt/urbanopt-example-geojson-project?branch=develop)
+
 ## Overview
 
 This repository contains an URBANopt™ Example GeoJSON Project to demonstrate its basic principles.
@@ -24,17 +26,17 @@ include:
   part of the OpenStudio SDK.
 
 The
-example project has different projects based on the geometry method used to create 
+example project has different projects based on the geometry method used to create
 buildings, such as the
 `default project`, `createbar project` and the `floorspace project`.
 There are commands to run, post process and delete these project described as
 rake tasks within the
-[Rakefile](https://github.com/urbanopt/urbanopt-example-geojson-project/blob/master/Rakefile). 
+[Rakefile](https://github.com/urbanopt/urbanopt-example-geojson-project/blob/master/Rakefile).
 
 More details on these projects and their implementation is described in the [Developer Documentation](https://urbanopt.github.io).
 
 
-An overview of the commands: 
+An overview of the commands:
 
 *To view all rake tasks*
 
@@ -138,22 +140,22 @@ bundle exec rake clear_all[json,csv]
 *To clear a specific scenario for a project*
 
 ```ruby
-bundle exec rake clear_baseline[json,csv] 
+bundle exec rake clear_baseline[json,csv]
 ```
 
 ```ruby
-bundle exec rake clear_high_efficiency[json,csv] 
+bundle exec rake clear_high_efficiency[json,csv]
 ```
 
 ```ruby
-bundle exec rake clear_mixed[json,csv] 
+bundle exec rake clear_mixed[json,csv]
 ```
 
 Where, `json` is the is the name of the FeatureFile and  `csv` is the name of the scenario file
 corresponding to the feature file, that you would like to clear.
 
 ```ruby
-bundle exec rake clear_thermal_storage[json,csv] 
+bundle exec rake clear_thermal_storage[json,csv]
 ```
 
 Where, `json` is the `example_project.json` FeatureFile and `csv` is the name of a scenario file for this feature file.
