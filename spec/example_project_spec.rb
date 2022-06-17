@@ -38,22 +38,22 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 # *********************************************************************************
 
-# require 'json'
 require 'rake'
 
 # example: https://stackoverflow.com/questions/6895179/running-rake-tasks-in-rspec-tests
 load File.expand_path('../Rakefile', __dir__)
 
 RSpec.describe URBANopt::ExampleGeoJSONProject do
-  run_dir = File.join(__dir__, '..', 'example_project', 'run')
+  run_dir = File.expand_path(File.join(__dir__, '..', 'example_project', 'run'))
 
   it 'runs a rake task' do
     Rake::Task.define_task(:environment)
     Rake::Task['run_all'].invoke
 
     # Every feature in every scenario should finish successfully
-    Dir[run_dir].each do |scenario|
-      Dir[scenario].each do |feature|
+    # FIXME: Surely there's a better way to iterate through dirs in a dir?
+    Dir.glob("#{run_dir}/**").each do |scenario|
+      Dir.glob("#{scenario}/**").each do |feature|
         expect(File.exist?(File.join(feature, 'finished.job'))).to be true
       end
     end
