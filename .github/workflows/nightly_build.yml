@@ -2,10 +2,11 @@
 name: nightly_build
 
 on:
-  schedule:
+  push:
+  # schedule:
     # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
-    - cron: '* 5 * * 2-6'
+    # - cron: '* 5 * * 2-6'
 
 # Cancels an existing job (of the same workflow) if it is still running
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
@@ -38,7 +39,7 @@ jobs:
       - name: Run vizualization
         run: bundle exec rake visualize_all
       # coveralls action docs: https://github.com/marketplace/actions/coveralls-github-action
-      # - name: Coveralls
-      #   uses: coverallsapp/github-action@1.1.3
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Coveralls
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
