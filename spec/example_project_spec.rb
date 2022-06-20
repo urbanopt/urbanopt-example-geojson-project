@@ -50,11 +50,15 @@ RSpec.describe URBANopt::ExampleGeoJSONProject do
     Rake::Task.define_task(:environment)
     Rake::Task['run_all'].invoke
 
-    # Every feature in every scenario should finish successfully
-    # FIXME: Surely there's a better way to iterate through dirs in a dir?
-    Dir.glob("#{run_dir}/**").each do |scenario|
-      Dir.glob("#{scenario}/**").each do |feature|
-        expect(File.exist?(File.join(feature, 'finished.job'))).to be true
+    # Every feature in every scenario should finish successfully, having a finished.job file
+    Pathname(run_dir).children.each do |scenario|
+      if File.directory?(scenario)
+        Pathname(scenario).children.each do |feature|
+          if File.directory?(feature)
+            puts "Checking #{feature}"
+            expect(File.exist?(File.join(feature, 'finished.job'))).to be true
+          end
+        end
       end
     end
   end
