@@ -39,6 +39,20 @@
 # *********************************************************************************
 
 require 'bundler/setup'
+require 'simplecov'
+
+dir = File.expand_path('../../reports/coverage', File.dirname(__FILE__))
+SimpleCov.coverage_dir(dir)
+
+unless ENV['SKIP_COVERALLS']
+  require 'coveralls'
+  Coveralls.wear!
+  SimpleCov.formatter = Coveralls::SimpleCov::Formatter
+end
+
+SimpleCov.start do
+  add_filter 'spec/files'
+end
 
 RSpec.configure do |config|
   # Recording test status enables flags like --only-failures and --next-failure
