@@ -46,8 +46,7 @@ load File.expand_path('../Rakefile', __dir__)
 RSpec.describe URBANopt::ExampleGeoJSONProject do
   run_dir = File.expand_path(File.join(__dir__, '..', 'example_project', 'run'))
 
-  it 'runs a rake task' do
-    Rake::Task.define_task(:environment)
+  it 'runs all rake tasks' do
     Rake::Task['run_all'].invoke
 
     # Every feature in every scenario should finish successfully, having a finished.job file
@@ -61,5 +60,11 @@ RSpec.describe URBANopt::ExampleGeoJSONProject do
         end
       end
     end
+  end
+
+  it 'checks visualization stdout for errors' do
+    expect { Rake::Task['visualize_all'].invoke }
+      .not_to output(a_string_including('Error'))
+      .to_stdout_from_any_process
   end
 end
