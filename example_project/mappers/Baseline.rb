@@ -385,8 +385,6 @@ module URBANopt
         end
       end
 
-
-      
       # epw_state to subregions mapping methods
       # REK: Maybe we can move these method to the geojson gem
       def get_future_emissions_region(feature)
@@ -1356,14 +1354,14 @@ module URBANopt
         ######## Emissions Adition from add_ems_emissions_reporting
         if feature_type == 'Building'
 
-          # emissions options 
-          future_regions = ['AZNMc', 'CAMXc', 'ERCTc', 'FRCCc', 'MROEc', 'MROWc', 'NEWEc', 'NWPPc', 'NYSTc', 'RFCEc', 'RFCMc', 'RFCWc', 'RMPAc', 'SPNOc', 'SPSOc', 'SRMVc', 'SRMWc', 'SRSOc', 'SRTVc', 'SRVCc' ]
+          # emissions options
+          future_regions = ['AZNMc', 'CAMXc', 'ERCTc', 'FRCCc', 'MROEc', 'MROWc', 'NEWEc', 'NWPPc', 'NYSTc', 'RFCEc', 'RFCMc', 'RFCWc', 'RMPAc', 'SPNOc', 'SPSOc', 'SRMVc', 'SRMWc', 'SRSOc', 'SRTVc', 'SRVCc']
           hourly_historical_regions = ['California', 'Carolinas', 'Central', 'Florida', 'Mid-Atlantic', 'Midwest', 'New England', 'New York', 'Northwest', 'Rocky Mountains', 'Southeast', 'Southwest', 'Tennessee', 'Texas']
           annual_historical_regions = ['AKGD', 'AKMS', 'AZNM', 'CAMX', 'ERCT', 'FRCC', 'HIMS', 'HIOA', 'MROE', 'MROW', 'NEWE', 'NWPP', 'NYCW', 'NYLI', 'NYUP', 'RFCE', 'RFCM', 'RFCW', 'RMPA', 'SPNO', 'SPSO', 'SRMV', 'SRMW', 'SRSO', 'SRTV', 'SRVC']
-          annual_historical_years = ['2007', '2009','2010','2012','2014', '2016',  '2018', '2019']
-          future_years = ['2020','2022','2024', '2026','2028','2030','2032','2034','2036','2038','2040','2042','2044','2046','2048','2050']
+          annual_historical_years = ['2007', '2009', '2010', '2012', '2014', '2016', '2018', '2019']
+          future_years = ['2020', '2022', '2024', '2026', '2028', '2030', '2032', '2034', '2036', '2038', '2040', '2042', '2044', '2046', '2048', '2050']
           hourly_historical_years = ['2019']
-        
+
           # add Emissions
           emissions = nil
 
@@ -1392,14 +1390,14 @@ module URBANopt
               electricity_emissions_hourly_historical_subregion = feature.electricity_emissions_hourly_historical_subregion
             rescue StandardError
               @@logger.info("\nelectricity_emissions_hourly_historical_subregion is not assigned for feature #{feature_id}. Defining subregion based on the State....")
-              electricity_emissions_hourly_historical_subregion =  get_hourly_historical_emissions_region(feature)
+              electricity_emissions_hourly_historical_subregion = get_hourly_historical_emissions_region(feature)
             end
 
             begin
               electricity_emissions_annual_historical_subregion = feature.electricity_emissions_annual_historical_subregion
             rescue StandardError
               @@logger.info("\nelectricity_emissions_annual_historical_subregion is not assigned for feature #{feature_id}. Defining subregion based on the State....")
-              electricity_emissions_annual_historical_subregion =  get_annual_historical_emissions_region(feature)
+              electricity_emissions_annual_historical_subregion = get_annual_historical_emissions_region(feature)
             end
 
             begin
@@ -1412,7 +1410,7 @@ module URBANopt
             begin
               electricity_emissions_hourly_historical_year = feature.electricity_emissions_hourly_historical_year
             rescue StandardError
-              @@logger.info("\nelectricity_emissions_hourly_historical_year was not assigned by the user. The assigned default value is 2019" )
+              @@logger.info("\nelectricity_emissions_hourly_historical_year was not assigned by the user. The assigned default value is 2019")
               electricity_emissions_hourly_historical_year = '2019'
             end
 
@@ -1472,22 +1470,21 @@ module URBANopt
 
               # hourly_historical_year
               if !electricity_emissions_hourly_historical_year.nil? && !electricity_emissions_hourly_historical_year.empty?
-                if  hourly_historical_years.include? electricity_emissions_hourly_historical_year
+                if hourly_historical_years.include? electricity_emissions_hourly_historical_year
                   OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'hourly_historical_year', electricity_emissions_hourly_historical_year)
                 else
                   @@logger.error(" '#{electricity_emissions_hourly_historical_year}' is not valid option for electricity_emissions_hourly_historical_year. Please choose an input from #{hourly_historical_years}")
                 end
               end
-              
+
               # annual_historical_year
               if !electricity_emissions_annual_historical_year.nil? && !electricity_emissions_annual_historical_year.empty?
                 if annual_historical_years.include? electricity_emissions_annual_historical_year
                   OpenStudio::Extension.set_measure_argument(osw, 'add_ems_emissions_reporting', 'annual_historical_year', electricity_emissions_annual_historical_year)
                 else
-                  @@logger.error("'#{electricity_emissions_annual_historical_year}' is not valid option for electricity_emissions_annual_historical_year. Please choose an input from #{annual_historical_years}") 
+                  @@logger.error("'#{electricity_emissions_annual_historical_year}' is not valid option for electricity_emissions_annual_historical_year. Please choose an input from #{annual_historical_years}")
                 end
               end
-
             rescue StandardError
             end
 
