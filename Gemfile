@@ -5,7 +5,7 @@ gem 'rspec', '>= 3.9'
 gem 'rubocop', '~> 1.15.0', require: false
 gem 'rubocop-checkstyle_formatter', '~> 0.4.0'
 gem 'rubocop-performance', '~> 1.11.3'
-gem 'coveralls-lcov', '~> 1.7.0'
+# gem 'coveralls-lcov', '~> 1.7.0'
 gem 'simplecov', '~> 0.18.2', require: false, group: :test
 
 # Local gems are useful when developing and integrating the various dependencies.
