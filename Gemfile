@@ -22,13 +22,13 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
 # end
 
-# if allow_local && File.exist?('../openstudio-common-measures-gem')
-#  gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
-# elsif allow_local
+if allow_local && File.exist?('../openstudio-common-measures-gem')
+ gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
+elsif allow_local
 gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
-# else
-#  gem 'openstudio-common-measures', '~> 0.6.0'
-# end
+else
+ gem 'openstudio-common-measures', '~> 0.6.1'
+end
 
 if allow_local && File.exist?('../openstudio-model-articulation-gem')
   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
@@ -68,35 +68,35 @@ end
 #   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # end
 
-# if allow_local && File.exist?('../urbanopt-scenario-gem')
-#   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
-# elsif allow_local
+if allow_local && File.exist?('../urbanopt-scenario-gem')
+  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+elsif allow_local
 gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
-# else
-#   gem 'urbanopt-scenario', '~> 0.7.0'
-# end
+else
+  gem 'urbanopt-scenario', '~> 0.8.0'
+end
 
-# if allow_local && File.exist?('../urbanopt-reporting-gem')
-#  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
-# elsif allow_local
-gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'emissions'
-# else
-#   gem 'urbanopt-reporting', '~> 0.5.0'
-# end
+if allow_local && File.exist?('../urbanopt-reporting-gem')
+ gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
+elsif allow_local
+gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
+else
+  gem 'urbanopt-reporting', '~> 0.6.1'
+end
 
-# TODO: Uncomment and revert changes once gem is released
-# if allow_local && File.exist?('../urbanopt-geojson-gem')
-#  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-# elsif allow_local
-gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'emissions'
-# else
-#  gem 'urbanopt-geojson', '~> 0.7.0'
-# end
 
-# if allow_local && File.exist?('../urbanopt-reopt-gem')
-#   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
-# elsif allow_local
+if allow_local && File.exist?('../urbanopt-geojson-gem')
+ gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+elsif allow_local
+gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+else
+ gem 'urbanopt-geojson', '~> 0.8.1'
+end
+
+if allow_local && File.exist?('../urbanopt-reopt-gem')
+  gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
+elsif allow_local
 gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
-# else
-#   gem 'urbanopt-reopt', '0.7.0'
-# end
+else
+  gem 'urbanopt-reopt', '0.8.0'
+end
