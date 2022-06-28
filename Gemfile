@@ -1,9 +1,11 @@
-source 'http://rubygems.org'
+source 'https://rubygems.org'
 
 ruby '~> 2.7.0'
 gem 'rubocop', '~> 1.15.0', require: false
 gem 'rubocop-checkstyle_formatter', '~> 0.4.0'
 gem 'rubocop-performance', '~> 1.11.3'
+# gem 'coveralls-lcov'
+# gem 'simplecov', '>= 0.21.2' require: false, group: :test
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
@@ -71,32 +73,31 @@ end
 if allow_local && File.exist?('../urbanopt-scenario-gem')
   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 elsif allow_local
-gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
 else
   gem 'urbanopt-scenario', '~> 0.8.0'
 end
 
 if allow_local && File.exist?('../urbanopt-reporting-gem')
- gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
+  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 elsif allow_local
-gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
+  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
 else
   gem 'urbanopt-reporting', '~> 0.6.1'
 end
 
-
 if allow_local && File.exist?('../urbanopt-geojson-gem')
- gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 elsif allow_local
-gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
- gem 'urbanopt-geojson', '~> 0.8.1'
+  gem 'urbanopt-geojson', '~> 0.8.1'
 end
 
 if allow_local && File.exist?('../urbanopt-reopt-gem')
   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
 elsif allow_local
-gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
+  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'develop'
 else
   gem 'urbanopt-reopt', '0.8.0'
 end

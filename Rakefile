@@ -186,7 +186,7 @@ def visualize_scenarios
     elsif File.exist?(File.join(scenario_folder, 'default_scenario_report.csv'))
       scenario_folders << File.join(scenario_folder, 'default_scenario_report.csv')
       scenario_report_exists = true
-    elsif puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
+    else puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
     end
   end
   if scenario_report_exists == true
@@ -228,7 +228,7 @@ def visualize_features(scenario_file)
     elsif File.exist?(File.join(run_dir, feature, 'feature_reports/default_feature_report.csv'))
       feature_report_exists = true
       feature_folders << File.join(run_dir, feature, 'feature_reports/default_feature_report.csv')
-    elsif puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+    else puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
     end
   end
   if feature_report_exists == true
