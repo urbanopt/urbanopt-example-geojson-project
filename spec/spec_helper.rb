@@ -38,19 +38,22 @@
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 # *********************************************************************************
 
-require 'bundler/setup'
 require 'simplecov'
-
+require 'simplecov-lcov'
+SimpleCov::Formatter::LcovFormatter.config.report_with_single_file = true
+SimpleCov.formatter = SimpleCov::Formatter::LcovFormatter
 SimpleCov.start
+
+require 'bundler/setup'
 
 # dir = File.expand_path('../../reports/coverage', File.dirname(__FILE__))
 # SimpleCov.coverage_dir(dir)
 
-# unless ENV['SKIP_COVERALLS']
-#   require 'coveralls'
-#   Coveralls.wear!
-#   SimpleCov.formatter = Coveralls::SimpleCov::Formatter
-# end
+unless ENV['SKIP_COVERALLS']
+  require 'coveralls'
+  Coveralls.wear!
+  SimpleCov.formatter = Coveralls::SimpleCov::Formatter
+end
 
 RSpec.configure do |config|
   # Recording test status enables flags like --only-failures and --next-failure
