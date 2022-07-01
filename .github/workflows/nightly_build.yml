@@ -31,11 +31,11 @@ jobs:
       - name: Update gems
         run: bundle update
       - name: Run simulations
-        run: bundle exec rake run_all
+        run: bundle exec rake run_baseline
       - name: Run post-processing
         run: |
           bundle exec certified-update
-          bundle exec rake post_process_all
+          bundle exec rake post_process_baseline
       - name: Run vizualization
         run: bundle exec rake visualize_all
       # coveralls action docs: https://github.com/marketplace/actions/coveralls-github-action
