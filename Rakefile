@@ -112,7 +112,7 @@ end
 
 def flexible_hot_water_scenario(json, csv)
   name = 'Flexible Hot Water Scenario'
-  run_dir = File.join(root_dir, 'run/flexiblehotwater_scenario/')
+  run_dir = File.join(root_dir, 'run/flexible_hot_water_scenario/')
   feature_file_path = File.join(root_dir, json)
   csv_file = File.join(root_dir, csv)
   mapper_files_dir = File.join(root_dir, 'mappers/')
@@ -192,18 +192,7 @@ def visualize_scenarios
   if scenario_report_exists == true
     puts "\nCreating visualizations for all Scenario results\n"
     URBANopt::Scenario::ResultVisualization.create_visualization(scenario_folders, false)
-    vis_file_path = File.join(root_dir, 'visualization')
-    if !File.exist?(vis_file_path)
-      Dir.mkdir File.join(root_dir, 'visualization')
-    end
-    html_in_path = File.join(vis_file_path, 'input_visualization_scenario.html')
-    if !File.exist?(html_in_path)
-      $LOAD_PATH.each do |path_item|
-        if path_item.to_s.end_with?('example_files')
-          FileUtils.cp(File.join(path_item, 'visualization', 'input_visualization_scenario.html'), html_in_path)
-        end
-      end
-    end
+    html_in_path = File.join(root_dir, 'visualization', 'input_visualization_scenario.html')
     html_out_path = File.join(run_dir, 'scenario_comparison.html')
     FileUtils.cp(html_in_path, html_out_path)
     puts "\nDone\n"
@@ -234,18 +223,7 @@ def visualize_features(scenario_file)
   if feature_report_exists == true
     puts "\nCreating visualizations for Feature results in the Scenario\n"
     URBANopt::Scenario::ResultVisualization.create_visualization(feature_folders, true, feature_names)
-    vis_file_path = File.join(root_dir, 'visualization')
-    if !File.exist?(vis_file_path)
-      Dir.mkdir File.join(root_dir, 'visualization')
-    end
-    html_in_path = File.join(vis_file_path, 'input_visualization_feature.html')
-    if !File.exist?(html_in_path)
-      $LOAD_PATH.each do |path_item|
-        if path_item.to_s.end_with?('example_files')
-          FileUtils.cp(File.join(path_item, 'visualization', 'input_visualization_feature.html'), html_in_path)
-        end
-      end
-    end
+    html_in_path = File.join(root_dir, 'visualization', 'input_visualization_feature.html')
     html_out_path = File.join(root_dir, 'run', scenario_name, 'feature_comparison.html')
     FileUtils.cp(html_in_path, html_out_path)
     puts "\nDone\n"
