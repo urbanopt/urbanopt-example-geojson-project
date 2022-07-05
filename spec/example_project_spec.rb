@@ -48,7 +48,7 @@ RSpec.describe URBANopt::ExampleGeoJSONProject do
   run_dir = File.expand_path(File.join(__dir__, '..', 'example_project', 'run'))
 
   it 'runs all rake tasks' do
-    Rake::Task['run_all'].invoke
+    Rake::Task['run_baseline'].invoke
 
     # Every feature in every scenario should finish successfully, having a finished.job file
     Pathname(run_dir).children.each do |scenario|
