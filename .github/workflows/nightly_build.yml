@@ -53,6 +53,8 @@ jobs:
           type: ".info"
       - name: Output results
         run: |
+          echo "current working dir: $PWD"
+          echo "*"
           echo "Found ${{ steps.pl.outputs.path_count }} file(s) with this extension:"
           for i in ${{ steps.pl.outputs.paths }}; do
           echo $i
