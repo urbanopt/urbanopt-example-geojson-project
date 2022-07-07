@@ -62,5 +62,5 @@ jobs:
         uses: coverallsapp/github-action@1.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: /github/workspace/example_project/coverage/lcov.info
+          path-to-lcov: /github/workspace/coverage/lcov.info
      
