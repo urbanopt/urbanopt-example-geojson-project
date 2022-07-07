@@ -54,7 +54,7 @@ jobs:
       - name: Output results
         run: |
           echo "current working dir: $PWD"
-          echo *
+          echo ./coverage/*
           echo "Found ${{ steps.pl.outputs.path_count }} file(s) with this extension:"
           for i in ${{ steps.pl.outputs.paths }}; do
           echo $i
@@ -64,5 +64,5 @@ jobs:
         uses: coverallsapp/github-action@1.1.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "/github/workspace/example_project/coverage/lcov.info"
+          path-to-lcov: "./coverage/lcov.info"
      
