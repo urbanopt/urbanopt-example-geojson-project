@@ -37,9 +37,8 @@
 # OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 # *********************************************************************************
-
+require 'spec_helper'
 require 'rake'
-require_relative 'spec_helper'
 
 # example: https://stackoverflow.com/questions/6895179/running-rake-tasks-in-rspec-tests
 load File.expand_path('../Rakefile', __dir__)

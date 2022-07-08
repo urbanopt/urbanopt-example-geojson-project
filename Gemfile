@@ -6,8 +6,8 @@ gem 'rubocop', '~> 1.15.0', require: false
 gem 'rubocop-checkstyle_formatter', '~> 0.4.0'
 gem 'rubocop-performance', '~> 1.11.3'
 #gem 'coveralls_reborn', '~> 0.24.0', require: false
-gem 'coveralls-lcov'
-#gem 'simplecov', '~> 0.18.2', require: false, group: :test
+#gem 'coveralls-lcov'
+gem 'simplecov', '~> 0.18.2', require: false, group: :test
 gem 'simplecov-lcov', '~> 0.8.0'
 
 # Local gems are useful when developing and integrating the various dependencies.
