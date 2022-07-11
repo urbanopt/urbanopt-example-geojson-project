@@ -62,6 +62,16 @@ RSpec.describe URBANopt::ExampleGeoJSONProject do
     end
   end
 
+  it 'post-processes all rake tasks' do
+    Rake::Task['post_process_baseline'].invoke
+
+    Pathname(run_dir).children.each do |scenario|
+      if File.directory?(scenario)
+        expect(File.exist?(File.join(scenario, 'default_scenario_report.json'))).to be true
+      end
+    end
+  end
+
   it 'checks visualization stdout for errors' do
     expect { Rake::Task['visualize_all'].invoke }
       .not_to output(a_string_including('Error'))
