@@ -428,8 +428,10 @@ desc 'Clear REopt Scenario'
 task :clear_reopt, [:json, :csv] do |t, args|
   puts 'Clearing REopt Scenario...'
 
-  json = 'example_project_combined.json' if args[:json].nil?
-  csv = 'reopt_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_with_PV.json' if json.nil?
+  csv = 'reopt_scenario.csv' if csv.nil?
 
   reopt_scenario(json, csv).clear
 end
@@ -438,8 +440,10 @@ desc 'Run REopt Scenario'
 task :run_reopt, [:json, :csv] do |t, args|
   puts 'Running REopt Scenario...'
 
-  json = 'example_project_with_PV.json' if args[:json].nil?
-  csv = 'reopt_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_with_PV.json' if json.nil?
+  csv = 'reopt_scenario.csv' if csv.nil?
 
   configure_project
 
@@ -451,8 +455,10 @@ desc 'Post Process REopt Scenario'
 task :post_process_reopt, [:json, :csv] do |t, args|
   puts 'Post Processing REopt Scenario...'
 
-  json = 'example_project_with_PV.json' if args[:json].nil?
-  csv = 'reopt_scenario.csv' if args[:csv].nil?
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_with_PV.json' if json.nil?
+  csv = 'reopt_scenario.csv' if csv.nil?
 
   default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(reopt_scenario(json, csv))
   scenario_report = default_post_processor.run

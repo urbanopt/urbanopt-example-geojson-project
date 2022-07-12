@@ -30,3 +30,5 @@ out.txt
 
 # running config
 runner.conf
+# coveralls
+.coveralls.yml
