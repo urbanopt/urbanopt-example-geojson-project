@@ -150,6 +150,42 @@ def reopt_scenario(json, csv)
   return scenario
 end
 
+def chilled_water_storage_scenario(json, csv)
+  name = 'Chilled Water Storage Scenario'
+  run_dir = File.join(root_dir, 'run/chilled_water_storage_scenario/')
+  feature_file_path = File.join(root_dir, json)
+  csv_file = File.join(root_dir, csv)
+  mapper_files_dir = File.join(root_dir, 'mappers/')
+  num_header_rows = 1
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def peak_hours_mels_shedding_scenario(json, csv)
+  name = 'Peak Hours MELs Shedding Scenario'
+  run_dir = File.join(root_dir, 'run/peak_hours_mels_shedding_scenario/')
+  feature_file_path = File.join(root_dir, json)
+  csv_file = File.join(root_dir, csv)
+  mapper_files_dir = File.join(root_dir, 'mappers/')
+  num_header_rows = 1
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
+def peak_hours_thermostat_adjust_scenario(json, csv)
+  name = 'Peak Hours Thermostat Adjust Scenario'
+  run_dir = File.join(root_dir, 'run/peak_hours_thermostat_adjust_scenario/')
+  feature_file_path = File.join(root_dir, json)
+  csv_file = File.join(root_dir, csv)
+  mapper_files_dir = File.join(root_dir, 'mappers/')
+  num_header_rows = 1
+  feature_file = URBANopt::GeoJSON::GeoFile.from_file(feature_file_path)
+  scenario = URBANopt::Scenario::ScenarioCSV.new(name, root_dir, run_dir, feature_file, mapper_files_dir, csv_file, num_header_rows)
+  return scenario
+end
+
 def configure_project
   # write a runner.conf in project dir if it does not exist
   # delete runner.conf to automatically regenerate it
