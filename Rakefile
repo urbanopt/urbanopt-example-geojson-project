@@ -364,6 +364,147 @@ task :post_process_high_efficiency, [:json, :csv] do |t, args|
   scenario_result.feature_reports.each(&:save_csv_report)
 end
 
+### Chilled Water Storage
+
+desc 'Clear Chilled Water Storage Scenario'
+task :clear_chilled_water_storage, [:json, :csv] do |t, args|
+  puts 'Clearing Chilled Water Storage Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'chilled_water_storage_scenario.csv' if csv.nil?
+
+  chilled_water_storage_scenario(json, csv).clear
+end
+
+desc 'Run Chilled Water Storage Scenario'
+task :run_chilled_water_storage, [:json, :csv] do |t, args|
+  puts 'Running Chilled Water Storage Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'chilled_water_storage_scenario.csv' if csv.nil?
+
+  configure_project
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(chilled_water_storage_scenario(json, csv))
+end
+
+desc 'Post Process Chilled Water Storage Scenario'
+task :post_process_chilled_water_storage, [:json, :csv] do |t, args|
+  puts 'Post Processing Chilled Water Storage Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'chilled_water_storage_scenario.csv' if csv.nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(chilled_water_storage_scenario(json, csv))
+  scenario_result = default_post_processor.run
+  # save scenario reports
+  scenario_result.save
+  # save feature reports
+  scenario_result.feature_reports.each(&:save_json_report)
+  scenario_result.feature_reports.each(&:save_csv_report)
+end
+
+### Peak Hours MELs Shedding
+
+desc 'Clear Peak Hours MELs Shedding Scenario'
+task :clear_peak_hours_mels_shedding, [:json, :csv] do |t, args|
+  puts 'Clearing Peak Hours MELs Shedding Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'peak_hours_mels_shedding_scenario.csv' if csv.nil?
+
+  peak_hours_mels_shedding_scenario(json, csv).clear
+end
+
+desc 'Run Peak Hours MELs Shedding Scenario'
+task :run_peak_hours_mels_shedding, [:json, :csv] do |t, args|
+  puts 'Running Peak Hours MELs Shedding Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'peak_hours_mels_shedding_scenario.csv' if csv.nil?
+
+  configure_project
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(peak_hours_mels_shedding_scenario(json, csv))
+end
+
+desc 'Post Process Peak Hours MELs Shedding Scenario'
+task :post_process_peak_hours_mels_shedding, [:json, :csv] do |t, args|
+  puts 'Post Processing Peak Hours MELs Shedding Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'peak_hours_mels_shedding_scenario.csv' if csv.nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(peak_hours_mels_shedding_scenario(json, csv))
+  scenario_result = default_post_processor.run
+  # save scenario reports
+  scenario_result.save
+  # save feature reports
+  scenario_result.feature_reports.each(&:save_json_report)
+  scenario_result.feature_reports.each(&:save_csv_report)
+end
+
+### Peak Hours Thermostat Adjust
+
+desc 'Clear Peak Hours Thermostat Adjust Scenario'
+task :clear_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
+  puts 'Clearing Peak Hours Thermostat Adjust Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'peak_hours_thermostat_adjust_scenario.csv' if csv.nil?
+
+  peak_hours_thermostat_adjust_scenario(json, csv).clear
+end
+
+desc 'Run Peak Hours Thermostat Adjust Scenario'
+task :run_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
+  puts 'Running Peak Hours Thermostat Adjust Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'peak_hours_thermostat_adjust_scenario.csv' if csv.nil?
+
+  configure_project
+
+  scenario_runner = URBANopt::Scenario::ScenarioRunnerOSW.new
+  scenario_runner.run(peak_hours_thermostat_adjust_scenario(json, csv))
+end
+
+desc 'Post Process Peak Hours Thermostat Adjust Scenario'
+task :post_process_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
+  puts 'Post Processing Peak Hours Thermostat Adjust Scenario...'
+
+  json = args[:json]
+  csv = args[:csv]
+  json = 'example_project_combined.json' if json.nil?
+  csv = 'peak_hours_thermostat_adjust_scenario.csv' if csv.nil?
+
+  default_post_processor = URBANopt::Scenario::ScenarioDefaultPostProcessor.new(peak_hours_thermostat_adjust_scenario(json, csv))
+  scenario_result = default_post_processor.run
+  # save scenario reports
+  scenario_result.save
+  # save feature reports
+  scenario_result.feature_reports.each(&:save_json_report)
+  scenario_result.feature_reports.each(&:save_csv_report)
+end
+
 ### Thermal Storage
 
 desc 'Clear Thermal Storage Scenario'
