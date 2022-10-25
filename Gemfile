@@ -30,7 +30,7 @@ if allow_local && File.exist?('../openstudio-geb-gem')
 elsif allow_local
   gem 'openstudio-geb', github: 'LBNL-ETA/Openstudio-GEB-gem', branch: 'master'
 else
-  gem 'openstudio-geb', '~> 0.0.3r'
+  gem 'openstudio-geb', '~> 0.1.0'
 end
 
 if allow_local && File.exist?('../openstudio-common-measures-gem')
