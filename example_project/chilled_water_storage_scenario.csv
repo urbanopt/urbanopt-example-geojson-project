@@ -12,3 +12,8 @@ Feature Id,Feature Name,Mapper Class
 11,Restaurant 13,URBANopt::Scenario::ChilledWaterStorageMapper
 12,Mall 1,URBANopt::Scenario::ChilledWaterStorageMapper
 13,Hotel 1,URBANopt::Scenario::ChilledWaterStorageMapper
+14,Residential 1,URBANopt::Scenario::ChilledWaterStorageMapper
+15,Residential 2,URBANopt::Scenario::ChilledWaterStorageMapper
+16,Residential 3,URBANopt::Scenario::ChilledWaterStorageMapper
+17,Residential 4,URBANopt::Scenario::ChilledWaterStorageMapper
+18,Residential 5,URBANopt::Scenario::ChilledWaterStorageMapper
