@@ -938,13 +938,9 @@ module URBANopt
                 appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
                 appliances = get_lookup_tsv(args, appliances_filepath)
                 row = get_lookup_row(args, appliances, template_vals)
-                puts "ROW !!!!!  #{row}"
-                if appliance == 'clothes_dryer' && !row.nil? && row[:clothes_dryer_location] == 'auto'
-                  # do nothing
-                  puts "CLOTHES DRYER --> auto, skipping argument update!"
-                else
-                  args.update(row) unless row.nil?
-                end
+
+                args.update(row) unless row.nil?
+
               end
 
               # MECHANICAL VENTILATION
