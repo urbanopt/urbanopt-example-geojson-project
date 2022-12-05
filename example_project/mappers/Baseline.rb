@@ -951,7 +951,7 @@ module URBANopt
               args.update(row) unless row.nil?
 
               # EXHAUST
-              # deprecated in OpenStudio v3.5.0
+              # deprecated in OpenStudio-HPXML v1.5.0
               # exhaust_filepath = File.join(File.dirname(__FILE__), 'residential/exhaust.tsv')
               # exhaust = get_lookup_tsv(args, exhaust_filepath)
               # row = get_lookup_row(args, exhaust, template_vals)
