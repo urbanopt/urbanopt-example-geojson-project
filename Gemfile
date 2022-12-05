@@ -74,39 +74,39 @@ else
 end
 
 # if allow_local && File.exist?('../urbanopt-core-gem')
-  gem 'urbanopt-core', path: '../urbanopt-core-gem'
+#  gem 'urbanopt-core', path: '../urbanopt-core-gem'
 # elsif allow_local
-#   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
+   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'OS-3.5'
 # end
 
 # if allow_local && File.exist?('../urbanopt-scenario-gem')
-  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+#  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 # elsif allow_local
-#  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'OS-3.5'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'OS-3.5'
 # else
 #   gem 'urbanopt-scenario', '~> 0.8.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-reporting-gem')
-   gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
+#   gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 # elsif allow_local
-#  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'OS-3.5'
+  gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'OS-3.5'
 # else
 #   gem 'urbanopt-reporting', '~> 0.6.1'
 # end
 
 # if allow_local && File.exist?('../urbanopt-geojson-gem')
-   gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+#   gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 # elsif allow_local
-#  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'OS-3.5'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'OS-3.5'
 # else
 #   gem 'urbanopt-geojson', '~> 0.8.1'
 # end
 
 # if allow_local && File.exist?('../urbanopt-reopt-gem')
-   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
+#   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
 # elsif allow_local
-#  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'OS-3.5'
+  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'OS-3.5'
 # else
 #   gem 'urbanopt-reopt', '0.8.0'
 # end
