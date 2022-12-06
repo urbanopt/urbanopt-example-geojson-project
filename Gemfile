@@ -84,7 +84,7 @@ end
 # elsif allow_local
   gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'OS-3.5'
 # else
-#   gem 'urbanopt-scenario', '~> 0.8.0'
+#   gem 'urbanopt-scenario', '~> 0.9.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-reporting-gem')
@@ -92,7 +92,7 @@ end
 # elsif allow_local
   gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'OS-3.5'
 # else
-#   gem 'urbanopt-reporting', '~> 0.6.1'
+#   gem 'urbanopt-reporting', '~> 0.7.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-geojson-gem')
@@ -100,7 +100,7 @@ end
 # elsif allow_local
   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'OS-3.5'
 # else
-#   gem 'urbanopt-geojson', '~> 0.8.1'
+#   gem 'urbanopt-geojson', '~> 0.9.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-reopt-gem')
@@ -108,5 +108,5 @@ end
 # elsif allow_local
   gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'OS-3.5'
 # else
-#   gem 'urbanopt-reopt', '0.8.0'
+#   gem 'urbanopt-reopt', '0.9.0'
 # end

@@ -79,7 +79,7 @@ end
 # elsif allow_local
     gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'OS-3.5'
 # else
-#   gem 'urbanopt-geojson', '~> 0.8.0'
+#   gem 'urbanopt-geojson', '~> 0.9.0'
 # end
 
 # NEVER put SCENARIO-GEM in this file...it will make all simulations fail due to the sqlite dependency
