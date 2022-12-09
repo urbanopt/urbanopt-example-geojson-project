@@ -25,13 +25,13 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 #   gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
 # end
 
-# if allow_local && File.exist?('../openstudio-geb-gem')
-#   gem 'openstudio-geb', path: '../openstudio-geb-gem'
-# elsif allow_local
+if allow_local && File.exist?('../openstudio-geb-gem')
+  gem 'openstudio-geb', path: '../openstudio-geb-gem'
+elsif allow_local
   gem 'openstudio-geb', github: 'LBNL-ETA/Openstudio-GEB-gem', branch: 'master'
-# else
-#   gem 'openstudio-geb', '~> 0.1.0'
-# end
+else
+  gem 'openstudio-geb', '~> 0.2.1'
+end
 
 if allow_local && File.exist?('../openstudio-common-measures-gem')
  gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
