@@ -14,9 +14,9 @@ env:
 
 jobs:
   weeknight-tests:
-    # Pinned to `ubuntu-20.04`. When ubuntu-latest adopts 22.04 it would break for us since 22 only supports Ruby 3.1
-    # https://github.com/ruby/setup-ruby#supported-platforms
-    runs-on: ubuntu-20.04
+    # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
+    # https://github.com/rbenv/ruby-build/discussions/1940
+    runs-on: ubuntu-latest
     container:
       image: docker://nrel/openstudio:3.5.1
     steps:
