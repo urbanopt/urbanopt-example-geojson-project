@@ -776,7 +776,7 @@ module URBANopt
             rescue StandardError
             end
 
-#            args[:geometry_unit_num_occupants] = 'auto'
+            # args[:geometry_unit_num_occupants] = 'auto'
             begin
               args[:geometry_unit_num_occupants] = (feature.number_of_occupants / args[:geometry_building_num_units]).to_s
             rescue StandardError
@@ -807,7 +807,7 @@ module URBANopt
             # SCHEDULES
 
             feature_ids = []
-            scenario.feature_file.features.each do |feature|
+            scenario.feature_file.features.each do |_|
               feature_ids << feature.id
             end
 
@@ -941,7 +941,6 @@ module URBANopt
                 row = get_lookup_row(args, appliances, template_vals)
 
                 args.update(row) unless row.nil?
-
               end
 
               # MECHANICAL VENTILATION
