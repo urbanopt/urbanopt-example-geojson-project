@@ -4,7 +4,7 @@
 
 ## Overview
 
-This repository contains an URBANopt™ Example GeoJSON Project to demonstrate its basic principles.
+This example repository contains an URBANopt™ Example GeoJSON Project to demonstrate its basic principles.
 It combines a set of URBANopt modules to implement a district-scale energy analysis
 workflow. Each of these modules is developed and managed in separate source code
 repositories. The different modules used in the URBANopt Example GeoJSON Project workflow
