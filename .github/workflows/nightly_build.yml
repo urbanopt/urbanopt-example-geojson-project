@@ -9,7 +9,7 @@ on:
 
 env:
   # This env var should enforce develop branch of all dependencies
-  FAVOR_LOCAL_GEMS: true
+  FAVOR_LOCAL_GEMS: false
   GEM_DEVELOPER_KEY: ${{ secrets.GEM_DEVELOPER_KEY }}
 
 jobs:
