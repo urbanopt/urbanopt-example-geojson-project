@@ -1,11 +1,11 @@
 name: nightly_build
 
 on:
-  push:
-  # schedule:
+  # push:
+  schedule:
     # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
-    #- cron: '* 5 * * 2-6'
+    - cron: '* 5 * * 2-6'
 
 env:
   # This env var should enforce develop branch of all dependencies
