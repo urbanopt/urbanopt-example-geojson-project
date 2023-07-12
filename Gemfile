@@ -8,6 +8,11 @@ gem 'rubocop-performance', '~> 1.11.3'
 gem 'simplecov', '~> 0.18.2', require: false, group: :test
 gem 'simplecov-lcov', '~> 0.8.0'
 
+# pin this dependency to avoid unicode_normalize error
+gem 'addressable', '2.8.1'
+# pin this dependency to avoid using racc dependency (which has native extensions)
+gem 'parser', '3.2.2.2'
+
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
 #   Mac: export FAVOR_LOCAL_GEMS=1
@@ -110,3 +115,5 @@ end
 # else
 #   gem 'urbanopt-reopt', '0.9.0'
 # end
+
+gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'more-361-updates'
