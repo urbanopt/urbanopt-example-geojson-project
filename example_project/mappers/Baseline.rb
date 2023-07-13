@@ -655,13 +655,6 @@ module URBANopt
             rescue StandardError
             end
 
-            # Occupancy Calculation Type
-            args[:occupancy_calculation_type] = 'asset'
-            begin
-              args[:occupancy_calculation_type] = feature.occupancy_calculation_type
-            rescue StandardError
-            end
-
             # Simulation Control
             args[:simulation_control_timestep] = 60
             begin
@@ -776,10 +769,18 @@ module URBANopt
             rescue StandardError
             end
 
-#            args[:geometry_unit_num_occupants] = 'auto'
+            # Occupancy Calculation Type
             begin
-              args[:geometry_unit_num_occupants] = (feature.number_of_occupants / args[:geometry_building_num_units]).to_s
-            rescue StandardError
+              if feature.occupancy_calculation_type == 'operational' && feature.number_of_occupants.nil?
+                args[:geometry_unit_num_occupants] = args[:geometry_unit_num_bedrooms] # this ensures an operational calculation
+              end
+              if feature.occupancy_calculation_type == 'operational' && !feature.number_of_occupants.nil?
+                args[:geometry_unit_num_occupants] = (feature.number_of_occupants / args[:geometry_building_num_units]).to_s # this ensures an operational calculation
+              end
+              if feature.occupancy_calculation_type == 'asset'
+                # do not set args[:geometry_unit_num_occupants]
+              end
+            rescue StandardError # do nothing, i.e., OpenStudio asset calculation by default
             end
 
             args[:geometry_average_ceiling_height] = 8.0
