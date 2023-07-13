@@ -691,12 +691,14 @@ module URBANopt
               rescue StandardError
               end
               args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
+              args[:air_leakage_type] = 'unit exterior only'
             when 'Multifamily'
               args[:geometry_unit_type] = 'apartment unit'
               begin
                 args[:geometry_building_num_units] = feature.number_of_residential_units
               rescue StandardError
               end
+              args[:air_leakage_type] = 'unit exterior only'
             end
 
             args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
@@ -771,16 +773,17 @@ module URBANopt
 
             # Occupancy Calculation Type
             begin
-              if feature.occupancy_calculation_type == 'operational' && feature.number_of_occupants.nil?
-                args[:geometry_unit_num_occupants] = args[:geometry_unit_num_bedrooms] # this ensures an operational calculation
-              end
-              if feature.occupancy_calculation_type == 'operational' && !feature.number_of_occupants.nil?
-                args[:geometry_unit_num_occupants] = (feature.number_of_occupants / args[:geometry_building_num_units]).to_s # this ensures an operational calculation
-              end
-              if feature.occupancy_calculation_type == 'asset'
+              if feature.occupancy_calculation_type == 'operational'
+                # set args[:geometry_unit_num_occupants]
+                begin
+                  args[:geometry_unit_num_occupants] = feature.number_of_occupants / args[:geometry_building_num_units]
+                rescue StandardError # number_of_occupants is not defined: assume equal to number of bedrooms
+                  args[:geometry_unit_num_occupants] = args[:geometry_unit_num_bedrooms]
+                end
+              elsif feature.occupancy_calculation_type == 'asset'
                 # do not set args[:geometry_unit_num_occupants]
               end
-            rescue StandardError # do nothing, i.e., OpenStudio asset calculation by default
+            rescue StandardError # occupancy_calculation_type is not defined: do nothing, i.e., asset calculation
             end
 
             args[:geometry_average_ceiling_height] = 8.0
