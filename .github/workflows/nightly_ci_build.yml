@@ -26,7 +26,19 @@ jobs:
           bundle update
           bundle exec certified-update
       - name: Run Rspec
+        # Continue to upload step even if a test fails, so we can troubleshoot
+        continue-on-error: true
         run: bundle exec rspec
+      - name: Upload artifacts
+      # Save results for examination - useful for debugging
+        uses: actions/upload-artifact@v3
+        # Only upload if rspec fails
+        if: failure()
+        with:
+          name: rspec_results
+          path: |
+            example_project/run/*scenario/
+          retention-days: 7 # save for 1 week before deleting
       - name: Coveralls
       # coveralls action docs: https://github.com/marketplace/actions/coveralls-github-action
         uses: coverallsapp/github-action@v2
