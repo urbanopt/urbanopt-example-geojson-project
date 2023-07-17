@@ -1,8 +1,7 @@
-name: nightly_build
+name: weekly_build
 
 on:
   push:
-    branches: master
   # schedule:
     # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
@@ -14,7 +13,7 @@ env:
   GEM_DEVELOPER_KEY: ${{ secrets.GEM_DEVELOPER_KEY }}
 
 jobs:
-  weeknight-tests:
+  weekly-tests:
     # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
     # https://github.com/rbenv/ruby-build/discussions/1940
     runs-on: ubuntu-latest
@@ -26,20 +25,42 @@ jobs:
         run: |
           bundle update
           bundle exec certified-update
-      - name: Rake run baseline and mixed simulations
+      - name: Rake run baseline, chilled water storage, and flexible hot water storage
         # Continue to upload step even if a test fails, so we can troubleshoot
         continue-on-error: true
         run: |
           bundle exec rake run_baseline
+          bundle exec rake run_chilled_water_storage
+          bundle exec rake run_flexible_hot_water
+      - name: Rake run high efficiency
+        continue-on-error: true
+        run: bundle exec rake run_high_efficiency
+      - name: Rake run mixed and peak hours mel shedding
+        continue-on-error: true
+        run: |
           bundle exec rake run_mixed
+          bundle exec rake run_peak_hours_mels_shedding
+      - name: Rake run peak hours thermostat adjustments, reopt, and thermal storage
+        continue-on-error: true
+        run: |
+          bundle exec rake run_peak_hours_thermostat_adjust
+          bundle exec rake run_reopt
+          bundle exec rake run_thermal_storage
       - name: rake post processing
         continue-on-error: true
         run: |
           bundle exec rake post_process_baseline
+          bundle exec rake post_process_chilled_water_storage
+          bundle exec rake post_process_flexible_hot_water
+          bundle exec rake post_process_high_efficiency
           bundle exec rake post_process_mixed
+          bundle exec rake post_process_peak_hours_mels_shedding
+          bundle exec rake post_process_peak_hours_thermostat_adjust
+          bundle exec rake post_process_reopt
+          bundle exec rake post_process_thermal_storage
       - name: Rake visualization
         continue-on-error: true
-        run: bundle exec rake visualize_scenarios
+        run: bundle exec rake visualize_all
       - name: Upload artifacts
       # Save results for examination - useful for debugging
         uses: actions/upload-artifact@v3
