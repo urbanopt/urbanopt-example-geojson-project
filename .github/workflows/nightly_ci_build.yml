@@ -25,7 +25,7 @@ jobs:
         run: |
           bundle update
           bundle exec certified-update
-      - name: Rake run basline, chilled water storage, and flexible hot water storage
+      - name: Rake run baseline, chilled water storage, and flexible hot water storage
         # Continue to upload step even if a test fails, so we can troubleshoot
         continue-on-error: true
         run: |
