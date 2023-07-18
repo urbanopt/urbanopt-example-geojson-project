@@ -47,8 +47,7 @@ jobs:
         if: failure()
         with:
           name: rspec_results
-          path: |
-            example_project/run/*scenario/
+          path: example_project/run/*scenario/
           retention-days: 7 # save for 1 week before deleting
       - name: Coveralls
       # coveralls action docs: https://github.com/marketplace/actions/coveralls-github-action
