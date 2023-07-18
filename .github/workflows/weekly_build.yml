@@ -31,10 +31,10 @@ jobs:
           bundle exec certified-update
       - name: Simulate
         # Continue to upload step even if a test fails, so we can troubleshoot
-        continue-on-error: true
+        # continue-on-error: true
         run: bundle exec rake run_${{ matrix.scenario }}
       - name: Post process
-        continue-on-error: true
+        # continue-on-error: true
         run: bundle exec rake post_process_${{ matrix.scenario }}
       - name: Upload artifacts
       # Save results for examination - useful for debugging
