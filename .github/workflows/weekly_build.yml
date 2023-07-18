@@ -13,7 +13,7 @@ env:
   GEM_DEVELOPER_KEY: ${{ secrets.GEM_DEVELOPER_KEY }}
 
 jobs:
-  weekly-tests:
+  baseline_cws_fhws:
     # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
     # https://github.com/rbenv/ruby-build/discussions/1940
     runs-on: ubuntu-latest
@@ -25,21 +25,99 @@ jobs:
         run: |
           bundle update
           bundle exec certified-update
-      - name: Rake run baseline, chilled water storage, and flexible hot water storage
+      - name: Run baseline, chilled water storage, and flexible hot water storage
         # Continue to upload step even if a test fails, so we can troubleshoot
         continue-on-error: true
         run: |
           bundle exec rake run_baseline
           bundle exec rake run_chilled_water_storage
           bundle exec rake run_flexible_hot_water
+      - name: Post processing
+        continue-on-error: true
+        run: |
+          bundle exec rake post_process_baseline
+          bundle exec rake post_process_chilled_water_storage
+          bundle exec rake post_process_flexible_hot_water
+      - name: Upload artifacts
+      # Save results for examination - useful for debugging
+        uses: actions/upload-artifact@v3
+        # Only upload if rspec fails
+        if: failure()
+        with:
+          name: rspec_results
+          path: example_project/run/*scenario/
+          retention-days: 7 # save for 1 week before deleting
+  high-efficiency:
+    # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
+    # https://github.com/rbenv/ruby-build/discussions/1940
+    runs-on: ubuntu-latest
+    container:
+      image: docker://nrel/openstudio:3.6.1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update gems
+        run: |
+          bundle update
+          bundle exec certified-update
       - name: Rake run high efficiency
         continue-on-error: true
         run: bundle exec rake run_high_efficiency
+      - name: Post processing
+        continue-on-error: true
+        run: |
+          bundle exec rake post_process_high_efficiency
+      - name: Upload artifacts
+      # Save results for examination - useful for debugging
+        uses: actions/upload-artifact@v3
+        # Only upload if rspec fails
+        if: failure()
+        with:
+          name: rspec_results
+          path: example_project/run/*scenario/
+          retention-days: 7 # save for 1 week before deleting
+  mixed-phms:
+    # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
+    # https://github.com/rbenv/ruby-build/discussions/1940
+    runs-on: ubuntu-latest
+    container:
+      image: docker://nrel/openstudio:3.6.1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update gems
+        run: |
+          bundle update
+          bundle exec certified-update
       - name: Rake run mixed and peak hours mel shedding
         continue-on-error: true
         run: |
           bundle exec rake run_mixed
           bundle exec rake run_peak_hours_mels_shedding
+      - name: Post processing
+        continue-on-error: true
+        run: |
+          bundle exec rake post_process_mixed
+          bundle exec rake post_process_peak_hours_mels_shedding
+      - name: Upload artifacts
+      # Save results for examination - useful for debugging
+        uses: actions/upload-artifact@v3
+        # Only upload if rspec fails
+        if: failure()
+        with:
+          name: rspec_results
+          path: example_project/run/*scenario/
+          retention-days: 7 # save for 1 week before deleting
+  phta-reopt-ts:
+    # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
+    # https://github.com/rbenv/ruby-build/discussions/1940
+    runs-on: ubuntu-latest
+    container:
+      image: docker://nrel/openstudio:3.6.1
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update gems
+        run: |
+          bundle update
+          bundle exec certified-update
       - name: Rake run peak hours thermostat adjustments, reopt, and thermal storage
         continue-on-error: true
         run: |
@@ -49,18 +127,9 @@ jobs:
       - name: rake post processing
         continue-on-error: true
         run: |
-          bundle exec rake post_process_baseline
-          bundle exec rake post_process_chilled_water_storage
-          bundle exec rake post_process_flexible_hot_water
-          bundle exec rake post_process_high_efficiency
-          bundle exec rake post_process_mixed
-          bundle exec rake post_process_peak_hours_mels_shedding
           bundle exec rake post_process_peak_hours_thermostat_adjust
           bundle exec rake post_process_reopt
           bundle exec rake post_process_thermal_storage
-      - name: Rake visualization
-        continue-on-error: true
-        run: bundle exec rake visualize_all
       - name: Upload artifacts
       # Save results for examination - useful for debugging
         uses: actions/upload-artifact@v3
@@ -68,12 +137,5 @@ jobs:
         if: failure()
         with:
           name: rspec_results
-          path: |
-            example_project/run/*scenario/
+          path: example_project/run/*scenario/
           retention-days: 7 # save for 1 week before deleting
-      - name: Coveralls
-      # coveralls action docs: https://github.com/marketplace/actions/coveralls-github-action
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: "./coverage/lcov/urbanopt-example-geojson-project.lcov"
