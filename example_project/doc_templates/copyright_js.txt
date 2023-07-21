@@ -1,4 +1,4 @@
 /* @preserve
- * URBANopt™, Copyright (c) 2019-2022, Alliance for Sustainable Energy, LLC, and other contributors. All rights reserved.
- * Use of this source code is governed by the BSD 3-Clause license.
+ * URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+ * See also https://github.com/urbanopt/urbanopt-reopt-gem/blob/develop/LICENSE.md
 */

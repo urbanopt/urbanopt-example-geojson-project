@@ -30,10 +30,10 @@ class HPXMLtoOpenStudioGeneratorTest < MiniTest::Test
 
       # Check object
       assert_equal(EPlus.fuel_type(hpxml_generator.fuel_type), generator.fuelType)
-      assert_in_epsilon(57.1, generator.referenceElectricalPowerOutput, 0.01)
-      assert_in_epsilon(57.1, generator.minimumFullLoadElectricalPowerOutput, 0.01)
-      assert_in_epsilon(57.1, generator.maximumFullLoadElectricalPowerOutput, 0.01)
-      assert_in_epsilon(0.2, generator.referenceElectricalEfficiencyUsingLowerHeatingValue, 0.01)
+      assert_in_epsilon(137.0, generator.referenceElectricalPowerOutput, 0.01)
+      assert_in_epsilon(137.0, generator.minimumFullLoadElectricalPowerOutput, 0.01)
+      assert_in_epsilon(137.0, generator.maximumFullLoadElectricalPowerOutput, 0.01)
+      assert_in_epsilon(0.48, generator.referenceElectricalEfficiencyUsingLowerHeatingValue, 0.01)
       assert_equal(generator.fuelHigherHeatingValue, generator.fuelLowerHeatingValue)
       assert_equal(0, generator.standbyPower)
       assert_equal(0, generator.ancillaryPower)
@@ -50,10 +50,10 @@ class HPXMLtoOpenStudioGeneratorTest < MiniTest::Test
 
       # Check object
       assert_equal(EPlus.fuel_type(hpxml_generator.fuel_type), generator.fuelType)
-      assert_in_epsilon(95.1, generator.referenceElectricalPowerOutput, 0.01)
-      assert_in_epsilon(95.1, generator.minimumFullLoadElectricalPowerOutput, 0.01)
-      assert_in_epsilon(95.1, generator.maximumFullLoadElectricalPowerOutput, 0.01)
-      assert_in_epsilon(0.2, generator.referenceElectricalEfficiencyUsingLowerHeatingValue, 0.01)
+      assert_in_epsilon(228.3, generator.referenceElectricalPowerOutput, 0.01)
+      assert_in_epsilon(228.3, generator.minimumFullLoadElectricalPowerOutput, 0.01)
+      assert_in_epsilon(228.3, generator.maximumFullLoadElectricalPowerOutput, 0.01)
+      assert_in_epsilon(0.48, generator.referenceElectricalEfficiencyUsingLowerHeatingValue, 0.01)
       assert_equal(generator.fuelHigherHeatingValue, generator.fuelLowerHeatingValue)
       assert_equal(0, generator.standbyPower)
       assert_equal(0, generator.ancillaryPower)
@@ -68,7 +68,7 @@ class HPXMLtoOpenStudioGeneratorTest < MiniTest::Test
     model = OpenStudio::Model::Model.new
 
     # get arguments
-    args_hash['output_dir'] = 'tests'
+    args_hash['output_dir'] = File.dirname(__FILE__)
     arguments = measure.arguments(model)
     argument_map = OpenStudio::Measure.convertOSArgumentVectorToMap(arguments)
 

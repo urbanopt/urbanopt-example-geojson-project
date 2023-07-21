@@ -9,9 +9,6 @@
   <SoftwareInfo>
     <extension>
       <ApplyASHRAE140Assumptions>true</ApplyASHRAE140Assumptions>
-      <AdditionalProperties>
-        <ParentHPXMLFile>L100AC.xml</ParentHPXMLFile>
-      </AdditionalProperties>
     </extension>
   </SoftwareInfo>
   <Building>
@@ -73,7 +70,7 @@
             <AttachedToRoof idref='Roof2'/>
             <AttachedToWall idref='Wall5'/>
             <AttachedToWall idref='Wall6'/>
-            <AttachedToFrameFloor idref='FrameFloor1'/>
+            <AttachedToFloor idref='Floor1'/>
           </Attic>
         </Attics>
         <Roofs>
@@ -113,7 +110,7 @@
             <SystemIdentifier id='RimJoist1'/>
             <ExteriorAdjacentTo>outside</ExteriorAdjacentTo>
             <InteriorAdjacentTo>basement - conditioned</InteriorAdjacentTo>
-            <Area>42.8</Area>
+            <Area>42.7</Area>
             <Azimuth>0</Azimuth>
             <Siding>wood siding</Siding>
             <SolarAbsorptance>0.6</SolarAbsorptance>
@@ -141,7 +138,7 @@
             <SystemIdentifier id='RimJoist3'/>
             <ExteriorAdjacentTo>outside</ExteriorAdjacentTo>
             <InteriorAdjacentTo>basement - conditioned</InteriorAdjacentTo>
-            <Area>42.8</Area>
+            <Area>42.7</Area>
             <Azimuth>180</Azimuth>
             <Siding>wood siding</Siding>
             <SolarAbsorptance>0.6</SolarAbsorptance>
@@ -294,7 +291,7 @@
             <ExteriorAdjacentTo>ground</ExteriorAdjacentTo>
             <InteriorAdjacentTo>basement - conditioned</InteriorAdjacentTo>
             <Height>7.25</Height>
-            <Area>413.3</Area>
+            <Area>413.2</Area>
             <Azimuth>0</Azimuth>
             <Thickness>6.0</Thickness>
             <DepthBelowGrade>6.583</DepthBelowGrade>
@@ -318,7 +315,7 @@
             <ExteriorAdjacentTo>ground</ExteriorAdjacentTo>
             <InteriorAdjacentTo>basement - conditioned</InteriorAdjacentTo>
             <Height>7.25</Height>
-            <Area>195.7</Area>
+            <Area>195.8</Area>
             <Azimuth>90</Azimuth>
             <Thickness>6.0</Thickness>
             <DepthBelowGrade>6.583</DepthBelowGrade>
@@ -342,7 +339,7 @@
             <ExteriorAdjacentTo>ground</ExteriorAdjacentTo>
             <InteriorAdjacentTo>basement - conditioned</InteriorAdjacentTo>
             <Height>7.25</Height>
-            <Area>413.3</Area>
+            <Area>413.2</Area>
             <Azimuth>180</Azimuth>
             <Thickness>6.0</Thickness>
             <DepthBelowGrade>6.583</DepthBelowGrade>
@@ -366,7 +363,7 @@
             <ExteriorAdjacentTo>ground</ExteriorAdjacentTo>
             <InteriorAdjacentTo>basement - conditioned</InteriorAdjacentTo>
             <Height>7.25</Height>
-            <Area>195.7</Area>
+            <Area>195.8</Area>
             <Azimuth>270</Azimuth>
             <Thickness>6.0</Thickness>
             <DepthBelowGrade>6.583</DepthBelowGrade>
@@ -386,22 +383,26 @@
             </Insulation>
           </FoundationWall>
         </FoundationWalls>
-        <FrameFloors>
-          <FrameFloor>
-            <SystemIdentifier id='FrameFloor1'/>
+        <Floors>
+          <Floor>
+            <SystemIdentifier id='Floor1'/>
             <ExteriorAdjacentTo>attic - vented</ExteriorAdjacentTo>
             <InteriorAdjacentTo>living space</InteriorAdjacentTo>
+            <FloorOrCeiling>ceiling</FloorOrCeiling>
+            <FloorType>
+              <WoodFrame/>
+            </FloorType>
             <Area>1539.0</Area>
             <InteriorFinish>
               <Type>gypsum board</Type>
               <Thickness>0.5</Thickness>
             </InteriorFinish>
             <Insulation>
-              <SystemIdentifier id='FrameFloor1Insulation'/>
+              <SystemIdentifier id='Floor1Insulation'/>
               <AssemblyEffectiveRValue>18.45</AssemblyEffectiveRValue>
             </Insulation>
-          </FrameFloor>
-        </FrameFloors>
+          </Floor>
+        </Floors>
         <Slabs>
           <Slab>
             <SystemIdentifier id='Slab1'/>

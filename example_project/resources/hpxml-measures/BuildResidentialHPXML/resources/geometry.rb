@@ -37,13 +37,13 @@ class Geometry
   def self.get_azimuth_from_facade(facade:,
                                    orientation:)
     if facade == Constants.FacadeFront
-      azimuth = get_abs_azimuth(0, orientation)
+      return get_abs_azimuth(0, orientation)
     elsif facade == Constants.FacadeBack
-      azimuth = get_abs_azimuth(180, orientation)
+      return get_abs_azimuth(180, orientation)
     elsif facade == Constants.FacadeLeft
-      azimuth = get_abs_azimuth(90, orientation)
+      return get_abs_azimuth(90, orientation)
     elsif facade == Constants.FacadeRight
-      azimuth = get_abs_azimuth(270, orientation)
+      return get_abs_azimuth(270, orientation)
     else
       fail 'Unexpected facade.'
     end
@@ -52,7 +52,7 @@ class Geometry
   def self.get_unexposed_garage_perimeter(geometry_garage_protrusion:,
                                           geometry_garage_width:,
                                           geometry_garage_depth:,
-                                          **remainder)
+                                          **)
     protrusion = geometry_garage_protrusion
     width = geometry_garage_width
     depth = geometry_garage_depth
@@ -139,7 +139,7 @@ class Geometry
     end
 
     num_points = footprint_polygon.size
-    (1..num_points).to_a.each do |i|
+    for i in 1..num_points
       pt1 = footprint_polygon[(i + 1) % num_points]
       pt2 = footprint_polygon[i % num_points]
       polygon_points = [pt1, pt2]
@@ -223,7 +223,7 @@ class Geometry
                                          geometry_attic_type:,
                                          geometry_roof_type:,
                                          geometry_roof_pitch:,
-                                         **remainder)
+                                         **)
     cfa = geometry_unit_cfa
     average_ceiling_height = geometry_average_ceiling_height
     num_floors = geometry_unit_num_floors_above_grade
@@ -273,8 +273,11 @@ class Geometry
     end
 
     # calculate the dimensions of the building
-    width = Math.sqrt(footprint / aspect_ratio)
-    length = footprint / width
+    # we have: (1) aspect_ratio = fb / lr, and (2) footprint = fb * lr
+    fb = Math.sqrt(footprint * aspect_ratio)
+    lr = footprint / fb
+    length = fb
+    width = lr
 
     # error checking
     if ((garage_width >= length) && (garage_depth > 0))
@@ -649,17 +652,10 @@ class Geometry
         end
 
         if num_floors == 1
-          if not attic_type == HPXML::AtticTypeConditioned
-            nw_point = OpenStudio::Point3d.new(nw_point.x, nw_point.y, living_space.zOrigin + nw_point.z)
-            ne_point = OpenStudio::Point3d.new(ne_point.x, ne_point.y, living_space.zOrigin + ne_point.z)
-            sw_point = OpenStudio::Point3d.new(sw_point.x, sw_point.y, living_space.zOrigin + sw_point.z)
-            se_point = OpenStudio::Point3d.new(se_point.x, se_point.y, living_space.zOrigin + se_point.z)
-          else
-            nw_point = OpenStudio::Point3d.new(nw_point.x, nw_point.y, nw_point.z - living_space.zOrigin)
-            ne_point = OpenStudio::Point3d.new(ne_point.x, ne_point.y, ne_point.z - living_space.zOrigin)
-            sw_point = OpenStudio::Point3d.new(sw_point.x, sw_point.y, sw_point.z - living_space.zOrigin)
-            se_point = OpenStudio::Point3d.new(se_point.x, se_point.y, se_point.z - living_space.zOrigin)
-          end
+          nw_point = OpenStudio::Point3d.new(nw_point.x, nw_point.y, living_space.zOrigin + nw_point.z)
+          ne_point = OpenStudio::Point3d.new(ne_point.x, ne_point.y, living_space.zOrigin + ne_point.z)
+          sw_point = OpenStudio::Point3d.new(sw_point.x, sw_point.y, living_space.zOrigin + sw_point.z)
+          se_point = OpenStudio::Point3d.new(se_point.x, se_point.y, living_space.zOrigin + se_point.z)
         else
           nw_point = OpenStudio::Point3d.new(nw_point.x, nw_point.y, num_floors * nw_point.z + rim_joist_height)
           ne_point = OpenStudio::Point3d.new(ne_point.x, ne_point.y, num_floors * ne_point.z + rim_joist_height)
@@ -669,7 +665,6 @@ class Geometry
 
         garage_attic_height = (ne_point.x - nw_point.x) / 2 * roof_pitch
 
-        garage_roof_pitch = roof_pitch
         if garage_attic_height >= attic_height
           garage_attic_height = attic_height - 0.01 # garage attic height slightly below attic height so that we don't get any roof decks with only three vertices
           garage_roof_pitch = garage_attic_height / (garage_width / 2)
@@ -863,16 +858,6 @@ class Geometry
     return m
   end
 
-  def self.get_garage_spaces(spaces)
-    garage_spaces = []
-    spaces.each do |space|
-      next if not is_garage(space)
-
-      garage_spaces << space
-    end
-    return garage_spaces
-  end
-
   def self.get_space_floor_z(space)
     space.surfaces.each do |surface|
       next unless surface.surfaceType.downcase == 'floor'
@@ -896,7 +881,7 @@ class Geometry
                                         skylight_area_back:,
                                         skylight_area_left:,
                                         skylight_area_right:,
-                                        **remainder)
+                                        **)
     facades = [Constants.FacadeBack, Constants.FacadeRight, Constants.FacadeFront, Constants.FacadeLeft]
 
     wwrs = {}
@@ -1002,7 +987,7 @@ class Geometry
           surface_avail_area[surface] = 0
         end
 
-        area = get_wall_area_for_windows(surface, min_average_ceiling_height_for_window, min_window_width, runner)
+        area = get_wall_area_for_windows(surface, min_average_ceiling_height_for_window, min_window_width)
         surface_avail_area[surface] += area
         facade_avail_area[facade] += area
       end
@@ -1097,7 +1082,7 @@ class Geometry
         next if unit_facade_areas[unit][facade] == 0
         next unless unit_facade_areas[unit][facade] < min_single_window_area
 
-        new_facade = unit_facade_areas[unit].max_by { |k, v| v }[0] # move to facade with largest window area
+        new_facade = unit_facade_areas[unit].max_by { |_k, v| v }[0] # move to facade with largest window area
         next if new_facade == facade # can't move to same facade
         next if unit_facade_areas[unit][new_facade] <= unit_facade_areas[unit][facade] # only move to facade with >= window area
 
@@ -1242,7 +1227,7 @@ class Geometry
     return true
   end
 
-  def self.get_wall_area_for_windows(surface, min_average_ceiling_height_for_window, min_window_width, runner)
+  def self.get_wall_area_for_windows(surface, min_average_ceiling_height_for_window, min_window_width)
     # Skip surfaces with doors
     if surface.subSurfaces.size > 0
       return 0.0
@@ -1273,8 +1258,8 @@ class Geometry
   end
 
   def self.add_windows_to_wall(surface, window_area, window_gap_y, window_gap_x, window_aspect_ratio, max_single_window_area, facade, model, runner)
-    wall_width = get_surface_length(surface)
-    average_ceiling_height = get_surface_height(surface)
+    wall_width = get_surface_length(surface) # ft
+    average_ceiling_height = get_surface_height(surface) # ft
 
     # Calculate number of windows needed
     num_windows = (window_area / max_single_window_area).ceil
@@ -1286,9 +1271,43 @@ class Geometry
     window_width = Math.sqrt((window_area / num_windows.to_f) / window_aspect_ratio)
     window_height = (window_area / num_windows.to_f) / window_width
     width_for_windows = window_width * num_windows.to_f + window_gap_x * num_window_gaps.to_f
+
     if width_for_windows > wall_width
-      runner.registerError("Could not fit windows on #{surface.name}.")
-      return false
+      surface_area = UnitConversions.convert(surface.grossArea, 'm^2', 'ft^2')
+      wwr = window_area / surface_area
+      if wwr > 0.90
+        runner.registerWarning("Could not fit windows on #{surface.name}; reducing window area to 90% WWR.")
+        wwr = 0.90
+      end
+
+      # Instead of using this
+      # ss_ = surface.setWindowToWallRatio(wwr, offset, true)
+      # We offset the vertices towards the centroid to maximize the likelihood of fitting the window area on the surface
+      window_vertices = []
+      g = surface.centroid
+      scale_factor = wwr**0.5
+
+      surface.vertices.each do |vertex|
+        # A vertex is a Point3d.
+        # A diff from 2 Point3d creates a Vector3d
+
+        # Vector from centroid to vertex (GA, GB, GC, etc)
+        centroid_vector = vertex - g
+
+        # Resize the vector (done in place) according to scale_factor
+        centroid_vector.setLength(centroid_vector.length * scale_factor)
+
+        # Change the vertex
+        vertex = g + centroid_vector
+
+        window_vertices << vertex
+      end
+
+      sub_surface = create_sub_surface(window_vertices, model)
+      sub_surface.setName("#{surface.name} - Window 1")
+      sub_surface.setSurface(surface)
+      sub_surface.setSubSurfaceType('FixedWindow')
+      return true
     end
 
     # Position window from top of surface
@@ -1309,20 +1328,20 @@ class Geometry
       if not ((i == num_window_groups) && (num_windows % 2 == 1))
         # Two windows in group
         win_num += 1
-        add_window_to_wall(surface, window_width, window_height, group_cx - window_width / 2.0 - window_gap_x / 2.0, group_cy, win_num, facade, model, runner)
+        add_window_to_wall(surface, window_width, window_height, group_cx - window_width / 2.0 - window_gap_x / 2.0, group_cy, win_num, facade, model)
         win_num += 1
-        add_window_to_wall(surface, window_width, window_height, group_cx + window_width / 2.0 + window_gap_x / 2.0, group_cy, win_num, facade, model, runner)
+        add_window_to_wall(surface, window_width, window_height, group_cx + window_width / 2.0 + window_gap_x / 2.0, group_cy, win_num, facade, model)
       else
         # One window in group
         win_num += 1
-        add_window_to_wall(surface, window_width, window_height, group_cx, group_cy, win_num, facade, model, runner)
+        add_window_to_wall(surface, window_width, window_height, group_cx, group_cy, win_num, facade, model)
       end
     end
 
     return true
   end
 
-  def self.add_window_to_wall(surface, win_width, win_height, win_center_x, win_center_y, win_num, facade, model, runner)
+  def self.add_window_to_wall(surface, win_width, win_height, win_center_x, win_center_y, win_num, facade, model)
     # Create window vertices in relative coordinates, ft
     upperleft = [win_center_x - win_width / 2.0, win_center_y + win_height / 2.0]
     upperright = [win_center_x + win_width / 2.0, win_center_y + win_height / 2.0]
@@ -1368,15 +1387,21 @@ class Geometry
   def self.get_conditioned_spaces(spaces)
     conditioned_spaces = []
     spaces.each do |space|
-      next if space_is_unconditioned(space)
+      next unless space.spaceType.get.standardsSpaceType.get == HPXML::LocationLivingSpace
 
       conditioned_spaces << space
     end
     return conditioned_spaces
   end
 
-  def self.space_is_unconditioned(space)
-    return !space_is_conditioned(space)
+  def self.get_garage_spaces(spaces)
+    garage_spaces = []
+    spaces.each do |space|
+      next unless space.spaceType.get.standardsSpaceType.get == HPXML::LocationGarage
+
+      garage_spaces << space
+    end
+    return garage_spaces
   end
 
   def self.is_rectangular_wall(surface)
@@ -1423,7 +1448,7 @@ class Geometry
   def self.create_doors(runner:,
                         model:,
                         door_area:,
-                        **remainder)
+                        **)
     # error checking
     if door_area == 0
       runner.registerFinalCondition('No doors added because door area was set to 0.')
@@ -1437,7 +1462,7 @@ class Geometry
     # Get all exterior walls prioritized by front, then back, then left, then right
     facades = [Constants.FacadeFront, Constants.FacadeBack]
     avail_walls = []
-    facades.each do |facade|
+    facades.each do |_facade|
       sorted_spaces = model.getSpaces.sort_by { |s| s.additionalProperties.getFeatureAsInteger('Index').get }
       get_conditioned_spaces(sorted_spaces).each do |space|
         next if space_is_below_grade(space)
@@ -1561,11 +1586,9 @@ class Geometry
     return false
   end
 
-  def self.create_single_family_attached(runner:,
-                                         model:,
+  def self.create_single_family_attached(model:,
                                          geometry_unit_cfa:,
                                          geometry_average_ceiling_height:,
-                                         geometry_building_num_units:,
                                          geometry_unit_num_floors_above_grade:,
                                          geometry_unit_aspect_ratio:,
                                          geometry_foundation_type:,
@@ -1578,11 +1601,10 @@ class Geometry
                                          geometry_unit_right_wall_is_adiabatic:,
                                          geometry_unit_front_wall_is_adiabatic:,
                                          geometry_unit_back_wall_is_adiabatic:,
-                                         **remainder)
+                                         **)
 
     cfa = geometry_unit_cfa
     average_ceiling_height = geometry_average_ceiling_height
-    num_units = geometry_building_num_units.get
     num_floors = geometry_unit_num_floors_above_grade
     aspect_ratio = geometry_unit_aspect_ratio
     foundation_type = geometry_foundation_type
@@ -1614,8 +1636,11 @@ class Geometry
     end
 
     # calculate the dimensions of the unit
-    x = Math.sqrt(footprint / aspect_ratio)
-    y = footprint / x
+    # we have: (1) aspect_ratio = fb / lr, and (2) footprint = fb * lr
+    fb = Math.sqrt(footprint * aspect_ratio)
+    lr = footprint / fb
+    x = fb
+    y = lr
 
     # create the prototype unit footprint
     nw_point = OpenStudio::Point3d.new(0, 0, rim_joist_height)
@@ -1665,7 +1690,7 @@ class Geometry
     end
 
     # additional floors
-    (2..num_floors).to_a.each do |story|
+    for story in 2..num_floors
       new_living_space = living_space.clone.to_Space.get
       assign_indexes(model, living_polygon, new_living_space)
       new_living_space.setName("living space|story #{story}")
@@ -1680,7 +1705,7 @@ class Geometry
     # attic
     attic_spaces = []
     if attic_type != HPXML::AtticTypeFlatRoof
-      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, num_units, roof_pitch, roof_type, rim_joist_height)
+      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, roof_pitch, roof_type, rim_joist_height)
       if attic_type == HPXML::AtticTypeConditioned
         attic_space_name = HPXML::LocationLivingSpace
         attic_space.setName(attic_space_name)
@@ -1782,7 +1807,7 @@ class Geometry
       attic_spaces.each do |attic_space|
         attic_space.remove
       end
-      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, num_units, roof_pitch, roof_type, rim_joist_height)
+      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, roof_pitch, roof_type, rim_joist_height)
 
       # set these to the attic zone
       if (attic_type == HPXML::AtticTypeVented) || (attic_type == HPXML::AtticTypeUnvented)
@@ -1843,11 +1868,10 @@ class Geometry
     return true
   end
 
-  def self.get_attic_space(model, x, y, average_ceiling_height, num_floors, num_units, roof_pitch, roof_type, rim_joist_height)
+  def self.get_attic_space(model, x, y, average_ceiling_height, num_floors, roof_pitch, roof_type, rim_joist_height)
     y_rear = 0
     y_peak = -y / 2
     y_tot = y
-    x_tot = x * num_units
 
     nw_point = OpenStudio::Point3d.new(0, 0, average_ceiling_height * num_floors + rim_joist_height)
     ne_point = OpenStudio::Point3d.new(x, 0, average_ceiling_height * num_floors + rim_joist_height)
@@ -1930,11 +1954,9 @@ class Geometry
     return attic_space
   end
 
-  def self.create_apartment(runner:,
-                            model:,
+  def self.create_apartment(model:,
                             geometry_unit_cfa:,
                             geometry_average_ceiling_height:,
-                            geometry_building_num_units:,
                             geometry_unit_num_floors_above_grade:,
                             geometry_unit_aspect_ratio:,
                             geometry_foundation_type:,
@@ -1947,11 +1969,10 @@ class Geometry
                             geometry_unit_right_wall_is_adiabatic:,
                             geometry_unit_front_wall_is_adiabatic:,
                             geometry_unit_back_wall_is_adiabatic:,
-                            **remainder)
+                            **)
 
     cfa = geometry_unit_cfa
     average_ceiling_height = geometry_average_ceiling_height
-    num_units = geometry_building_num_units.get
     num_floors = geometry_unit_num_floors_above_grade
     aspect_ratio = geometry_unit_aspect_ratio
     foundation_type = geometry_foundation_type
@@ -1981,9 +2002,12 @@ class Geometry
     rim_joist_height = UnitConversions.convert(rim_joist_height, 'ft', 'm')
 
     # calculate the dimensions of the unit
+    # we have: (1) aspect_ratio = fb / lr, and (2) footprint = fb * lr
     footprint = cfa
-    x = Math.sqrt(footprint / aspect_ratio)
-    y = footprint / x
+    fb = Math.sqrt(footprint * aspect_ratio)
+    lr = footprint / fb
+    x = fb
+    y = lr
 
     foundation_polygon = nil
 
@@ -2050,7 +2074,7 @@ class Geometry
     # attic
     attic_spaces = []
     if [HPXML::AtticTypeVented, HPXML::AtticTypeUnvented].include? attic_type
-      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, num_units, roof_pitch, roof_type, rim_joist_height)
+      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, roof_pitch, roof_type, rim_joist_height)
       attic_spaces << attic_space
     end
 
@@ -2141,7 +2165,7 @@ class Geometry
       attic_spaces.each do |attic_space|
         attic_space.remove
       end
-      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, num_units, roof_pitch, roof_type, rim_joist_height)
+      attic_space = get_attic_space(model, x, y, average_ceiling_height, num_floors, roof_pitch, roof_type, rim_joist_height)
 
       # set these to the attic zone
       if (attic_type == HPXML::AtticTypeVented) || (attic_type == HPXML::AtticTypeUnvented)
@@ -2362,7 +2386,7 @@ class Geometry
       end
       # make edges
       counter = 0
-      vertex_hash.each do |k, v|
+      vertex_hash.values.each do |v|
         edge_counter += 1
         counter += 1
         if vertex_hash.size != counter
@@ -2402,25 +2426,6 @@ class Geometry
       end
     end
     return facade
-  end
-
-  def self.space_is_conditioned(space)
-    unless space.isPlenum
-      if space.spaceType.is_initialized
-        if space.spaceType.get.standardsSpaceType.is_initialized
-          return is_conditioned_space_type(space.spaceType.get.standardsSpaceType.get)
-        end
-      end
-    end
-    return false
-  end
-
-  def self.is_conditioned_space_type(space_type)
-    if [HPXML::LocationLivingSpace].include? space_type
-      return true
-    end
-
-    return false
   end
 
   # Return an array of x values for surfaces passed in. The values will be relative to the parent origin. This was intended for spaces.
