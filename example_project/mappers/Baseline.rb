@@ -1,31 +1,6 @@
 # *********************************************************************************
-# URBANopt™, Copyright (c) 2019-2022, Alliance for Sustainable Energy, LLC, and other
-# contributors. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without modification,
-# are permitted provided that the following conditions are met:
-#
-# Redistributions of source code must retain the above copyright notice, this list
-# of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above copyright notice, this
-# list of conditions and the following disclaimer in the documentation and/or other
-# materials provided with the distribution.
-#
-# Neither the name of the copyright holder nor the names of its contributors may be
-# used to endorse or promote products derived from this software without specific
-# prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-# IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-# OF THE POSSIBILITY OF SUCH DAMAGE.
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-reopt-gem/blob/develop/LICENSE.md
 # *********************************************************************************
 
 require 'urbanopt/reporting'
@@ -655,13 +630,6 @@ module URBANopt
             rescue StandardError
             end
 
-            # Occupancy Calculation Type
-            args[:occupancy_calculation_type] = 'asset'
-            begin
-              args[:occupancy_calculation_type] = feature.occupancy_calculation_type
-            rescue StandardError
-            end
-
             # Simulation Control
             args[:simulation_control_timestep] = 60
             begin
@@ -698,12 +666,14 @@ module URBANopt
               rescue StandardError
               end
               args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
+              args[:air_leakage_type] = 'unit exterior only'
             when 'Multifamily'
               args[:geometry_unit_type] = 'apartment unit'
               begin
                 args[:geometry_building_num_units] = feature.number_of_residential_units
               rescue StandardError
               end
+              args[:air_leakage_type] = 'unit exterior only'
             end
 
             args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
@@ -776,10 +746,19 @@ module URBANopt
             rescue StandardError
             end
 
-#            args[:geometry_unit_num_occupants] = 'auto'
+            # Occupancy Calculation Type
             begin
-              args[:geometry_unit_num_occupants] = (feature.number_of_occupants / args[:geometry_building_num_units]).to_s
-            rescue StandardError
+              if feature.occupancy_calculation_type == 'operational'
+                # set args[:geometry_unit_num_occupants]
+                begin
+                  args[:geometry_unit_num_occupants] = feature.number_of_occupants / args[:geometry_building_num_units]
+                rescue StandardError # number_of_occupants is not defined: assume equal to number of bedrooms
+                  args[:geometry_unit_num_occupants] = args[:geometry_unit_num_bedrooms]
+                end
+              elsif feature.occupancy_calculation_type == 'asset'
+                # do not set args[:geometry_unit_num_occupants]
+              end
+            rescue StandardError # occupancy_calculation_type is not defined: do nothing, i.e., asset calculation
             end
 
             args[:geometry_average_ceiling_height] = 8.0
