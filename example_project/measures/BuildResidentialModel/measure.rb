@@ -429,7 +429,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       ems_map[old_sensor_name] = new_sensor_name
 
-      old_sensor_key_name = sensor.keyName.to_s
       new_sensor_key_name = make_variable_name("#{unit['name']}_#{sensor.keyName}") unless sensor.keyName.empty?
       sensor.setKeyName(new_sensor_key_name) unless sensor.keyName.empty?
     end
@@ -439,6 +438,23 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       new_actuator_name = make_variable_name("#{unit['name']}_#{actuator.name}")
 
       ems_map[old_actuator_name] = new_actuator_name
+    end
+
+    unit_model.getEnergyManagementSystemInternalVariables.each do |internal_variable|
+      old_internal_variable_name = internal_variable.name.to_s
+      new_internal_variable_name = make_variable_name("#{unit['name']}_#{internal_variable.name}")
+
+      ems_map[old_internal_variable_name] = new_internal_variable_name
+
+      new_internal_variable_key_name = make_variable_name("#{unit['name']}_#{internal_variable.internalDataIndexKeyName}") unless internal_variable.internalDataIndexKeyName.empty?
+      internal_variable.setInternalDataIndexKeyName(new_internal_variable_key_name) unless internal_variable.internalDataIndexKeyName.empty?
+    end
+
+    unit_model.getEnergyManagementSystemGlobalVariables.each do |global_variable|
+      old_global_variable_name = global_variable.name.to_s
+      new_global_variable_name = make_variable_name("#{unit['name']}_#{global_variable.name}")
+
+      ems_map[old_global_variable_name] = new_global_variable_name
     end
 
     unit_model.getEnergyManagementSystemOutputVariables.each do |output_variable|
@@ -451,14 +467,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       output_variable.setEMSVariableName(new_ems_variable_name)
     end
 
-    # variables in program lines don't get updated automatically
-    characters = ['', ' ', ',', '(', ')', '+', '-', '*', '/', ';']
-    unit_model.getEnergyManagementSystemPrograms.each do |program|
-      old_program_name = program.name.to_s
-      new_program_name = make_variable_name("#{unit['name']}_#{program.name}")
+    unit_model.getEnergyManagementSystemSubroutines.each do |subroutine|
+      old_subroutine_name = subroutine.name.to_s
+      new_subroutine_name = make_variable_name("#{unit['name']}_#{subroutine.name}")
 
+      ems_map[old_subroutine_name] = new_subroutine_name
+    end
+
+    # variables in program/subroutine lines don't get updated automatically
+    characters = ['', ' ', ',', '(', ')', '+', '-', '*', '/', ';']
+    (unit_model.getEnergyManagementSystemPrograms + unit_model.getEnergyManagementSystemSubroutines).each do |program_or_subroutine|
       new_lines = []
-      program.lines.each_with_index do |line, i|
+      program_or_subroutine.lines.each_with_index do |line, i|
         ems_map.each do |old_name, new_name|
           # old_name between at least 1 character, with the exception of '' on left and ' ' on right
           characters.each do |lhs|
@@ -471,7 +491,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
         new_lines << line
       end
-      program.setLines(new_lines)
+      program_or_subroutine.setLines(new_lines)
     end
 
     # All model objects
