@@ -478,14 +478,19 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     characters = ['', ' ', ',', '(', ')', '+', '-', '*', '/', ';']
     (unit_model.getEnergyManagementSystemPrograms + unit_model.getEnergyManagementSystemSubroutines).each do |program_or_subroutine|
       new_lines = []
-      program_or_subroutine.lines.each_with_index do |line, i|
+      program_or_subroutine.lines.each do |line|
         ems_map.each do |old_name, new_name|
+          next unless line.include?(old_name)
+
           # old_name between at least 1 character, with the exception of '' on left and ' ' on right
           characters.each do |lhs|
+            next unless line.include?("#{lhs}#{old_name}")
+
             characters.each do |rhs|
+              next unless line.include?("#{lhs}#{old_name}#{rhs}")
               next if lhs == '' && ['', ' '].include?(rhs)
 
-              line = line.gsub("#{lhs}#{old_name}#{rhs}", "#{lhs}#{new_name}#{rhs}") if line.include?("#{lhs}#{old_name}#{rhs}")
+              line.gsub!("#{lhs}#{old_name}#{rhs}", "#{lhs}#{new_name}#{rhs}")
             end
           end
         end
