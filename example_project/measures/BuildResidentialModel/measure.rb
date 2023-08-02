@@ -146,6 +146,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       return false
     end
 
+    unit_model_objects = []
     units.each_with_index do |unit, unit_num|
       unit_model = OpenStudio::Model::Model.new
 
@@ -185,7 +186,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args.delete('geometry_num_floors_above_grade')
 
         measures[measure_subdir] << measure_args
-      else
+      else # we're using HPXML files from the xml_building folder
         FileUtils.cp(File.expand_path(unit['hpxml_path']), hpxml_path)
       end
 
@@ -219,7 +220,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       measures[measure_subdir] << measure_args
 
-      # if !apply_child_measures(measures_dir, measures, runner, unit_model, workflow_json, "#{unit['name']}.osw", true)
       if !apply_measures(measures_dir, measures, runner, unit_model, true, 'OpenStudio::Measure::ModelMeasure', "#{unit['name']}.osw")
         return false
       end
@@ -266,7 +266,9 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       if unit_num == 0 # for the first building unit, add everything
 
-        model.addObjects(unit_model.objects, true)
+        unit_model.objects.each do |obj|
+          unit_model_objects << obj
+        end
 
       else # for single-family attached and multifamily, add "almost" everything
 
@@ -299,34 +301,28 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         # we already have the following unique objects from the first building unit
         unit_model.getConvergenceLimits.remove
+        unit_model.getFoundationKivaSettings.remove
+        unit_model.getOutputControlFiles.remove
         unit_model.getOutputDiagnostics.remove
+        unit_model.getOutputJSON.remove
+        unit_model.getPerformancePrecisionTradeoffs.remove
         unit_model.getRunPeriodControlDaylightSavingTime.remove
         unit_model.getShadowCalculation.remove
         unit_model.getSimulationControl.remove
+        unit_model.getSite.remove
         unit_model.getSiteGroundTemperatureDeep.remove
         unit_model.getSiteGroundTemperatureShallow.remove
-        unit_model.getSite.remove
         unit_model.getInsideSurfaceConvectionAlgorithm.remove
         unit_model.getOutsideSurfaceConvectionAlgorithm.remove
         unit_model.getTimestep.remove
-        unit_model.getFoundationKivaSettings.remove
-        unit_model.getOutputJSON.remove
-        unit_model.getOutputControlFiles.remove
-        unit_model.getPerformancePrecisionTradeoffs.remove
 
-        unit_model_objects = []
         unit_model.objects.each do |obj|
           unit_model_objects << obj unless obj.to_Building.is_initialized # if we remove this, we lose all thermal zones
         end
-
-        model.addObjects(unit_model_objects, true)
-
       end
-    end
+    end # units.each_with_index do |unit, unit_num|
 
-    # save the "re-composed" model with all building units to file
-    building_path = File.expand_path(File.join('..', 'whole_building.osm'))
-    model.save(building_path, true)
+    model.addObjects(unit_model_objects, true)
 
     return true
   end
