@@ -1,6 +1,7 @@
 # URBANopt Example GeoJSON Project
 
 [![Coverage Status](https://coveralls.io/repos/github/urbanopt/urbanopt-example-geojson-project/badge.svg?branch=develop)](https://coveralls.io/github/urbanopt/urbanopt-example-geojson-project?branch=develop)
+[![Example-project CI](https://github.com/urbanopt/urbanopt-example-geojson-project/actions/workflows/weekly_build.yml/badge.svg)](https://github.com/urbanopt/urbanopt-example-geojson-project/actions/workflows/weekly_build.yml)
 
 ## Overview
 
