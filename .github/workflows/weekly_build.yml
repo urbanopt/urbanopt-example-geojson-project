@@ -1,4 +1,4 @@
-name: weekly_build
+name: Example-project CI
 
 on:
   # push:
