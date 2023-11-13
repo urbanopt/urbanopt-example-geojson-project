@@ -1,3 +1,8 @@
+# *********************************************************************************
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-reopt-gem/blob/develop/LICENSE.md
+# *********************************************************************************
+
 # frozen_string_literal: true
 
 # Require all gems up front; this is much faster than multiple resource
