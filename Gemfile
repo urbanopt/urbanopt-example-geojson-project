@@ -31,9 +31,9 @@ allow_local = ENV['FAVOR_LOCAL_GEMS']
 # end
 
 # if allow_local && File.exist?('../openstudio-geb-gem')
-  gem 'openstudio-geb', path: '../openstudio-geb-gem'
+  # gem 'openstudio-geb', path: '../openstudio-geb-gem'
 # elsif allow_local
-#   gem 'openstudio-geb', github: 'LBNL-ETA/Openstudio-GEB-gem', branch: 'master'
+  gem 'openstudio-geb', github: 'vtnate/Openstudio-GEB-gem', branch: 'os37'
 # else
 #   gem 'openstudio-geb', '~> 0.3.2'
 # end
@@ -55,9 +55,9 @@ gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem',
 # end
 
 # if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
-  gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
+  # gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
 # elsif allow_local
-  # gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'master'
+  gem 'openstudio-load-flexibility-measures', github: 'vtnate/openstudio-load-flexibility-measures-gem', branch: 'develop'
 # else
 #   gem 'openstudio-load-flexibility-measures', '~> 0.7.0'
 # end
@@ -85,33 +85,33 @@ gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem',
 # end
 
 # if allow_local && File.exist?('../urbanopt-scenario-gem')
-  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+  # gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 # elsif allow_local
-#   gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'os37'
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'os37'
 # else
 #   gem 'urbanopt-scenario', '~> 0.10.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-reporting-gem')
-  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
+  # gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 # elsif allow_local
-#   gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'os37'
+gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'os37'
 # else
 #   gem 'urbanopt-reporting', '~> 0.8.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-geojson-gem')
-  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+  # gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 # elsif allow_local
-#   gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'os37'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'os37'
 # else
 #   gem 'urbanopt-geojson', '~> 0.10.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-reopt-gem')
-  gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
+  # gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
 # elsif allow_local
-#   gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'os37'
+  gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'os37'
 # else
 #   gem 'urbanopt-reopt', '0.10.0'
 # end
