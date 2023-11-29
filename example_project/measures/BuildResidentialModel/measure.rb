@@ -127,10 +127,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
 
       units = []
-      Dir["#{hpxml_dir}/*.xml"].each do |hpxml_path|
-        name, ext = File.basename(hpxml_path).split('.')
-        units << { 'name' => name, 'hpxml_path' => hpxml_path }
+      hpxml_paths = Dir["#{hpxml_dir}/*.xml"]
+      if hpxml_paths.size != 1
+        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature.")
+        return false
       end
+      name, ext = File.basename(hpxml_paths[0]).split('.')
+      units << { 'hpxml_path' => hpxml_paths[0] }
     end
 
     standards_number_of_living_units = units.size
@@ -143,7 +146,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     units.each_with_index do |unit, unit_num|
 
       measures = {}
-      if !unit.key?('hpxml_path')
+      if !unit.key?('hpxml_path') # create a single new HPXML file describing all dwelling units of the feature
 
         # BuildResidentialHPXML
         measure_subdir = 'BuildResidentialHPXML'
@@ -181,16 +184,17 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args.delete('geometry_num_floors_above_grade')
 
         measures[measure_subdir] << measure_args
-      else # we're using HPXML files from the xml_building folder
-        FileUtils.cp(File.expand_path(unit['hpxml_path']), hpxml_path)
-      end
 
-      if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'existing.osw')
-        return false
+        if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'existing.osw')
+          return false
+        end
+      else # we're using an HPXML file from the xml_building folder
+        FileUtils.cp(File.expand_path(unit['hpxml_path']), hpxml_path)
+
       end
     end # end units.each_with_index do |unit, unit_num|
 
-    # Call BuildResidentialScheduleFile / HPXMLtoOpenStudio after HPXML file is created
+    # call BuildResidentialScheduleFile / HPXMLtoOpenStudio after HPXML file is created
     measures = {}
 
     # BuildResidentialScheduleFile
@@ -275,19 +279,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     units = []
     case args[:geometry_unit_type]
     when 'single-family detached'
-      units << { 'name' => 'unit 1' }
+      units << {}
     when 'single-family attached'
       (1..args[:geometry_building_num_units]).to_a.each do |unit_num|
         case unit_num
         when 1
-          units << { 'name' => "unit #{unit_num}",
-                     'geometry_unit_left_wall_is_adiabatic' => true }
+          units << { 'geometry_unit_left_wall_is_adiabatic' => true }
         when args[:geometry_building_num_units]
-          units << { 'name' => "unit #{unit_num}",
-                     'geometry_unit_right_wall_is_adiabatic' => true }
+          units << { 'geometry_unit_right_wall_is_adiabatic' => true }
         else
-          units << { 'name' => "unit #{unit_num}",
-                     'geometry_unit_left_wall_is_adiabatic' => true,
+          units << { 'geometry_unit_left_wall_is_adiabatic' => true,
                      'geometry_unit_right_wall_is_adiabatic' => true }
         end
       end
@@ -346,8 +347,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
         position += 1
 
-        units << { 'name' => "unit #{unit_num}",
-                   'geometry_unit_left_wall_is_adiabatic' => geometry_unit_left_wall_is_adiabatic,
+        units << { 'geometry_unit_left_wall_is_adiabatic' => geometry_unit_left_wall_is_adiabatic,
                    'geometry_unit_right_wall_is_adiabatic' => geometry_unit_right_wall_is_adiabatic,
                    'geometry_unit_front_wall_is_adiabatic' => geometry_unit_front_wall_is_adiabatic,
                    'geometry_unit_back_wall_is_adiabatic' => geometry_unit_back_wall_is_adiabatic,
