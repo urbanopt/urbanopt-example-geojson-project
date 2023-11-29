@@ -993,6 +993,9 @@ module URBANopt
             end
 
           elsif commercial_building_types.include? building_type
+            OpenStudio::Extension.set_measure_argument(osw, 'export_time_series_modelica', '__SKIP__', false) # FIXME: where should these be set?
+            OpenStudio::Extension.set_measure_argument(osw, 'export_modelica_loads', '__SKIP__', false) # FIXME: where should these be set?      
+            
             # set_run_period
             OpenStudio::Extension.set_measure_argument(osw, 'set_run_period', '__SKIP__', false)
             # can enable reporting (commercial building types only for now)

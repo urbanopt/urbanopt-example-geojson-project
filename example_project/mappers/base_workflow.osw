@@ -214,12 +214,12 @@
     {
       "measure_dir_name":"export_time_series_modelica",
       "arguments":{
-        "__SKIP__":false
+        "__SKIP__": true
       }
     },{
       "measure_dir_name":"export_modelica_loads",
       "arguments":{
-        "__SKIP__":false
+        "__SKIP__": true
       }
     },
     {
