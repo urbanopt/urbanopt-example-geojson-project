@@ -232,7 +232,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       return false
     end
 
-    # store metadata for default feature reports measure
+    # store metadata for default_feature_reports measure
     standards_number_of_above_ground_stories = Integer(args[:geometry_num_floors_above_grade])
     standards_number_of_stories = Integer(args[:geometry_num_floors_above_grade])
     number_of_conditioned_stories = Integer(args[:geometry_num_floors_above_grade])
@@ -260,9 +260,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     model.getSpaceTypes.each do |space_type|
       next unless space_type.standardsSpaceType.is_initialized
-      next if !space_type.standardsSpaceType.get.include?('living space')
 
-      space_type.setStandardsBuildingType(building_type)
+      # set building_type on SpaceType for conditioned spaces to populate space_type_areas hash in default_feature_reports
+      if space_type.standardsSpaceType.get.include?('conditioned space') || space_type.standardsSpaceType.get.include?('conditioned_space')
+        space_type.setStandardsBuildingType(building_type)
+      end
     end
 
     model.getBuilding.setStandardsBuildingType('Residential')
