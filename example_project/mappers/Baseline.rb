@@ -352,12 +352,20 @@ module URBANopt
       def get_climate_zone_iecc(epw)
         headers = CSV.open(epw, 'r', &:first)
         wmo = headers[5]
-        zones_csv = File.join(File.dirname(__FILE__), '../resources/hpxml-measures/HPXMLtoOpenStudio/resources/data/climate_zones.csv')
+        zones_csv = Pathname(__FILE__).dirname.parent / 'resources' / 'hpxml-measures' / 'HPXMLtoOpenStudio' / 'resources' / 'data' / 'climate_zones.csv'
+
+        # Check if the CSV file is empty
+        if File.empty?(epw)
+          raise "Error: Your weather file #{epw} is empty."
+        end
+
         CSV.foreach(zones_csv) do |row|
           if row[0].to_s == wmo.to_s
             return row[6].to_s
           end
         end
+
+        return nil
       end
 
       # epw_state to subregions mapping methods
@@ -861,7 +869,13 @@ module URBANopt
               template_vals = template_vals.transform_keys(&:to_sym)
 
               epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
-              template_vals[:climate_zone] = get_climate_zone_iecc(epw)
+              climate_zone = get_climate_zone_iecc(epw)
+              if climate_zone.nil?
+                abort("Error: No match found for the WMO station from your weather file #{Pathname(epw).expand_path} in our US WMO list.
+                This is known to happen when your weather file is from somewhere outside of the United States.
+                Please replace your weather file with one from an analogous weather location in the United States.")
+              end
+              template_vals[:climate_zone] = climate_zone
 
               # ENCLOSURE
 
