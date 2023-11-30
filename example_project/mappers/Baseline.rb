@@ -1052,8 +1052,12 @@ module URBANopt
 
             # convert to hash
             building_hash = feature.to_hash
-            # check for detailed model filename
             OpenStudio::Extension.set_measure_argument(osw, 'PredictedMeanVote', '__SKIP__', false)
+
+            # Changing location here means we always read the geojson weather file, no matter what.
+            OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', '__SKIP__', false)
+
+            # check for detailed model filename
             if building_hash.key?(:detailed_model_filename)
               detailed_model_filename = building_hash[:detailed_model_filename]
               osw[:file_paths] << File.join(File.dirname(__FILE__), '../osm_building/')
@@ -1062,7 +1066,7 @@ module URBANopt
               # skip PMV measure with detailed models:
               OpenStudio::Extension.set_measure_argument(osw, 'PredictedMeanVote', '__SKIP__', true)
 
-            # in case detailed model filename is not present
+            # For when the user DIDN'T BYO osm file
             else
 
               building_type_1 = building_hash[:building_type]
@@ -1157,10 +1161,6 @@ module URBANopt
                 new_time = [hour, minute_fraction].join('.')
                 return new_time
               end
-
-              # ChangeBuildingLocation
-              # set skip measure to false change building location
-              OpenStudio::Extension.set_measure_argument(osw, 'ChangeBuildingLocation', '__SKIP__', false)
 
               # cec climate zone takes precedence
               cec_found = false
