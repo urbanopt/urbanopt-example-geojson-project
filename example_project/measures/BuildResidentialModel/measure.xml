@@ -3,8 +3,8 @@
   <schema_version>3.1</schema_version>
   <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
-  <version_id>08ee42db-bf35-48a9-b5de-b4a7d80fd930</version_id>
-  <version_modified>2023-11-30T22:10:02Z</version_modified>
+  <version_id>763b8c81-347c-4df9-859b-a07470771d59</version_id>
+  <version_modified>2023-11-30T22:17:05Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
   <class_name>BuildResidentialModel</class_name>
   <display_name>Build Residential Model</display_name>
@@ -78,14 +78,6 @@
       <name>hpxml_dir</name>
       <display_name>Folder Containing Custom HPXML File</display_name>
       <description>The name of the folder containing a custom HPXML file, relative to the xml_building folder.</description>
-      <type>String</type>
-      <required>false</required>
-      <model_dependent>false</model_dependent>
-    </argument>
-    <argument>
-      <name>existing_hpxml_path</name>
-      <display_name>Existing HPXML File Path</display_name>
-      <description>Absolute/relative path of the existing HPXML file. If not provided, a new HPXML file with one Building element is created. If provided, a new Building element will be appended to this HPXML file (e.g., to create a multifamily HPXML file describing multiple dwelling units).</description>
       <type>String</type>
       <required>false</required>
       <model_dependent>false</model_dependent>
@@ -6827,7 +6819,7 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>DF432E2D</checksum>
+      <checksum>C3031A35</checksum>
     </file>
     <file>
       <filename>constants.rb</filename>
