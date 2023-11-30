@@ -63,8 +63,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     args << arg
 
     arg = OpenStudio::Measure::OSArgument.makeStringArgument('hpxml_dir', false)
-    arg.setDisplayName('Custom HPXML Files')
-    arg.setDescription('The name of the folder containing HPXML files, relative to the xml_building folder.')
+    arg.setDisplayName('Folder Containing Custom HPXML File')
+    arg.setDescription('The name of the folder containing a custom HPXML file, relative to the xml_building folder.')
     args << arg
 
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
@@ -95,20 +95,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # optionals: get or remove
     args.each_key do |arg|
-      # TODO: how to check if arg is an optional or not?
-
       if args[arg].is_initialized
         args[arg] = args[arg].get
       else
         args.delete(arg)
       end
-    rescue StandardError
+    rescue StandardError # this is needed for when args[arg] is actually a value
     end
 
-    # get file/dir paths
+    # get hpxml-measures directory
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
-
-    # apply HPXML measures
     measures_dir = File.join(resources_dir, 'hpxml-measures')
     check_dir_exists(measures_dir, runner)
 
@@ -118,6 +114,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       if units.empty?
         return false
       end
+
+      standards_number_of_living_units = units.size
     else
       hpxml_dir = File.join(File.dirname(__FILE__), "../../xml_building/#{args[:hpxml_dir]}")
 
@@ -132,17 +130,24 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature.")
         return false
       end
-      name, ext = File.basename(hpxml_paths[0]).split('.')
-      units << { 'hpxml_path' => hpxml_paths[0] }
+      hpxml_path = hpxml_paths[0]
+      units << { 'hpxml_path' => hpxml_path }
+
+      hpxml = HPXML.new(hpxml_path: hpxml_path, building_id: 'ALL')
+      standards_number_of_living_units = 0
+      hpxml.buildings.each do |hpxml_bldg|
+        number_of_units = 1
+        number_of_units = hpxml_bldg.building_construction.number_of_units if !hpxml_bldg.building_construction.number_of_units.nil?
+        standards_number_of_living_units += number_of_units
+      end
     end
 
-    standards_number_of_living_units = units.size
-    if args[:hpxml_dir].nil? && args.key?(:geometry_building_num_units) && (standards_number_of_living_units != Integer(args[:geometry_building_num_units]))
-      runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{standards_number_of_living_units}).")
+    if args.key?(:geometry_building_num_units) && (standards_number_of_living_units != Integer(args[:geometry_building_num_units]))
+      runner.registerError("The number of actual dwelling units (#{standards_number_of_living_units}) differs from the specified number of units (#{Integer(args[:geometry_building_num_units])}).")
       return false
     end
 
-    hpxml_path = File.expand_path('../existing.xml')
+    hpxml_path = File.expand_path('../feature.xml')
     units.each_with_index do |unit, unit_num|
 
       measures = {}
@@ -185,7 +190,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         measures[measure_subdir] << measure_args
 
-        if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'existing.osw')
+        if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
           return false
         end
       else # we're using an HPXML file from the xml_building folder
@@ -198,7 +203,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     measures = {}
 
     # BuildResidentialScheduleFile
-    if args[:schedules_type] == 'stochastic' # if smooth, don't run the measure
+    if args[:schedules_type] == 'stochastic' # if smooth, don't run the measure; schedules type stochastic currently hardcoded in Baseline.rb
       measure_subdir = 'BuildResidentialScheduleFile'
       full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
@@ -208,7 +213,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args['hpxml_path'] = hpxml_path
       measure_args['hpxml_output_path'] = hpxml_path
       measure_args['schedules_random_seed'] = args[:schedules_random_seed]
-      measure_args['building_id'] = 'ALL' # FIXME: schedules variation by building currently not supported
+      measure_args['building_id'] = 'ALL' # FIXME: schedules variation by building currently not supported; by unit currently hardcoded in Baseline.rb
       measure_args['output_csv_path'] = File.expand_path('../schedules.csv')
 
       measures[measure_subdir] << measure_args
@@ -228,7 +233,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     measures[measure_subdir] << measure_args
 
-    if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'existing.osw')
+    if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
       return false
     end
 
