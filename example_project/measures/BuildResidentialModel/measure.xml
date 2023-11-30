@@ -91,6 +91,14 @@
       <model_dependent>false</model_dependent>
     </argument>
     <argument>
+      <name>existing_hpxml_path</name>
+      <display_name>Existing HPXML File Path</display_name>
+      <description>Absolute/relative path of the existing HPXML file. If not provided, a new HPXML file with one Building element is created. If provided, a new Building element will be appended to this HPXML file (e.g., to create a multifamily HPXML file describing multiple dwelling units).</description>
+      <type>String</type>
+      <required>false</required>
+      <model_dependent>false</model_dependent>
+    </argument>
+    <argument>
       <name>software_info_program_used</name>
       <display_name>Software Info: Program Used</display_name>
       <description>The name of the software program used.</description>
@@ -6825,25 +6833,25 @@
       <filename>constants.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>2050FF10</checksum>
+      <checksum>BEF32B5B</checksum>
     </file>
     <file>
       <filename>geometry.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>58F1B7DD</checksum>
+      <checksum>12C16DFB</checksum>
     </file>
     <file>
       <filename>unit_conversions.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>5E82ABE2</checksum>
+      <checksum>E1DCEFDC</checksum>
     </file>
     <file>
       <filename>util.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>055F0A54</checksum>
+      <checksum>E2C2AEE5</checksum>
     </file>
   </files>
 </measure>

@@ -16,15 +16,13 @@ env:
 
 jobs:
   simulate-and-post-process:
-    # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
-    # https://github.com/rbenv/ruby-build/discussions/1940
     strategy:
       matrix:
         scenario: [baseline, chilled_water_storage, flexible_hot_water, high_efficiency, mixed,
           peak_hours_mels_shedding, peak_hours_thermostat_adjust, reopt, thermal_storage]
     runs-on: ubuntu-latest
     container:
-      image: docker://nrel/openstudio:3.6.1
+      image: docker://nrel/openstudio:3.7.0
     steps:
       - uses: actions/checkout@v3
       - name: Update gems
@@ -32,18 +30,14 @@ jobs:
           bundle update
           bundle exec certified-update
       - name: Simulate
-        # Continue to upload step even if a test fails, so we can troubleshoot
-        # continue-on-error: true
         run: bundle exec rake run_${{ matrix.scenario }}
       - name: Post process
-        # continue-on-error: true
         run: bundle exec rake post_process_${{ matrix.scenario }}
       - name: Upload artifacts
-      # Save results for examination - useful for debugging
         uses: actions/upload-artifact@v3
         # Only upload if rspec fails
         if: failure()
         with:
           name: rspec_results
           path: example_project/run/*scenario/
-          retention-days: 7 # save for 1 week before deleting
+          retention-days: 7 # save for 1 week before deleting - useful for debugging
