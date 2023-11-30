@@ -214,7 +214,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args['hpxml_output_path'] = hpxml_path
       measure_args['schedules_random_seed'] = args[:schedules_random_seed]
       measure_args['building_id'] = 'ALL' # FIXME: schedules variation by building currently not supported; by unit currently hardcoded in Baseline.rb
-      measure_args['output_csv_path'] = File.expand_path('../schedules.csv')
+      measure_args['output_csv_path'] = 'schedules.csv'
 
       measures[measure_subdir] << measure_args
     end

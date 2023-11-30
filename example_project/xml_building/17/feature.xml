@@ -3,7 +3,7 @@
   <XMLTransactionHeaderInformation>
     <XMLType>HPXML</XMLType>
     <XMLGeneratedBy>BuildResidentialHPXML</XMLGeneratedBy>
-    <CreatedDateAndTime>2023-11-28T16:38:42-07:00</CreatedDateAndTime>
+    <CreatedDateAndTime>2023-11-30T15:05:03-07:00</CreatedDateAndTime>
     <Transaction>create</Transaction>
   </XMLTransactionHeaderInformation>
   <SoftwareInfo>
@@ -41,7 +41,7 @@
           <ConditionedBuildingVolume>36640.0</ConditionedBuildingVolume>
         </BuildingConstruction>
       <extension>
-          <SchedulesFilePath>C:/uo-example-project/example_project/run/baseline_scenario/17/schedules.csv</SchedulesFilePath>
+          <SchedulesFilePath>schedules.csv</SchedulesFilePath>
         </extension>
       </BuildingSummary>
       <ClimateandRiskZones>
@@ -577,7 +577,7 @@
           <ConditionedBuildingVolume>36640.0</ConditionedBuildingVolume>
         </BuildingConstruction>
       <extension>
-          <SchedulesFilePath>C:/uo-example-project/example_project/run/baseline_scenario/17/schedules_2.csv</SchedulesFilePath>
+          <SchedulesFilePath>schedules_2.csv</SchedulesFilePath>
         </extension>
       </BuildingSummary>
       <ClimateandRiskZones>
@@ -1086,7 +1086,7 @@
           <ConditionedBuildingVolume>36640.0</ConditionedBuildingVolume>
         </BuildingConstruction>
       <extension>
-          <SchedulesFilePath>C:/uo-example-project/example_project/run/baseline_scenario/17/schedules_3.csv</SchedulesFilePath>
+          <SchedulesFilePath>schedules_3.csv</SchedulesFilePath>
         </extension>
       </BuildingSummary>
       <ClimateandRiskZones>
@@ -1595,7 +1595,7 @@
           <ConditionedBuildingVolume>36640.0</ConditionedBuildingVolume>
         </BuildingConstruction>
       <extension>
-          <SchedulesFilePath>C:/uo-example-project/example_project/run/baseline_scenario/17/schedules_4.csv</SchedulesFilePath>
+          <SchedulesFilePath>schedules_4.csv</SchedulesFilePath>
         </extension>
       </BuildingSummary>
       <ClimateandRiskZones>

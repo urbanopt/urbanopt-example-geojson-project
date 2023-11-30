@@ -3,8 +3,8 @@
   <schema_version>3.1</schema_version>
   <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
-  <version_id>b37acc77-c018-4c3d-8718-d9f3b32f7ed9</version_id>
-  <version_modified>2023-11-30T20:54:36Z</version_modified>
+  <version_id>08ee42db-bf35-48a9-b5de-b4a7d80fd930</version_id>
+  <version_modified>2023-11-30T22:10:02Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
   <class_name>BuildResidentialModel</class_name>
   <display_name>Build Residential Model</display_name>
@@ -6819,7 +6819,7 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>845FA8D5</checksum>
+      <checksum>DF432E2D</checksum>
     </file>
     <file>
       <filename>constants.rb</filename>
