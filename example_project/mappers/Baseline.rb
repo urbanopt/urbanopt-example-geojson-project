@@ -615,8 +615,6 @@ module URBANopt
           end
 
           if residential_building_types.include? building_type
-            debug = false
-
             # Check for required residential fields
             is_defined(feature, :number_of_stories_above_ground)
             is_defined(feature, :foundation_type)
@@ -632,7 +630,7 @@ module URBANopt
 
             args = {}
 
-            # Custom HPXML Files
+            # Custom HPXML File
             begin
               args[:hpxml_dir] = feature.hpxml_directory
             rescue StandardError
@@ -961,7 +959,6 @@ module URBANopt
 
             # Parse BuildResidentialModel measure xml so we can override defaults with template values
             default_args = {}
-            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', '__SKIP__', false)
             measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/hpxml-measures'))
             measure_xml = File.read(File.join(measures_dir, 'BuildResidentialHPXML', 'measure.xml'))
             measure = REXML::Document.new(measure_xml).root
@@ -976,14 +973,16 @@ module URBANopt
               end
             end
 
+            build_res_model_args = [:feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir]
             args.each_key do |arg_name|
               unless default_args.key?(arg_name)
-                next if [:feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir].include?(arg_name)
+                next if build_res_model_args.include?(arg_name)
 
                 puts "Argument '#{arg_name}' is unknown."
               end
             end
 
+            debug = false
             default_args.each do |arg_name, arg_default|
               next if arg_default.nil?
 
@@ -1002,6 +1001,7 @@ module URBANopt
               end
             end
 
+            OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', '__SKIP__', false)
             args.each_key do |arg_name|
               OpenStudio::Extension.set_measure_argument(osw, 'BuildResidentialModel', arg_name, args[arg_name])
             end
@@ -1340,6 +1340,8 @@ module URBANopt
               OpenStudio::Extension.set_measure_argument(osw, 'create_typical_building_from_model', 'system_type', system_type, 'create_typical_building_from_model 2')
             end
 
+            OpenStudio::Extension.set_measure_argument(osw, 'export_time_series_modelica', '__SKIP__', false)
+            OpenStudio::Extension.set_measure_argument(osw, 'export_modelica_loads', '__SKIP__', false)
           else
             raise "Building type #{building_type} not currently supported."
           end

@@ -68,8 +68,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     args << arg
 
     arg = OpenStudio::Measure::OSArgument.makeStringArgument('hpxml_dir', false)
-    arg.setDisplayName('Custom HPXML Files')
-    arg.setDescription('The name of the folder containing HPXML files, relative to the xml_building folder.')
+    arg.setDisplayName('Folder Containing Custom HPXML File')
+    arg.setDescription('The name of the folder containing a custom HPXML file, relative to the xml_building folder.')
     args << arg
 
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
@@ -100,29 +100,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # optionals: get or remove
     args.each_key do |arg|
-      # TODO: how to check if arg is an optional or not?
-
       if args[arg].is_initialized
         args[arg] = args[arg].get
       else
         args.delete(arg)
       end
-    rescue StandardError
+    rescue StandardError # this is needed for when args[arg] is actually a value
     end
 
-    # get file/dir paths
+    # get hpxml-measures directory
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
-
-    # apply HPXML measures
     measures_dir = File.join(resources_dir, 'hpxml-measures')
     check_dir_exists(measures_dir, runner)
-
-    # these will get added back in by unit_model
-    model.getBuilding.remove
-    model.getShadowCalculation.remove
-    model.getSimulationControl.remove
-    model.getSite.remove
-    model.getTimestep.remove
 
     # either create units or get pre-made units
     if args[:hpxml_dir].nil?
@@ -130,6 +119,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       if units.empty?
         return false
       end
+
+      standards_number_of_living_units = units.size
     else
       hpxml_dir = File.join(File.dirname(__FILE__), "../../xml_building/#{args[:hpxml_dir]}")
 
@@ -139,24 +130,33 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
 
       units = []
-      Dir["#{hpxml_dir}/*.xml"].each do |hpxml_path|
-        name, ext = File.basename(hpxml_path).split('.')
-        units << { 'name' => name, 'hpxml_path' => hpxml_path }
+      hpxml_paths = Dir["#{hpxml_dir}/*.xml"]
+      if hpxml_paths.size != 1
+        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature.")
+        return false
+      end
+      hpxml_path = hpxml_paths[0]
+      units << { 'hpxml_path' => hpxml_path }
+
+      hpxml = HPXML.new(hpxml_path: hpxml_path, building_id: 'ALL')
+      standards_number_of_living_units = 0
+      hpxml.buildings.each do |hpxml_bldg|
+        number_of_units = 1
+        number_of_units = hpxml_bldg.building_construction.number_of_units if !hpxml_bldg.building_construction.number_of_units.nil?
+        standards_number_of_living_units += number_of_units
       end
     end
 
-    standards_number_of_living_units = units.size
-    if args[:hpxml_dir].nil? && args.key?(:geometry_building_num_units) && (standards_number_of_living_units != Integer(args[:geometry_building_num_units]))
-      runner.registerError("The number of created units (#{units.size}) differs from the specified number of units (#{standards_number_of_living_units}).")
+    if args.key?(:geometry_building_num_units) && (standards_number_of_living_units != Integer(args[:geometry_building_num_units]))
+      runner.registerError("The number of actual dwelling units (#{standards_number_of_living_units}) differs from the specified number of units (#{Integer(args[:geometry_building_num_units])}).")
       return false
     end
 
+    hpxml_path = File.expand_path('../feature.xml')
     units.each_with_index do |unit, unit_num|
-      unit_model = OpenStudio::Model::Model.new
 
       measures = {}
-      hpxml_path = File.expand_path("../#{unit['name']}.xml")
-      if !unit.key?('hpxml_path')
+      if !unit.key?('hpxml_path') # create a single new HPXML file describing all dwelling units of the feature
 
         # BuildResidentialHPXML
         measure_subdir = 'BuildResidentialHPXML'
@@ -166,6 +166,10 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         measure_args = args.clone.collect { |k, v| [k.to_s, v] }.to_h
         measure_args['hpxml_path'] = hpxml_path
+        if unit_num > 0
+          measure_args['existing_hpxml_path'] = hpxml_path
+          measure_args['battery_present'] = 'false' # limitation of OS-HPXML
+        end
         begin
           measure_args['software_info_program_used'] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
         rescue StandardError
@@ -190,11 +194,21 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args.delete('geometry_num_floors_above_grade')
 
         measures[measure_subdir] << measure_args
-      else
-        FileUtils.cp(File.expand_path(unit['hpxml_path']), hpxml_path)
-      end
 
-      # BuildResidentialScheduleFile
+        if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+          return false
+        end
+      else # we're using an HPXML file from the xml_building folder
+        FileUtils.cp(File.expand_path(unit['hpxml_path']), hpxml_path)
+
+      end
+    end # end units.each_with_index do |unit, unit_num|
+
+    # call BuildResidentialScheduleFile / HPXMLtoOpenStudio after HPXML file is created
+    measures = {}
+
+    # BuildResidentialScheduleFile
+    if args[:schedules_type] == 'stochastic' # if smooth, don't run the measure; schedules type stochastic currently hardcoded in Baseline.rb
       measure_subdir = 'BuildResidentialScheduleFile'
       full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
@@ -203,135 +217,72 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args = {}
       measure_args['hpxml_path'] = hpxml_path
       measure_args['hpxml_output_path'] = hpxml_path
-      measure_args['schedules_random_seed'] = args[:schedules_random_seed] # variation by building; deterministic
-      if args[:schedules_variation] == 'unit'
-        measure_args['schedules_random_seed'] *= (unit_num + 1) # variation across units; deterministic
-      end
-      measure_args['output_csv_path'] = File.expand_path("../#{unit['name']}.csv")
-
-      measures[measure_subdir] << measure_args if args[:schedules_type] == 'stochastic' # only run BuildResidentialScheduleFile measure if stochastic; if smooth, don't run the measure
-
-      # HPXMLtoOpenStudio
-      measure_subdir = 'HPXMLtoOpenStudio'
-      full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
-      check_file_exists(full_measure_path, runner)
-      measures[measure_subdir] = []
-
-      measure_args = {}
-      measure_args['hpxml_path'] = hpxml_path
-      measure_args['output_dir'] = File.expand_path('..')
-      measure_args['debug'] = true
+      measure_args['schedules_random_seed'] = args[:schedules_random_seed]
+      measure_args['building_id'] = 'ALL' # FIXME: schedules variation by building currently not supported; by unit currently hardcoded in Baseline.rb
+      measure_args['output_csv_path'] = 'schedules.csv'
 
       measures[measure_subdir] << measure_args
+    end
 
-      # if !apply_child_measures(measures_dir, measures, runner, unit_model, workflow_json, "#{unit['name']}.osw", true)
-      if !apply_measures(measures_dir, measures, runner, unit_model, true, 'OpenStudio::Measure::ModelMeasure', "#{unit['name']}.osw")
-        return false
-      end
+    # HPXMLtoOpenStudio
+    measure_subdir = 'HPXMLtoOpenStudio'
+    full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+    check_file_exists(full_measure_path, runner)
+    measures[measure_subdir] = []
 
-      # store metadata for default feature reports measure
-      standards_number_of_above_ground_stories = Integer(args[:geometry_num_floors_above_grade])
-      standards_number_of_stories = Integer(args[:geometry_num_floors_above_grade])
-      number_of_conditioned_stories = Integer(args[:geometry_num_floors_above_grade])
-      if ['UnconditionedBasement', 'ConditionedBasement'].include?(args[:geometry_foundation_type])
-        standards_number_of_stories += 1
-        if ['ConditionedBasement'].include?(args[:geometry_foundation_type])
-          number_of_conditioned_stories += 1
-        end
-      end
+    measure_args = {}
+    measure_args['hpxml_path'] = hpxml_path
+    measure_args['output_dir'] = File.expand_path('..')
+    measure_args['debug'] = true
+    measure_args['building_id'] = 'ALL'
 
-      case args[:geometry_unit_type]
-      when 'single-family detached'
-        building_type = 'Single-Family Detached'
-      when 'single-family attached'
-        building_type = 'Single-Family Attached'
-      when 'apartment unit'
-        building_type = 'Multifamily'
-      end
+    measures[measure_subdir] << measure_args
 
-      unit_model.getSpaces.each do |unit_space|
-        unit_space_type = OpenStudio::Model::SpaceType.new(unit_model)
-        unit_space_type.setStandardsSpaceType(unit_space.name.to_s)
-        unit_space.setSpaceType(unit_space_type)
-      end
+    if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+      return false
+    end
 
-      unit_model.getSpaceTypes.each do |space_type|
-        next unless space_type.standardsSpaceType.is_initialized
-        next if !space_type.standardsSpaceType.get.include?('living space')
-
-        space_type.setStandardsBuildingType(building_type)
-      end
-
-      unit_model.getBuilding.setStandardsBuildingType('Residential')
-      unit_model.getBuilding.setStandardsNumberOfAboveGroundStories(standards_number_of_above_ground_stories)
-      unit_model.getBuilding.setStandardsNumberOfStories(standards_number_of_stories)
-      unit_model.getBuilding.setNominalFloortoFloorHeight(Float(args[:geometry_average_ceiling_height]))
-      unit_model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
-      unit_model.getBuilding.additionalProperties.setFeature('NumberOfConditionedStories', number_of_conditioned_stories)
-
-      if unit_num == 0 # for the first building unit, add everything
-
-        model.addObjects(unit_model.objects, true)
-
-      else # for single-family attached and multifamily, add "almost" everything
-
-        y_shift = 100.0 * unit_num # meters
-
-        # shift the unit so it's not right on top of the previous one
-        unit_model.getSpaces.sort.each do |space|
-          space.setYOrigin(y_shift)
-        end
-
-        # shift shading surfaces
-        m = OpenStudio::Matrix.new(4, 4, 0)
-        m[0, 0] = 1
-        m[1, 1] = 1
-        m[2, 2] = 1
-        m[3, 3] = 1
-        m[1, 3] = y_shift
-        t = OpenStudio::Transformation.new(m)
-
-        unit_model.getShadingSurfaceGroups.each do |shading_surface_group|
-          next if shading_surface_group.space.is_initialized # already got shifted
-
-          shading_surface_group.shadingSurfaces.each do |shading_surface|
-            shading_surface.setVertices(t * shading_surface.vertices)
-          end
-        end
-
-        # prefix all objects with name using unit number. May be cleaner if source models are setup with unique names
-        prefix_all_unit_model_objects(unit_model, unit)
-
-        # we already have the following unique objects from the first building unit
-        unit_model.getConvergenceLimits.remove
-        unit_model.getOutputDiagnostics.remove
-        unit_model.getRunPeriodControlDaylightSavingTime.remove
-        unit_model.getShadowCalculation.remove
-        unit_model.getSimulationControl.remove
-        unit_model.getSiteGroundTemperatureDeep.remove
-        unit_model.getSiteGroundTemperatureShallow.remove
-        unit_model.getSite.remove
-        unit_model.getInsideSurfaceConvectionAlgorithm.remove
-        unit_model.getOutsideSurfaceConvectionAlgorithm.remove
-        unit_model.getTimestep.remove
-        unit_model.getFoundationKivaSettings.remove
-        unit_model.getOutputJSON.remove
-        unit_model.getOutputControlFiles.remove
-        unit_model.getPerformancePrecisionTradeoffs.remove
-
-        unit_model_objects = []
-        unit_model.objects.each do |obj|
-          unit_model_objects << obj unless obj.to_Building.is_initialized # if we remove this, we lose all thermal zones
-        end
-
-        model.addObjects(unit_model_objects, true)
-
+    # store metadata for default_feature_reports measure
+    standards_number_of_above_ground_stories = Integer(args[:geometry_num_floors_above_grade])
+    standards_number_of_stories = Integer(args[:geometry_num_floors_above_grade])
+    number_of_conditioned_stories = Integer(args[:geometry_num_floors_above_grade])
+    if ['UnconditionedBasement', 'ConditionedBasement'].include?(args[:geometry_foundation_type])
+      standards_number_of_stories += 1
+      if ['ConditionedBasement'].include?(args[:geometry_foundation_type])
+        number_of_conditioned_stories += 1
       end
     end
 
-    # save the "re-composed" model with all building units to file
-    building_path = File.expand_path(File.join('..', 'whole_building.osm'))
-    model.save(building_path, true)
+    case args[:geometry_unit_type]
+    when 'single-family detached'
+      building_type = 'Single-Family Detached'
+    when 'single-family attached'
+      building_type = 'Single-Family Attached'
+    when 'apartment unit'
+      building_type = 'Multifamily'
+    end
+
+    model.getSpaces.each do |space|
+      space_type = OpenStudio::Model::SpaceType.new(model)
+      space_type.setStandardsSpaceType(space.name.to_s)
+      space.setSpaceType(space_type)
+    end
+
+    model.getSpaceTypes.each do |space_type|
+      next unless space_type.standardsSpaceType.is_initialized
+
+      # set building_type on SpaceType for conditioned spaces to populate space_type_areas hash in default_feature_reports
+      if space_type.standardsSpaceType.get.include?('conditioned space') || space_type.standardsSpaceType.get.include?('conditioned_space')
+        space_type.setStandardsBuildingType(building_type)
+      end
+    end
+
+    model.getBuilding.setStandardsBuildingType('Residential')
+    model.getBuilding.setStandardsNumberOfAboveGroundStories(standards_number_of_above_ground_stories)
+    model.getBuilding.setStandardsNumberOfStories(standards_number_of_stories)
+    model.getBuilding.setNominalFloortoFloorHeight(Float(args[:geometry_average_ceiling_height]))
+    model.getBuilding.setStandardsNumberOfLivingUnits(standards_number_of_living_units)
+    model.getBuilding.additionalProperties.setFeature('NumberOfConditionedStories', number_of_conditioned_stories)
 
     return true
   end
@@ -340,19 +291,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     units = []
     case args[:geometry_unit_type]
     when 'single-family detached'
-      units << { 'name' => 'unit 1' }
+      units << {}
     when 'single-family attached'
       (1..args[:geometry_building_num_units]).to_a.each do |unit_num|
         case unit_num
         when 1
-          units << { 'name' => "unit #{unit_num}",
-                     'geometry_unit_left_wall_is_adiabatic' => true }
+          units << { 'geometry_unit_left_wall_is_adiabatic' => true }
         when args[:geometry_building_num_units]
-          units << { 'name' => "unit #{unit_num}",
-                     'geometry_unit_right_wall_is_adiabatic' => true }
+          units << { 'geometry_unit_right_wall_is_adiabatic' => true }
         else
-          units << { 'name' => "unit #{unit_num}",
-                     'geometry_unit_left_wall_is_adiabatic' => true,
+          units << { 'geometry_unit_left_wall_is_adiabatic' => true,
                      'geometry_unit_right_wall_is_adiabatic' => true }
         end
       end
@@ -411,8 +359,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
         position += 1
 
-        units << { 'name' => "unit #{unit_num}",
-                   'geometry_unit_left_wall_is_adiabatic' => geometry_unit_left_wall_is_adiabatic,
+        units << { 'geometry_unit_left_wall_is_adiabatic' => geometry_unit_left_wall_is_adiabatic,
                    'geometry_unit_right_wall_is_adiabatic' => geometry_unit_right_wall_is_adiabatic,
                    'geometry_unit_front_wall_is_adiabatic' => geometry_unit_front_wall_is_adiabatic,
                    'geometry_unit_back_wall_is_adiabatic' => geometry_unit_back_wall_is_adiabatic,
@@ -422,74 +369,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
     end
     return units
-  end
-
-  def prefix_all_unit_model_objects(unit_model, unit)
-    # EMS objects
-    ems_map = {}
-
-    unit_model.getEnergyManagementSystemSensors.each do |sensor|
-      old_sensor_name = sensor.name.to_s
-      new_sensor_name = make_variable_name("#{unit['name']}_#{sensor.name}")
-
-      ems_map[old_sensor_name] = new_sensor_name
-
-      old_sensor_key_name = sensor.keyName.to_s
-      new_sensor_key_name = make_variable_name("#{unit['name']}_#{sensor.keyName}") unless sensor.keyName.empty?
-      sensor.setKeyName(new_sensor_key_name) unless sensor.keyName.empty?
-    end
-
-    unit_model.getEnergyManagementSystemActuators.each do |actuator|
-      old_actuator_name = actuator.name.to_s
-      new_actuator_name = make_variable_name("#{unit['name']}_#{actuator.name}")
-
-      ems_map[old_actuator_name] = new_actuator_name
-    end
-
-    unit_model.getEnergyManagementSystemOutputVariables.each do |output_variable|
-      next if output_variable.emsVariableObject.is_initialized
-
-      old_ems_variable_name = output_variable.emsVariableName.to_s
-      new_ems_variable_name = make_variable_name("#{unit['name']}_#{output_variable.emsVariableName}")
-
-      ems_map[old_ems_variable_name] = new_ems_variable_name
-      output_variable.setEMSVariableName(new_ems_variable_name)
-    end
-
-    # variables in program lines don't get updated automatically
-    characters = ['', ' ', ',', '(', ')', '+', '-', '*', '/', ';']
-    unit_model.getEnergyManagementSystemPrograms.each do |program|
-      old_program_name = program.name.to_s
-      new_program_name = make_variable_name("#{unit['name']}_#{program.name}")
-
-      new_lines = []
-      program.lines.each_with_index do |line, i|
-        ems_map.each do |old_name, new_name|
-          # old_name between at least 1 character, with the exception of '' on left and ' ' on right
-          characters.each do |lhs|
-            characters.each do |rhs|
-              next if lhs == '' && ['', ' '].include?(rhs)
-
-              line = line.gsub("#{lhs}#{old_name}#{rhs}", "#{lhs}#{new_name}#{rhs}") if line.include?("#{lhs}#{old_name}#{rhs}")
-            end
-          end
-        end
-        new_lines << line
-      end
-      program.setLines(new_lines)
-    end
-
-    # All model objects
-    unit_model.objects.each do |model_object|
-      next if model_object.name.nil?
-
-      new_model_object_name = make_variable_name("#{unit['name']}_#{model_object.name}")
-      model_object.setName(new_model_object_name)
-    end
-  end
-
-  def make_variable_name(str)
-    return str.gsub(' ', '_').gsub('-', '_')
   end
 end
 

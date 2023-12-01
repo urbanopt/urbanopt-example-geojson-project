@@ -3,8 +3,8 @@
   <schema_version>3.1</schema_version>
   <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
-  <version_id>290199a0-cc29-44b4-808d-fb5685f89d87</version_id>
-  <version_modified>2023-11-20T23:21:23Z</version_modified>
+  <version_id>763b8c81-347c-4df9-859b-a07470771d59</version_id>
+  <version_modified>2023-11-30T22:17:05Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
   <class_name>BuildResidentialModel</class_name>
   <display_name>Build Residential Model</display_name>
@@ -76,8 +76,8 @@
     </argument>
     <argument>
       <name>hpxml_dir</name>
-      <display_name>Custom HPXML Files</display_name>
-      <description>The name of the folder containing HPXML files, relative to the xml_building folder.</description>
+      <display_name>Folder Containing Custom HPXML File</display_name>
+      <description>The name of the folder containing a custom HPXML file, relative to the xml_building folder.</description>
       <type>String</type>
       <required>false</required>
       <model_dependent>false</model_dependent>
@@ -6819,7 +6819,7 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>1C143F01</checksum>
+      <checksum>C3031A35</checksum>
     </file>
     <file>
       <filename>constants.rb</filename>
