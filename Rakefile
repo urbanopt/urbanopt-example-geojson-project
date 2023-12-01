@@ -741,17 +741,17 @@ end
 ### All
 
 desc 'Clear all scenarios'
-task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed] do
+task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_chilled_water_storage, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task run_all: [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed] do
+task run_all: [:run_baseline, :run_high_efficiency, :run_chilled_water_storage, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed] do
+task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_chilled_water_storage, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed] do
   # post_process all the scenarios
 end
 
@@ -769,7 +769,10 @@ task :visualize_all do
   Rake::Task['visualize_features'].invoke('reopt_scenario.csv')
   Rake::Task['visualize_features'].reenable
   Rake::Task['visualize_features'].invoke('mixed_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('chilled_water_storage_scenario.csv')
   Rake::Task['visualize_scenarios'].invoke
+
 end
 
 desc 'Run and post process all scenarios'
