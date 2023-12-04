@@ -630,13 +630,13 @@ module URBANopt
 
             args = {}
 
-            # Custom HPXML File
+            # Custom HPXML file
             begin
               args[:hpxml_dir] = feature.hpxml_directory
             rescue StandardError
             end
 
-            # Simulation Control
+            # Building -level arguments
             args[:simulation_control_timestep] = 60
             begin
               args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
@@ -658,136 +658,8 @@ module URBANopt
 
             args[:weather_station_epw_filepath] = "../../../weather/#{feature.weather_filename}"
 
-            # Geometry
-            args[:geometry_building_num_units] = 1
-            args[:geometry_unit_num_floors_above_grade] = 1
-            case building_type
-            when 'Single-Family Detached'
-              args[:geometry_unit_type] = 'single-family detached'
-              args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
-            when 'Single-Family Attached'
-              args[:geometry_unit_type] = 'single-family attached'
-              begin
-                args[:geometry_building_num_units] = feature.number_of_residential_units
-              rescue StandardError
-              end
-              args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
-              args[:air_leakage_type] = 'unit exterior only'
-            when 'Multifamily'
-              args[:geometry_unit_type] = 'apartment unit'
-              begin
-                args[:geometry_building_num_units] = feature.number_of_residential_units
-              rescue StandardError
-              end
-              args[:air_leakage_type] = 'unit exterior only'
-            end
-
-            args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
-
-            args[:geometry_foundation_type] = 'SlabOnGrade'
-            args[:geometry_foundation_height] = 0.0
-            case feature.foundation_type
-            when 'crawlspace - vented'
-              args[:geometry_foundation_type] = 'VentedCrawlspace'
-              args[:geometry_foundation_height] = 3.0
-            when 'crawlspace - unvented'
-              args[:geometry_foundation_type] = 'UnventedCrawlspace'
-              args[:geometry_foundation_height] = 3.0
-            when 'crawlspace - conditioned'
-              args[:geometry_foundation_type] = 'ConditionedCrawlspace'
-              args[:geometry_foundation_height] = 3.0
-            when 'basement - unconditioned'
-              args[:geometry_foundation_type] = 'UnconditionedBasement'
-              args[:geometry_foundation_height] = 8.0
-            when 'basement - conditioned'
-              args[:geometry_foundation_type] = 'ConditionedBasement'
-              args[:geometry_foundation_height] = 8.0
-            when 'ambient'
-              args[:geometry_foundation_type] = 'Ambient'
-              args[:geometry_foundation_height] = 8.0
-            end
-
-            begin
-              case feature.attic_type
-              when 'attic - vented'
-                args[:geometry_attic_type] = 'VentedAttic'
-                begin
-                  args[:geometry_roof_type] = feature.roof_type
-                rescue StandardError
-                end
-              when 'attic - unvented'
-                args[:geometry_attic_type] = 'UnventedAttic'
-                begin
-                  args[:geometry_roof_type] = feature.roof_type
-                rescue StandardError
-                end
-              when 'attic - conditioned'
-                args[:geometry_attic_type] = 'ConditionedAttic'
-                begin
-                  args[:geometry_roof_type] = feature.roof_type
-                rescue StandardError
-                end
-              when 'flat roof'
-                args[:geometry_attic_type] = 'FlatRoof'
-              end
-            rescue StandardError
-            end
-
-            args[:geometry_roof_type] = 'gable'
-            begin
-              case feature.roof_type
-              when 'Hip'
-                args[:geometry_roof_type] = 'hip'
-              end
-            rescue StandardError
-            end
-
-            begin
-              args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
-            rescue StandardError
-            end
-
-            begin
-              args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
-            rescue StandardError
-            end
-
-            # Occupancy Calculation Type
-            begin
-              if feature.occupancy_calculation_type == 'operational'
-                # set args[:geometry_unit_num_occupants]
-                begin
-                  args[:geometry_unit_num_occupants] = feature.number_of_occupants / args[:geometry_building_num_units]
-                rescue StandardError # number_of_occupants is not defined: assume equal to number of bedrooms
-                  args[:geometry_unit_num_occupants] = args[:geometry_unit_num_bedrooms]
-                end
-              elsif feature.occupancy_calculation_type == 'asset'
-                # do not set args[:geometry_unit_num_occupants]
-              end
-            rescue StandardError # occupancy_calculation_type is not defined: do nothing, i.e., asset calculation
-            end
-
-            args[:geometry_average_ceiling_height] = 8.0
-            begin
-              args[:geometry_average_ceiling_height] = feature.maximum_roof_height / feature.number_of_stories_above_ground
-            rescue StandardError
-            end
-
-            begin
-              num_garage_spaces = 0
-              if feature.onsite_parking_fraction
-                num_garage_spaces = 1
-                if args[:geometry_unit_cfa] > 2500.0
-                  num_garage_spaces = 2
-                end
-              end
-              args[:geometry_garage_width] = 12.0 * num_garage_spaces
-              args[:geometry_garage_protrusion] = 1.0
-            rescue StandardError
-            end
-
-            args[:neighbor_left_distance] = 0.0
-            args[:neighbor_right_distance] = 0.0
+            number_of_stories_above_ground = feature.number_of_stories_above_ground
+            args[:geometry_num_floors_above_grade] = number_of_stories_above_ground
 
             # SCHEDULES
 
@@ -801,163 +673,15 @@ module URBANopt
             args[:schedules_type] = 'stochastic' # smooth or stochastic
             args[:schedules_variation] = 'unit' # building or unit
 
-            # HVAC
-
-            system_type = 'Residential - furnace and central air conditioner'
-            begin
-              system_type = feature.system_type
-            rescue StandardError
+            # buildstock_csv_path = nil
+            buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/test/base_results/baseline/annual/buildstock.csv')) # FIXME: this should be input by user into geojson file
+            if buildstock_csv_path.nil? # use feature properties and residential tsv files
+              residential_template(feature, args, building_type, number_of_stories_above_ground)
+            else # use resstock samples
+              residential_resstock(feature, args, buildstock_csv_path)
             end
 
-            args[:heating_system_type] = 'none'
-            if system_type.include?('electric resistance')
-              args[:heating_system_type] = 'ElectricResistance'
-            elsif system_type.include?('furnace')
-              args[:heating_system_type] = 'Furnace'
-            elsif system_type.include?('boiler')
-              args[:heating_system_type] = 'Boiler'
-            end
-
-            args[:cooling_system_type] = 'none'
-            if system_type.include?('central air conditioner')
-              args[:cooling_system_type] = 'central air conditioner'
-            elsif system_type.include?('room air conditioner')
-              args[:cooling_system_type] = 'room air conditioner'
-            elsif system_type.include?('evaporative cooler')
-              args[:cooling_system_type] = 'evaporative cooler'
-            end
-
-            args[:heat_pump_type] = 'none'
-            if system_type.include?('air-to-air')
-              args[:heat_pump_type] = 'air-to-air'
-            elsif system_type.include?('mini-split')
-              args[:heat_pump_type] = 'mini-split'
-            elsif system_type.include?('ground-to-air')
-              args[:heat_pump_type] = 'ground-to-air'
-            end
-
-            args[:heating_system_fuel] = 'natural gas'
-            begin
-              args[:heating_system_fuel] = feature.heating_system_fuel_type
-            rescue StandardError
-            end
-
-            if args[:heating_system_type] == 'ElectricResistance'
-              args[:heating_system_fuel] = 'electricity'
-            end
-
-            # APPLIANCES
-
-            args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
-            args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
-
-            # WATER HEATER
-
-            args[:water_heater_fuel_type] = args[:heating_system_fuel]
-
-            template = nil
-            begin
-              template = feature.template
-            rescue StandardError
-            end
-
-            # IECC / EnergyStar / Other
-            if !template.nil? && template.include?('Residential IECC')
-
-              captures = template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
-              template_vals = Hash[captures.names.zip(captures.captures)]
-              template_vals = template_vals.transform_keys(&:to_sym)
-
-              epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
-              climate_zone = get_climate_zone_iecc(epw)
-              if climate_zone.nil?
-                abort("Error: No match found for the WMO station from your weather file #{Pathname(epw).expand_path} in our US WMO list.
-                This is known to happen when your weather file is from somewhere outside of the United States.
-                Please replace your weather file with one from an analogous weather location in the United States.")
-              end
-              template_vals[:climate_zone] = climate_zone
-
-              # ENCLOSURE
-
-              enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
-              enclosure = get_lookup_tsv(args, enclosure_filepath)
-              row = get_lookup_row(args, enclosure, template_vals)
-
-              # Determine which surfaces to place insulation on
-              if args[:geometry_foundation_type].include? 'Basement'
-                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
-                row[:floor_over_foundation_assembly_r] = 2.1
-                row[:floor_over_garage_assembly_r] = 2.1
-              elsif args[:geometry_foundation_type].include? 'Crawlspace'
-                row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
-                row[:floor_over_foundation_assembly_r] = 2.1
-                row[:floor_over_garage_assembly_r] = 2.1
-              end
-              row.delete(:foundation_wall_assembly_r_basement)
-              row.delete(:foundation_wall_assembly_r_crawlspace)
-              if ['ConditionedAttic'].include?(args[:geometry_attic_type])
-                row[:roof_assembly_r] = row[:ceiling_assembly_r]
-                row[:ceiling_assembly_r] = 2.1
-              end
-              args.update(row) unless row.nil?
-
-              # HVAC
-
-              if args[:heating_system_type] != 'none'
-                heating_system_filepath = File.join(File.dirname(__FILE__), 'residential/heating_system.tsv')
-                heating_system = get_lookup_tsv(args, heating_system_filepath)
-                row = get_lookup_row(args, heating_system, template_vals)
-                args.update(row) unless row.nil?
-              end
-
-              if args[:cooling_system_type] != 'none'
-                cooling_system_filepath = File.join(File.dirname(__FILE__), 'residential/cooling_system.tsv')
-                cooling_system = get_lookup_tsv(args, cooling_system_filepath)
-                row = get_lookup_row(args, cooling_system, template_vals)
-                args.update(row) unless row.nil?
-              end
-
-              if args[:heat_pump_type] != 'none'
-                heat_pump_filepath = File.join(File.dirname(__FILE__), 'residential/heat_pump.tsv')
-                heat_pump = get_lookup_tsv(args, heat_pump_filepath)
-                row = get_lookup_row(args, heat_pump, template_vals)
-                args.update(row) unless row.nil?
-              end
-
-              # APPLIANCES
-
-              ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer'].each do |appliance|
-                appliances_filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
-                appliances = get_lookup_tsv(args, appliances_filepath)
-                row = get_lookup_row(args, appliances, template_vals)
-
-                args.update(row) unless row.nil?
-
-              end
-
-              # MECHANICAL VENTILATION
-
-              mechvent_filepath = File.join(File.dirname(__FILE__), 'residential/mechanical_ventilation.tsv')
-              mechvent = get_lookup_tsv(args, mechvent_filepath)
-              row = get_lookup_row(args, mechvent, template_vals)
-              args.update(row) unless row.nil?
-
-              # EXHAUST
-              # deprecated in OpenStudio-HPXML v1.5.0
-              # exhaust_filepath = File.join(File.dirname(__FILE__), 'residential/exhaust.tsv')
-              # exhaust = get_lookup_tsv(args, exhaust_filepath)
-              # row = get_lookup_row(args, exhaust, template_vals)
-              # args.update(row) unless row.nil?
-
-              # WATER HEATER
-
-              water_heater_filepath = File.join(File.dirname(__FILE__), 'residential/water_heater.tsv')
-              water_heater = get_lookup_tsv(args, water_heater_filepath)
-              row = get_lookup_row(args, water_heater, template_vals)
-              args.update(row) unless row.nil?
-            end
-
-            # Parse BuildResidentialModel measure xml so we can override defaults with template values
+            # Parse BuildResidentialModel measure xml so we can override defaults
             default_args = {}
             measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/hpxml-measures'))
             measure_xml = File.read(File.join(measures_dir, 'BuildResidentialHPXML', 'measure.xml'))
@@ -1497,6 +1221,261 @@ module URBANopt
 
         return osw
       end
-    end
+    
+      def residential_template(feature, args, building_type, number_of_stories_above_ground)
+        # Geometry
+        args[:geometry_building_num_units] = 1
+        args[:geometry_unit_num_floors_above_grade] = 1
+        case building_type
+        when 'Single-Family Detached'
+          args[:geometry_unit_type] = 'single-family detached'
+          args[:geometry_unit_num_floors_above_grade] = number_of_stories_above_ground
+        when 'Single-Family Attached'
+          args[:geometry_unit_type] = 'single-family attached'
+          begin
+            args[:geometry_building_num_units] = feature.number_of_residential_units
+          rescue StandardError
+          end
+          args[:geometry_unit_num_floors_above_grade] = number_of_stories_above_ground
+          args[:air_leakage_type] = 'unit exterior only'
+        when 'Multifamily'
+          args[:geometry_unit_type] = 'apartment unit'
+          begin
+            args[:geometry_building_num_units] = feature.number_of_residential_units
+          rescue StandardError
+          end
+          args[:air_leakage_type] = 'unit exterior only'
+        end
+
+        args[:geometry_foundation_type] = 'SlabOnGrade'
+        args[:geometry_foundation_height] = 0.0
+        case feature.foundation_type
+        when 'crawlspace - vented'
+          args[:geometry_foundation_type] = 'VentedCrawlspace'
+          args[:geometry_foundation_height] = 3.0
+        when 'crawlspace - unvented'
+          args[:geometry_foundation_type] = 'UnventedCrawlspace'
+          args[:geometry_foundation_height] = 3.0
+        when 'crawlspace - conditioned'
+          args[:geometry_foundation_type] = 'ConditionedCrawlspace'
+          args[:geometry_foundation_height] = 3.0
+        when 'basement - unconditioned'
+          args[:geometry_foundation_type] = 'UnconditionedBasement'
+          args[:geometry_foundation_height] = 8.0
+        when 'basement - conditioned'
+          args[:geometry_foundation_type] = 'ConditionedBasement'
+          args[:geometry_foundation_height] = 8.0
+        when 'ambient'
+          args[:geometry_foundation_type] = 'Ambient'
+          args[:geometry_foundation_height] = 8.0
+        end
+
+        begin
+          case feature.attic_type
+          when 'attic - vented'
+            args[:geometry_attic_type] = 'VentedAttic'
+            begin
+              args[:geometry_roof_type] = feature.roof_type
+            rescue StandardError
+            end
+          when 'attic - unvented'
+            args[:geometry_attic_type] = 'UnventedAttic'
+            begin
+              args[:geometry_roof_type] = feature.roof_type
+            rescue StandardError
+            end
+          when 'attic - conditioned'
+            args[:geometry_attic_type] = 'ConditionedAttic'
+            begin
+              args[:geometry_roof_type] = feature.roof_type
+            rescue StandardError
+            end
+          when 'flat roof'
+            args[:geometry_attic_type] = 'FlatRoof'
+          end
+        rescue StandardError
+        end
+
+        args[:geometry_roof_type] = 'gable'
+        begin
+          case feature.roof_type
+          when 'Hip'
+            args[:geometry_roof_type] = 'hip'
+          end
+        rescue StandardError
+        end
+
+        begin
+          args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
+        rescue StandardError
+        end
+
+        begin
+          args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
+        rescue StandardError
+        end
+
+        # Occupancy Calculation Type
+        begin
+          if feature.occupancy_calculation_type == 'operational'
+            # set args[:geometry_unit_num_occupants]
+            begin
+              args[:geometry_unit_num_occupants] = feature.number_of_occupants / args[:geometry_building_num_units]
+            rescue StandardError # number_of_occupants is not defined: assume equal to number of bedrooms
+              args[:geometry_unit_num_occupants] = args[:geometry_unit_num_bedrooms]
+            end
+          elsif feature.occupancy_calculation_type == 'asset'
+            # do not set args[:geometry_unit_num_occupants]
+          end
+        rescue StandardError # occupancy_calculation_type is not defined: do nothing, i.e., asset calculation
+        end
+
+        args[:geometry_average_ceiling_height] = 8.0
+        begin
+          args[:geometry_average_ceiling_height] = feature.maximum_roof_height / feature.number_of_stories_above_ground
+        rescue StandardError
+        end
+
+        begin
+          num_garage_spaces = 0
+          if feature.onsite_parking_fraction
+            num_garage_spaces = 1
+            if args[:geometry_unit_cfa] > 2500.0
+              num_garage_spaces = 2
+            end
+          end
+          args[:geometry_garage_width] = 12.0 * num_garage_spaces
+          args[:geometry_garage_protrusion] = 1.0
+        rescue StandardError
+        end
+
+        args[:neighbor_left_distance] = 0.0
+        args[:neighbor_right_distance] = 0.0
+
+        # HVAC
+
+        system_type = 'Residential - furnace and central air conditioner'
+        begin
+          system_type = feature.system_type
+        rescue StandardError
+        end
+
+        args[:heating_system_type] = 'none'
+        if system_type.include?('electric resistance')
+          args[:heating_system_type] = 'ElectricResistance'
+        elsif system_type.include?('furnace')
+          args[:heating_system_type] = 'Furnace'
+        elsif system_type.include?('boiler')
+          args[:heating_system_type] = 'Boiler'
+        end
+
+        args[:cooling_system_type] = 'none'
+        if system_type.include?('central air conditioner')
+          args[:cooling_system_type] = 'central air conditioner'
+        elsif system_type.include?('room air conditioner')
+          args[:cooling_system_type] = 'room air conditioner'
+        elsif system_type.include?('evaporative cooler')
+          args[:cooling_system_type] = 'evaporative cooler'
+        end
+
+        args[:heat_pump_type] = 'none'
+        if system_type.include?('air-to-air')
+          args[:heat_pump_type] = 'air-to-air'
+        elsif system_type.include?('mini-split')
+          args[:heat_pump_type] = 'mini-split'
+        elsif system_type.include?('ground-to-air')
+          args[:heat_pump_type] = 'ground-to-air'
+        end
+
+        args[:heating_system_fuel] = 'natural gas'
+        begin
+          args[:heating_system_fuel] = feature.heating_system_fuel_type
+        rescue StandardError
+        end
+
+        if args[:heating_system_type] == 'ElectricResistance'
+          args[:heating_system_fuel] = 'electricity'
+        end
+
+        # Fuel types
+        args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
+        args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
+        args[:water_heater_fuel_type] = args[:heating_system_fuel]
+
+        template = nil
+        begin
+          template = feature.template
+        rescue StandardError
+        end
+
+        # IECC / EnergyStar / Other
+        if !template.nil? && template.include?('Residential IECC')
+
+          captures = template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
+          template_vals = Hash[captures.names.zip(captures.captures)]
+          template_vals = template_vals.transform_keys(&:to_sym)
+
+          epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
+          climate_zone = get_climate_zone_iecc(epw)
+          if climate_zone.nil?
+            abort("Error: No match found for the WMO station from your weather file #{Pathname(epw).expand_path} in our US WMO list.
+            This is known to happen when your weather file is from somewhere outside of the United States.
+            Please replace your weather file with one from an analogous weather location in the United States.")
+          end
+          template_vals[:climate_zone] = climate_zone
+
+          # ENCLOSURE
+
+          enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
+          enclosure = get_lookup_tsv(args, enclosure_filepath)
+          row = get_lookup_row(args, enclosure, template_vals)
+
+          # Determine which surfaces to place insulation on
+          if args[:geometry_foundation_type].include? 'Basement'
+            row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
+            row[:floor_over_foundation_assembly_r] = 2.1
+            row[:floor_over_garage_assembly_r] = 2.1
+          elsif args[:geometry_foundation_type].include? 'Crawlspace'
+            row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
+            row[:floor_over_foundation_assembly_r] = 2.1
+            row[:floor_over_garage_assembly_r] = 2.1
+          end
+          row.delete(:foundation_wall_assembly_r_basement)
+          row.delete(:foundation_wall_assembly_r_crawlspace)
+          if ['ConditionedAttic'].include?(args[:geometry_attic_type])
+            row[:roof_assembly_r] = row[:ceiling_assembly_r]
+            row[:ceiling_assembly_r] = 2.1
+          end
+          args.update(row) unless row.nil?
+
+          # HVAC
+
+          { args[:heating_system_type] => 'residential/heating_system.tsv', 
+            args[:cooling_system_type] => 'residential/cooling_system.tsv',
+            args[:heat_pump_type] => 'residential/heat_pump.tsv' }.each do |type, path|
+
+            if type != 'none'
+              filepath = File.join(File.dirname(__FILE__), path)
+              lookup_tsv = get_lookup_tsv(args, filepath)
+              row = get_lookup_row(args, lookup_tsv, template_vals)
+              args.update(row) unless row.nil?
+            end
+          end
+
+          # APPLIANCES / MECHANICAL VENTILATION / WATER HEATER
+
+          ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer', 'mechanical_ventilation', 'water_heater'].each do |appliance|
+            filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
+            lookup_tsv = get_lookup_tsv(args, filepath)
+            row = get_lookup_row(args, lookup_tsv, template_vals)
+            args.update(row) unless row.nil?
+          end
+        end
+      end
+      
+      def residential_resstock(feature, args, buildstock_csv_path)
+        args[:buildstock_csv_path] = buildstock_csv_path
+      end    
+    end # class
   end
 end
