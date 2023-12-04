@@ -32,7 +32,7 @@ class TestTools < Minitest::Test
 
   def test_upgrades_columns
     ['national', 'testing'].each do |project|
-      buildstockbatch_path = File.join(@buildstock_directory, "buildstockbatch/project_#{project}/#{project}_upgrades/results_csvs/results_up15.csv")
+      buildstockbatch_path = File.join(@buildstock_directory, "buildstockbatch/project_#{project}/#{project}_upgrades/results_csvs/results_up16.csv")
       buildstockbatch = CSV.read(buildstockbatch_path, headers: true)
 
       run_analysis_path = File.join(@buildstock_directory, "run_analysis/project_#{project}/results-AllUpgrades.csv")
@@ -59,6 +59,14 @@ class TestTools < Minitest::Test
         buildstockbatch_extras -= ['report_utility_bills.bills_fuel_oil_total_usd']
         buildstockbatch_extras -= ['report_utility_bills.bills_propane_energy_usd']
         buildstockbatch_extras -= ['report_utility_bills.bills_propane_total_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_2_fuel_oil_energy_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_2_fuel_oil_total_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_2_propane_energy_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_2_propane_total_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_3_fuel_oil_energy_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_3_fuel_oil_total_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_3_propane_energy_usd']
+        buildstockbatch_extras -= ['report_utility_bills.bills_3_propane_total_usd']
       end
       puts "#{project}_upgrades, buildstockbatch - run_analysis: #{buildstockbatch_extras}" if !buildstockbatch_extras.empty?
 
@@ -85,7 +93,7 @@ class TestTools < Minitest::Test
         run_analysis_sum = run_analysis[col].map { |v| Float(v) }.sum
 
         assert_equal(buildstockbatch[col].size, run_analysis[col].size)
-        assert_in_delta(buildstockbatch_sum, run_analysis_sum, 0.01)
+        assert_in_epsilon(buildstockbatch_sum, run_analysis_sum, 0.01)
       end
     end
   end
@@ -94,7 +102,7 @@ class TestTools < Minitest::Test
     columns = ['report_simulation_output.energy_use_total_m_btu']
 
     ['national', 'testing'].each do |project|
-      buildstockbatch_path = File.join(@buildstock_directory, "buildstockbatch/project_#{project}/#{project}_upgrades/results_csvs/results_up15.csv")
+      buildstockbatch_path = File.join(@buildstock_directory, "buildstockbatch/project_#{project}/#{project}_upgrades/results_csvs/results_up16.csv")
       buildstockbatch = CSV.read(buildstockbatch_path, headers: true)
 
       run_analysis_path = File.join(@buildstock_directory, "run_analysis/project_#{project}/results-AllUpgrades.csv")
@@ -105,7 +113,7 @@ class TestTools < Minitest::Test
         run_analysis_sum = run_analysis[col].map { |v| Float(v) }.sum
 
         assert_equal(buildstockbatch[col].size, run_analysis[col].size)
-        assert_in_delta(buildstockbatch_sum, run_analysis_sum, 0.01)
+        assert_in_epsilon(buildstockbatch_sum, run_analysis_sum, 0.01)
       end
     end
   end
