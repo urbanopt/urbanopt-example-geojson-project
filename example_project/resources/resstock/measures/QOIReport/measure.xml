@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<measure>
+  <schema_version>3.1</schema_version>
+  <name>qoi_report</name>
+  <uid>be0bfc7f-25c6-435a-9acd-2f5fa8ac817d</uid>
+  <version_id>09083188-c2d8-4048-950b-2c251e9da92e</version_id>
+  <version_modified>2023-11-27T21:12:56Z</version_modified>
+  <xml_checksum>15BF4E57</xml_checksum>
+  <class_name>QOIReport</class_name>
+  <display_name>QOI Report</display_name>
+  <description>Reports uncertainty quantification quantities of interest.</description>
+  <modeler_description>TODO</modeler_description>
+  <arguments />
+  <outputs />
+  <provenances />
+  <tags>
+    <tag>Reporting.QAQC</tag>
+  </tags>
+  <attributes>
+    <attribute>
+      <name>Measure Type</name>
+      <value>ReportingMeasure</value>
+      <datatype>string</datatype>
+    </attribute>
+  </attributes>
+  <files>
+    <file>
+      <version>
+        <software_program>OpenStudio</software_program>
+        <identifier>2.9.0</identifier>
+        <min_compatible>2.9.0</min_compatible>
+      </version>
+      <filename>measure.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>script</usage_type>
+      <checksum>48961FEB</checksum>
+    </file>
+    <file>
+      <filename>constants.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>resource</usage_type>
+      <checksum>4A01E6CA</checksum>
+    </file>
+    <file>
+      <filename>qoi_report_test.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>test</usage_type>
+      <checksum>CCE950C4</checksum>
+    </file>
+  </files>
+</measure>
