@@ -678,12 +678,13 @@ module URBANopt
             if buildstock_csv_path.nil? # use feature properties and residential tsv files
               residential_template(feature, args, building_type, number_of_stories_above_ground)
             else # use resstock samples
-              residential_resstock(feature, args, buildstock_csv_path)
+              building_id = 5 # FIXME
+              residential_resstock(feature, args, building_id, buildstock_csv_path)
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults
             default_args = {}
-            measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/hpxml-measures'))
+            measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/resources/hpxml-measures'))
             measure_xml = File.read(File.join(measures_dir, 'BuildResidentialHPXML', 'measure.xml'))
             measure = REXML::Document.new(measure_xml).root
             measure.elements.each('arguments/argument') do |arg|
@@ -1473,9 +1474,21 @@ module URBANopt
         end
       end
       
-      def residential_resstock(feature, args, buildstock_csv_path)
-        args[:buildstock_csv_path] = buildstock_csv_path
+      def residential_resstock(feature, args, building_id, buildstock_csv_path)
+        args[:building_id] = building_id
+
+        # Create lib folder
+        resstock_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock'))
+        lib_dir = File.join(resstock_dir, 'lib')
+        resources_dir = File.join(resstock_dir, 'resources')
+        housing_characteristics_dir = File.join(resstock_dir, 'project_national/housing_characteristics')
+
+        FileUtils.rm_rf(lib_dir)
+        Dir.mkdir(lib_dir)
+        FileUtils.cp_r(resources_dir, lib_dir)
+        FileUtils.cp_r(housing_characteristics_dir, lib_dir)
+        FileUtils.cp(buildstock_csv_path, File.join(housing_characteristics_dir, 'buildstock.csv'))
       end    
-    end # class
+    end # end class
   end
 end

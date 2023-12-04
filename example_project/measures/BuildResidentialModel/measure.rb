@@ -7,7 +7,7 @@
 # http://nrel.github.io/OpenStudio-user-documentation/measures/measure_writing_guide/
 
 require 'openstudio'
-resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures/HPXMLtoOpenStudio/resources'))
+resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/resstock/resources/hpxml-measures/HPXMLtoOpenStudio/resources'))
 require File.join(resources_path, 'meta_measure')
 
 # start the measure
@@ -72,12 +72,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg.setDescription('The name of the folder containing a custom HPXML file, relative to the xml_building folder.')
     args << arg
 
-    arg = OpenStudio::Measure::OSArgument.makeStringArgument('buildstock_csv_path', false)
-    arg.setDisplayName('BuildStock CSV Path')
-    arg.setDescription('The path of the buildstock csv file.')
+    arg = OpenStudio::Measure::OSArgument.makeIntegerArgument('building_id', false)
+    arg.setDisplayName('Building Unit ID')
+    arg.setDescription('The building unit number (between 1 and the number of samples).')
     args << arg
 
-    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
+    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/resstock/resources/hpxml-measures'))
     measure_subdir = 'BuildResidentialHPXML'
     full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
     measure = get_measure_instance(full_measure_path)
@@ -113,17 +113,35 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     rescue StandardError # this is needed for when args[arg] is actually a value
     end
 
-    # get file/dir paths
+    # Get file/dir paths
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
+    measures_dir = File.join(resources_dir, 'resstock/measures')
+    hpxml_measures_dir = File.join(resources_dir, 'resstock/resources/hpxml-measures')
 
-    # FIXME
-    if args.key?(:buildstock_csv_path)
-      check_file_exists(args[:buildstock_csv_path], runner)
+    # Check file/dir paths exist
+    check_dir_exists(resources_dir, runner)
+    [measures_dir, hpxml_measures_dir].each do |dir|
+      check_dir_exists(dir, runner)
     end
 
-    # get hpxml-measures directory
-    measures_dir = File.join(resources_dir, 'hpxml-measures')
-    check_dir_exists(measures_dir, runner)
+    # Assign resstock options
+    if args.key?(:building_id)
+      measures = {}
+
+      # BuildExistingModel
+      measure_subdir = 'BuildExistingModel'
+      full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+      check_file_exists(full_measure_path, runner)
+
+      measure_args = {}
+      measure_args['building_id'] = args[:building_id]
+
+      measures[measure_subdir] = [measure_args]
+
+      if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+        return false
+      end
+    end
 
     # either create units or get pre-made units
     if args[:hpxml_dir].nil?
@@ -172,7 +190,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         # BuildResidentialHPXML
         measure_subdir = 'BuildResidentialHPXML'
-        full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+        full_measure_path = File.join(hpxml_measures_dir, measure_subdir, 'measure.rb')
         check_file_exists(full_measure_path, runner)
 
         measure_args = args.clone.collect { |k, v| [k.to_s, v] }.to_h
@@ -209,7 +227,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         measures[measure_subdir] = [measure_args]
 
-        if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+        if !apply_measures(hpxml_measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
           return false
         end
       else # we're using an HPXML file from the xml_building folder
@@ -224,7 +242,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     # BuildResidentialScheduleFile
     if args[:schedules_type] == 'stochastic' # if smooth, don't run the measure; schedules type stochastic currently hardcoded in Baseline.rb
       measure_subdir = 'BuildResidentialScheduleFile'
-      full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+      full_measure_path = File.join(hpxml_measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
 
       measure_args = {}
@@ -239,7 +257,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # HPXMLtoOpenStudio
     measure_subdir = 'HPXMLtoOpenStudio'
-    full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+    full_measure_path = File.join(hpxml_measures_dir, measure_subdir, 'measure.rb')
     check_file_exists(full_measure_path, runner)
 
     measure_args = {}
@@ -250,7 +268,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     measures[measure_subdir] = [measure_args]
 
-    if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+    if !apply_measures(hpxml_measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
       return false
     end
 
