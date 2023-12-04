@@ -115,31 +115,81 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # Get file/dir paths
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
-    measures_dir = File.join(resources_dir, 'resstock/measures')
     hpxml_measures_dir = File.join(resources_dir, 'resstock/resources/hpxml-measures')
 
     # Check file/dir paths exist
     check_dir_exists(resources_dir, runner)
-    [measures_dir, hpxml_measures_dir].each do |dir|
-      check_dir_exists(dir, runner)
-    end
+    check_dir_exists(hpxml_measures_dir, runner)
 
     # Assign resstock options
     if args.key?(:building_id)
-      measures = {}
+      lib_dir = File.join(resources_dir, 'resstock/lib')
+      characteristics_dir = File.join(lib_dir, 'housing_characteristics')
+      buildstock_file = File.join(lib_dir, 'resources/buildstock.rb')
+      measures_dir = File.join(resources_dir, 'resstock/measures')
+      lookup_file = File.join(lib_dir, 'resources/options_lookup.tsv')
+      buildstock_csv_path = File.absolute_path(File.join(characteristics_dir, 'buildstock.csv'))
 
-      # BuildExistingModel
-      measure_subdir = 'BuildExistingModel'
-      full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
-      check_file_exists(full_measure_path, runner)
+      # Load buildstock_file
+      require File.join(File.dirname(buildstock_file), File.basename(buildstock_file, File.extname(buildstock_file)))
 
-      measure_args = {}
-      measure_args['building_id'] = args[:building_id]
+      check_dir_exists(resources_dir, runner)
+      check_dir_exists(measures_dir, runner)
+      check_dir_exists(characteristics_dir, runner)
+      check_file_exists(lookup_file, runner)
+      check_file_exists(buildstock_csv_path, runner)
 
-      measures[measure_subdir] = [measure_args]
+      lookup_csv_data = CSV.open(lookup_file, col_sep: "\t").each.to_a
 
-      if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+      # Retrieve all data associated with sample number
+      bldg_data = get_data_for_sample(buildstock_csv_path, args[:building_id], runner)
+
+      # Retrieve order of parameters to run
+      parameters_ordered = get_parameters_ordered_from_options_lookup_tsv(lookup_csv_data, characteristics_dir)
+
+      # Check buildstock.csv has all parameters
+      missings = parameters_ordered - bldg_data.keys
+      if !missings.empty?
+        runner.registerError("Mismatch between buildstock.csv and options_lookup.tsv. Missing parameters: #{missings.join(', ')}.")
         return false
+      end
+
+      # Check buildstock.csv doesn't have extra parameters
+      extras = bldg_data.keys - parameters_ordered - ['Building', 'sample_weight']
+      if !extras.empty?
+        runner.registerError("Mismatch between buildstock.csv and options_lookup.tsv. Extra parameters: #{extras.join(', ')}.")
+        return false
+      end
+
+      # Retrieve options that have been selected for this building_id
+      parameters_ordered.each do |parameter_name|
+        # Register the option chosen for parameter_name with the runner
+        option_name = bldg_data[parameter_name]
+        register_value(runner, parameter_name, option_name)
+      end
+
+      # Obtain measures and arguments to be called
+      measures = {}
+      parameters_ordered.each do |parameter_name|
+        option_name = bldg_data[parameter_name]
+        print_option_assignment(parameter_name, option_name, runner)
+        options_measure_args, _errors = get_measure_args_from_option_names(lookup_csv_data, [option_name], parameter_name, lookup_file, runner)
+        options_measure_args[option_name].each do |measure_subdir, args_hash|
+          update_args_hash(measures, measure_subdir, args_hash, false)
+        end
+      end      
+
+      resstock_arguments_runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new) # we want only ResStockArguments registered argument values
+      if !apply_measures(measures_dir, { 'ResStockArguments' => measures['ResStockArguments'] }, resstock_arguments_runner, model, true, 'OpenStudio::Measure::ModelMeasure', nil)
+        return false
+      end
+
+      resstock_arguments_runner.result.stepValues.each do |step_value|
+        value = get_value_from_workflow_step_value(step_value)
+        next if value == ''
+        next if step_value.name == 'weather_station_epw_filepath' # we already assign this in the Baseline.rb mapper
+
+        args[step_value.name.to_sym] = value # FIXME: we'd probably want to check that lookup assignments don't conflict with geojson assignments?
       end
     end
 
@@ -318,16 +368,19 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
   end
 
   def get_unit_positions(runner, args)
+    geometry_building_num_units = Integer(args[:geometry_building_num_units])
+    geometry_num_floors_above_grade = Integer(args[:geometry_num_floors_above_grade])
+
     units = []
     case args[:geometry_unit_type]
     when 'single-family detached'
       units << {}
     when 'single-family attached'
-      (1..args[:geometry_building_num_units]).to_a.each do |unit_num|
+      (1..geometry_building_num_units).to_a.each do |unit_num|
         case unit_num
         when 1
           units << { 'geometry_unit_left_wall_is_adiabatic' => true }
-        when args[:geometry_building_num_units]
+        when geometry_building_num_units
           units << { 'geometry_unit_right_wall_is_adiabatic' => true }
         else
           units << { 'geometry_unit_left_wall_is_adiabatic' => true,
@@ -335,7 +388,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
       end
     when 'apartment unit'
-      num_units_per_floor = (Float(args[:geometry_building_num_units]) / Float(args[:geometry_num_floors_above_grade])).ceil
+      num_units_per_floor = (geometry_building_num_units / geometry_num_floors_above_grade).ceil
       if num_units_per_floor == 1
         runner.registerError("num_units_per_floor='#{num_units_per_floor}' not supported.")
         return units
@@ -343,7 +396,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       floor = 1
       position = 1
-      (1..args[:geometry_building_num_units]).to_a.each do |unit_num|
+      (1..geometry_building_num_units).to_a.each do |unit_num|
         geometry_unit_orientation = 180.0
         if position.even?
           geometry_unit_orientation = 0.0
@@ -371,11 +424,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         geometry_foundation_type = args[:geometry_foundation_type]
         geometry_attic_type = args[:geometry_attic_type]
 
-        if Float(args[:geometry_num_floors_above_grade]) > 1
+        if geometry_num_floors_above_grade > 1
           case floor
           when 1
             geometry_attic_type = 'BelowApartment'
-          when args[:geometry_num_floors_above_grade]
+          when geometry_num_floors_above_grade
             geometry_foundation_type = 'AboveApartment'
           else
             geometry_foundation_type = 'AboveApartment'

@@ -352,7 +352,7 @@ module URBANopt
       def get_climate_zone_iecc(epw)
         headers = CSV.open(epw, 'r', &:first)
         wmo = headers[5]
-        zones_csv = Pathname(__FILE__).dirname.parent / 'resources' / 'hpxml-measures' / 'HPXMLtoOpenStudio' / 'resources' / 'data' / 'climate_zones.csv'
+        zones_csv = Pathname(__FILE__).dirname.parent / 'resources' / 'resstock' / 'resources' / 'hpxml-measures' / 'HPXMLtoOpenStudio' / 'resources' / 'data' / 'climate_zones.csv'
 
         # Check if the CSV file is empty
         if File.empty?(epw)
@@ -656,7 +656,7 @@ module URBANopt
             rescue StandardError
             end
 
-            args[:weather_station_epw_filepath] = "../../../weather/#{feature.weather_filename}"
+            args[:weather_station_epw_filepath] = "../../../../../weather/#{feature.weather_filename}"
 
             number_of_stories_above_ground = feature.number_of_stories_above_ground
             args[:geometry_num_floors_above_grade] = number_of_stories_above_ground
@@ -673,12 +673,12 @@ module URBANopt
             args[:schedules_type] = 'stochastic' # smooth or stochastic
             args[:schedules_variation] = 'unit' # building or unit
 
-            # buildstock_csv_path = nil
-            buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/test/base_results/baseline/annual/buildstock.csv')) # FIXME: this should be input by user into geojson file
+            buildstock_csv_path = nil
+            # buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/test/base_results/baseline/annual/buildstock.csv')) # FIXME: this should be input by user into geojson file
             if buildstock_csv_path.nil? # use feature properties and residential tsv files
               residential_template(feature, args, building_type, number_of_stories_above_ground)
             else # use resstock samples
-              building_id = 5 # FIXME
+              building_id = 2 # FIXME
               residential_resstock(feature, args, building_id, buildstock_csv_path)
             end
 
