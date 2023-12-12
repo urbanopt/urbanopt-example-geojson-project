@@ -3,8 +3,8 @@
   <schema_version>3.1</schema_version>
   <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
-  <version_id>a54b1232-b935-4f6d-9783-6fe32fe2f120</version_id>
-  <version_modified>2023-12-04T23:03:30Z</version_modified>
+  <version_id>723f7c74-958f-44f3-aca2-2026722e400e</version_id>
+  <version_modified>2023-12-12T20:14:07Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
   <class_name>BuildResidentialModel</class_name>
   <display_name>Build Residential Model</display_name>
@@ -17,6 +17,14 @@
       <description>The feature ID passed from Baseline.rb.</description>
       <type>Integer</type>
       <required>true</required>
+      <model_dependent>false</model_dependent>
+    </argument>
+    <argument>
+      <name>resstock_building_id</name>
+      <display_name>ResStock: Building Unit ID</display_name>
+      <description>The building unit number (between 1 and the number of samples).</description>
+      <type>Integer</type>
+      <required>false</required>
       <model_dependent>false</model_dependent>
     </argument>
     <argument>
@@ -79,14 +87,6 @@
       <display_name>Folder Containing Custom HPXML File</display_name>
       <description>The name of the folder containing a custom HPXML file, relative to the xml_building folder.</description>
       <type>String</type>
-      <required>false</required>
-      <model_dependent>false</model_dependent>
-    </argument>
-    <argument>
-      <name>building_id</name>
-      <display_name>Building Unit ID</display_name>
-      <description>The building unit number (between 1 and the number of samples).</description>
-      <type>Integer</type>
       <required>false</required>
       <model_dependent>false</model_dependent>
     </argument>
@@ -6827,7 +6827,7 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>75DF4F48</checksum>
+      <checksum>A0636176</checksum>
     </file>
     <file>
       <filename>constants.rb</filename>

@@ -31,9 +31,14 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
   def arguments(model)
     args = OpenStudio::Measure::OSArgumentVector.new
 
-    arg = OpenStudio::Ruleset::OSArgument.makeIntegerArgument('feature_id', true)
-    arg.setDisplayName('Feature ID')
+    arg = OpenStudio::Ruleset::OSArgument.makeIntegerArgument('urbanopt_feature_id', true)
+    arg.setDisplayName('URBANopt: GeoJSON Feature ID')
     arg.setDescription('The feature ID passed from Baseline.rb.')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument.makeIntegerArgument('resstock_building_id', false)
+    arg.setDisplayName('ResStock: Building Unit ID')
+    arg.setDescription('The building unit number (between 1 and the number of samples).')
     args << arg
 
     schedules_type_choices = OpenStudio::StringVector.new
@@ -70,11 +75,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg = OpenStudio::Measure::OSArgument.makeStringArgument('hpxml_dir', false)
     arg.setDisplayName('Folder Containing Custom HPXML File')
     arg.setDescription('The name of the folder containing a custom HPXML file, relative to the xml_building folder.')
-    args << arg
-
-    arg = OpenStudio::Measure::OSArgument.makeIntegerArgument('building_id', false)
-    arg.setDisplayName('Building Unit ID')
-    arg.setDescription('The building unit number (between 1 and the number of samples).')
     args << arg
 
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/resstock/resources/hpxml-measures'))
@@ -122,7 +122,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     check_dir_exists(hpxml_measures_dir, runner)
 
     # Assign resstock options
-    if args.key?(:building_id)
+    if args.key?(:resstock_building_id)
       lib_dir = File.join(resources_dir, 'resstock/lib')
       characteristics_dir = File.join(lib_dir, 'housing_characteristics')
       buildstock_file = File.join(lib_dir, 'resources/buildstock.rb')
@@ -142,7 +142,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       lookup_csv_data = CSV.open(lookup_file, col_sep: "\t").each.to_a
 
       # Retrieve all data associated with sample number
-      bldg_data = get_data_for_sample(buildstock_csv_path, args[:building_id], runner)
+      bldg_data = get_data_for_sample(buildstock_csv_path, args[:resstock_building_id], runner)
 
       # Retrieve order of parameters to run
       parameters_ordered = get_parameters_ordered_from_options_lookup_tsv(lookup_csv_data, characteristics_dir)
@@ -205,7 +205,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       hpxml_dir = File.join(File.dirname(__FILE__), "../../xml_building/#{args[:hpxml_dir]}")
 
       if !File.exist?(hpxml_dir)
-        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} was specified for feature ID = #{args[:feature_id]}, but could not be found.")
+        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} was specified for feature ID = #{args[:urbanopt_feature_id]}, but could not be found.")
         return false
       end
 
