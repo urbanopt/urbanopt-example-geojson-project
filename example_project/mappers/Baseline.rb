@@ -684,7 +684,7 @@ module URBANopt
               end
             end
 
-            build_res_model_args = [:urbanopt_feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir]
+            build_res_model_args = [:urbanopt_feature_id, :resstock_building_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir]
             args.each_key do |arg_name|
               unless default_args.key?(arg_name)
                 next if build_res_model_args.include?(arg_name)

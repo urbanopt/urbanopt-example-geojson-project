@@ -4,7 +4,7 @@ def get_resstock_building_id(args, buildstock_csv_path)
 
   # TODO
 
-  resstock_building_id = 2 # FIXME: remove this line once this method actually assigns resstock_building_id
+  resstock_building_id = 15 # FIXME: remove this line once this method actually assigns resstock_building_id
   return resstock_building_id
 end
 
