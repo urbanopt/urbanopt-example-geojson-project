@@ -352,7 +352,7 @@ module URBANopt
       def get_climate_zone_iecc(epw)
         headers = CSV.open(epw, 'r', &:first)
         wmo = headers[5]
-        zones_csv = Pathname(__FILE__).dirname.parent / 'resources' / 'resstock' / 'resources' / 'hpxml-measures' / 'HPXMLtoOpenStudio' / 'resources' / 'data' / 'climate_zones.csv'
+        zones_csv = Pathname(__FILE__).dirname.parent / 'resources' / 'residential-measures' / 'resources' / 'hpxml-measures' / 'HPXMLtoOpenStudio' / 'resources' / 'data' / 'climate_zones.csv'
 
         # Check if the CSV file is empty
         if File.empty?(epw)
@@ -658,7 +658,7 @@ module URBANopt
             buildstock_csv_path = nil
             begin
               # buildstock_csv_path = feature.buildstock_csv_path
-              buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/test/base_results/baseline/annual/buildstock.csv')) # FIXME: remove once this can be specified in geojson file
+              buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv')) # FIXME: remove once this can be specified in geojson file
             rescue StandardError
             end
 
@@ -670,7 +670,7 @@ module URBANopt
 
             # Parse BuildResidentialModel measure xml so we can override defaults
             default_args = {}
-            measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/resources/hpxml-measures'))
+            measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/residential-measures/resources/hpxml-measures'))
             measure_xml = File.read(File.join(measures_dir, 'BuildResidentialHPXML', 'measure.xml'))
             measure = REXML::Document.new(measure_xml).root
             measure.elements.each('arguments/argument') do |arg|

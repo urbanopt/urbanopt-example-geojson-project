@@ -7,7 +7,7 @@
 # http://nrel.github.io/OpenStudio-user-documentation/measures/measure_writing_guide/
 
 require 'openstudio'
-resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/resstock/resources/hpxml-measures/HPXMLtoOpenStudio/resources'))
+resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/residential-measures/resources/hpxml-measures/HPXMLtoOpenStudio/resources'))
 require File.join(resources_path, 'meta_measure')
 
 # start the measure
@@ -77,7 +77,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg.setDescription('The name of the folder containing a custom HPXML file, relative to the xml_building folder.')
     args << arg
 
-    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/resstock/resources/hpxml-measures'))
+    measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/residential-measures/resources/hpxml-measures'))
     measure_subdir = 'BuildResidentialHPXML'
     full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
     measure = get_measure_instance(full_measure_path)
@@ -115,7 +115,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # Get file/dir paths
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
-    hpxml_measures_dir = File.join(resources_dir, 'resstock/resources/hpxml-measures')
+    hpxml_measures_dir = File.join(resources_dir, 'residential-measures/resources/hpxml-measures')
 
     # Check file/dir paths exist
     check_dir_exists(resources_dir, runner)
@@ -123,10 +123,10 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # Assign resstock options
     if args.key?(:resstock_building_id)
-      lib_dir = File.join(resources_dir, 'resstock/lib')
+      lib_dir = File.join(resources_dir, 'residential-measures/lib')
       characteristics_dir = File.join(lib_dir, 'housing_characteristics')
       buildstock_file = File.join(lib_dir, 'resources/buildstock.rb')
-      measures_dir = File.join(resources_dir, 'resstock/measures')
+      measures_dir = File.join(resources_dir, 'residential-measures/measures')
       lookup_file = File.join(lib_dir, 'resources/options_lookup.tsv')
       buildstock_csv_path = File.absolute_path(File.join(characteristics_dir, 'buildstock.csv'))
 

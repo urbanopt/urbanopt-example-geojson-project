@@ -782,12 +782,29 @@ end
 
 desc 'Update residential resources'
 task :update_residential do
-  resstock_version = 'latest-os-hpxml'
-  success = system("git subtree pull --prefix example_project/resources/resstock https://github.com/NREL/resstock #{resstock_version} --squash")
-  assert(success)
+  prefix = 'example_project/resources/residential-measures'
+  repository = 'https://github.com/NREL/resstock.git'
+  branch_or_tag = 'latest-os-hpxml'
 
-  # TODO: rename resstock folder to something more generic?
-  # TODO: remove files and folders we don't need
+  FileUtils.rm_rf(prefix)
+  system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+
+  folders_to_remove = [
+    '.git',
+    '.github',
+    'docs',
+    'project_national',
+    'project_testing',
+    'resources/data',
+    'test/SetSpaceInfiltrationPerExteriorArea',
+    'test/tests_buildstock_csvs',
+    'test/tests_housing_characteristics',
+    'test/tests_yml_files'
+  ]
+
+  folders_to_remove.each do |f|
+    FileUtils.rm_rf(File.join(prefix, f))
+  end
 end
 
 task default: :update_all

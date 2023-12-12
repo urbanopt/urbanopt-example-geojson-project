@@ -14,10 +14,10 @@ def residential_resstock(args, resstock_building_id, buildstock_csv_path)
   args[:resstock_building_id] = resstock_building_id
 
   # Create lib folder (so we can more easily copy code from BuildExistingModel)
-  resstock_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/resstock'))
-  lib_dir = File.join(resstock_dir, 'lib')
-  resources_dir = File.join(resstock_dir, 'resources')
-  housing_characteristics_dir = File.join(resstock_dir, 'project_national/housing_characteristics')
+  res_measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures'))
+  lib_dir = File.join(res_measures_dir, 'lib')
+  resources_dir = File.join(res_measures_dir, 'resources')
+  housing_characteristics_dir = File.join(res_measures_dir, 'project_national/housing_characteristics')
 
   FileUtils.rm_rf(lib_dir)
   Dir.mkdir(lib_dir)
