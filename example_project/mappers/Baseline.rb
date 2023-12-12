@@ -628,58 +628,44 @@ module URBANopt
               end
             end
 
+            epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
+            climate_zone = get_climate_zone_iecc(epw)
+            if climate_zone.nil?
+              abort("Error: No match found for the WMO station from your weather file #{Pathname(epw).expand_path} in our US WMO list.
+              This is known to happen when your weather file is from somewhere outside of the United States.
+              Please replace your weather file with one from an analogous weather location in the United States.")
+            end
+
+            # Start general residential mapping
             args = {}
+            residential(scenario, feature, args, building_type)
 
-            # Custom HPXML file
+            # Then onto optional "template" mapping
+            # mappers/residential/template
+            template = nil
             begin
-              args[:hpxml_dir] = feature.hpxml_directory
+              template = feature.template
             rescue StandardError
             end
 
-            # Building -level arguments
-            args[:simulation_control_timestep] = 60
-            begin
-              args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
-            rescue StandardError
+            if !template.nil?
+              require File.join(File.dirname(__FILE__), 'residential/template/util')
+              residential_template(args, template, climate_zone)
             end
 
-            args[:simulation_control_run_period] = 'Jan 1 - Dec 31'
-            args[:simulation_control_run_period_calendar_year] = 2007
-            begin
-              abbr_monthnames = Date::ABBR_MONTHNAMES
-              begin_month = abbr_monthnames[feature.begin_date[5, 2].to_i]
-              begin_day_of_month = feature.begin_date[8, 2].to_i
-              end_month = abbr_monthnames[feature.end_date[5, 2].to_i]
-              end_day_of_month = feature.end_date[8, 2].to_i
-              args[:simulation_control_run_period] = "#{begin_month} #{begin_day_of_month} - #{end_month} #{end_day_of_month}"
-              args[:simulation_control_run_period_calendar_year] = feature.begin_date[0, 4].to_i
-            rescue StandardError
-            end
-
-            args[:weather_station_epw_filepath] = "../../../../../weather/#{feature.weather_filename}"
-
-            number_of_stories_above_ground = feature.number_of_stories_above_ground
-            args[:geometry_num_floors_above_grade] = number_of_stories_above_ground
-
-            # SCHEDULES
-
-            feature_ids = []
-            scenario.feature_file.features.each do |feature|
-              feature_ids << feature.id
-            end
-
-            args[:feature_id] = feature_ids.index(feature_id)
-            args[:schedules_random_seed] = feature_ids.index(feature_id)
-            args[:schedules_type] = 'stochastic' # smooth or stochastic
-            args[:schedules_variation] = 'unit' # building or unit
-
+            # Then onto optional "samples" mapping
+            # mappers/residential/samples
             buildstock_csv_path = nil
-            # buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/test/base_results/baseline/annual/buildstock.csv')) # FIXME: this should be input by user into geojson file
-            if buildstock_csv_path.nil? # use feature properties and residential tsv files
-              residential_template(feature, args, building_type, number_of_stories_above_ground)
-            else # use resstock samples
-              building_id = 2 # FIXME
-              residential_resstock(feature, args, building_id, buildstock_csv_path)
+            begin
+              # buildstock_csv_path = feature.buildstock_csv_path
+              buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock/test/base_results/baseline/annual/buildstock.csv')) # FIXME: remove once this can be specified in geojson file
+            rescue StandardError
+            end
+
+            if !buildstock_csv_path.nil?
+              require File.join(File.dirname(__FILE__), 'residential/samples/util')
+              resstock_building_id = get_resstock_building_id(args, buildstock_csv_path)
+              residential_resstock(args, resstock_building_id, buildstock_csv_path)
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults
@@ -698,7 +684,7 @@ module URBANopt
               end
             end
 
-            build_res_model_args = [:feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir]
+            build_res_model_args = [:urbanopt_feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir]
             args.each_key do |arg_name|
               unless default_args.key?(arg_name)
                 next if build_res_model_args.include?(arg_name)
@@ -1222,22 +1208,64 @@ module URBANopt
 
         return osw
       end
-    
-      def residential_template(feature, args, building_type, number_of_stories_above_ground)
+
+      def residential(scenario, feature, args, building_type)
+        '''Assign arguments from geojson file.'''
+
+        # Custom HPXML file
+        begin
+          args[:hpxml_dir] = feature.hpxml_directory
+        rescue StandardError
+        end
+
+        # Building -level arguments
+        args[:simulation_control_timestep] = 60
+        begin
+          args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
+        rescue StandardError
+        end
+
+        args[:simulation_control_run_period] = 'Jan 1 - Dec 31'
+        args[:simulation_control_run_period_calendar_year] = 2007
+        begin
+          abbr_monthnames = Date::ABBR_MONTHNAMES
+          begin_month = abbr_monthnames[feature.begin_date[5, 2].to_i]
+          begin_day_of_month = feature.begin_date[8, 2].to_i
+          end_month = abbr_monthnames[feature.end_date[5, 2].to_i]
+          end_day_of_month = feature.end_date[8, 2].to_i
+          args[:simulation_control_run_period] = "#{begin_month} #{begin_day_of_month} - #{end_month} #{end_day_of_month}"
+          args[:simulation_control_run_period_calendar_year] = feature.begin_date[0, 4].to_i
+        rescue StandardError
+        end
+
+        args[:weather_station_epw_filepath] = "../../../../../weather/#{feature.weather_filename}"
+
+        # Schedules
+        feature_ids = []
+        scenario.feature_file.features.each do |f|
+          feature_ids << f.id
+        end
+
+        args[:urbanopt_feature_id] = feature_ids.index(feature.id)
+        args[:schedules_random_seed] = feature_ids.index(feature.id)
+        args[:schedules_type] = 'stochastic' # smooth or stochastic
+        args[:schedules_variation] = 'unit' # building or unit
+
         # Geometry
+        args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
         args[:geometry_building_num_units] = 1
         args[:geometry_unit_num_floors_above_grade] = 1
         case building_type
         when 'Single-Family Detached'
           args[:geometry_unit_type] = 'single-family detached'
-          args[:geometry_unit_num_floors_above_grade] = number_of_stories_above_ground
+          args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
         when 'Single-Family Attached'
           args[:geometry_unit_type] = 'single-family attached'
           begin
             args[:geometry_building_num_units] = feature.number_of_residential_units
           rescue StandardError
           end
-          args[:geometry_unit_num_floors_above_grade] = number_of_stories_above_ground
+          args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
           args[:air_leakage_type] = 'unit exterior only'
         when 'Multifamily'
           args[:geometry_unit_type] = 'apartment unit'
@@ -1402,93 +1430,7 @@ module URBANopt
         args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
         args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
         args[:water_heater_fuel_type] = args[:heating_system_fuel]
-
-        template = nil
-        begin
-          template = feature.template
-        rescue StandardError
-        end
-
-        # IECC / EnergyStar / Other
-        if !template.nil? && template.include?('Residential IECC')
-
-          captures = template.match(/Residential IECC (?<iecc_year>\d+) - Customizable Template (?<t_month>\w+) (?<t_year>\d+)/)
-          template_vals = Hash[captures.names.zip(captures.captures)]
-          template_vals = template_vals.transform_keys(&:to_sym)
-
-          epw = File.join(File.dirname(__FILE__), '../weather', feature.weather_filename)
-          climate_zone = get_climate_zone_iecc(epw)
-          if climate_zone.nil?
-            abort("Error: No match found for the WMO station from your weather file #{Pathname(epw).expand_path} in our US WMO list.
-            This is known to happen when your weather file is from somewhere outside of the United States.
-            Please replace your weather file with one from an analogous weather location in the United States.")
-          end
-          template_vals[:climate_zone] = climate_zone
-
-          # ENCLOSURE
-
-          enclosure_filepath = File.join(File.dirname(__FILE__), 'residential/enclosure.tsv')
-          enclosure = get_lookup_tsv(args, enclosure_filepath)
-          row = get_lookup_row(args, enclosure, template_vals)
-
-          # Determine which surfaces to place insulation on
-          if args[:geometry_foundation_type].include? 'Basement'
-            row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
-            row[:floor_over_foundation_assembly_r] = 2.1
-            row[:floor_over_garage_assembly_r] = 2.1
-          elsif args[:geometry_foundation_type].include? 'Crawlspace'
-            row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
-            row[:floor_over_foundation_assembly_r] = 2.1
-            row[:floor_over_garage_assembly_r] = 2.1
-          end
-          row.delete(:foundation_wall_assembly_r_basement)
-          row.delete(:foundation_wall_assembly_r_crawlspace)
-          if ['ConditionedAttic'].include?(args[:geometry_attic_type])
-            row[:roof_assembly_r] = row[:ceiling_assembly_r]
-            row[:ceiling_assembly_r] = 2.1
-          end
-          args.update(row) unless row.nil?
-
-          # HVAC
-
-          { args[:heating_system_type] => 'residential/heating_system.tsv', 
-            args[:cooling_system_type] => 'residential/cooling_system.tsv',
-            args[:heat_pump_type] => 'residential/heat_pump.tsv' }.each do |type, path|
-
-            if type != 'none'
-              filepath = File.join(File.dirname(__FILE__), path)
-              lookup_tsv = get_lookup_tsv(args, filepath)
-              row = get_lookup_row(args, lookup_tsv, template_vals)
-              args.update(row) unless row.nil?
-            end
-          end
-
-          # APPLIANCES / MECHANICAL VENTILATION / WATER HEATER
-
-          ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer', 'mechanical_ventilation', 'water_heater'].each do |appliance|
-            filepath = File.join(File.dirname(__FILE__), "residential/#{appliance}.tsv")
-            lookup_tsv = get_lookup_tsv(args, filepath)
-            row = get_lookup_row(args, lookup_tsv, template_vals)
-            args.update(row) unless row.nil?
-          end
-        end
       end
-      
-      def residential_resstock(feature, args, building_id, buildstock_csv_path)
-        args[:building_id] = building_id
-
-        # Create lib folder
-        resstock_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/resstock'))
-        lib_dir = File.join(resstock_dir, 'lib')
-        resources_dir = File.join(resstock_dir, 'resources')
-        housing_characteristics_dir = File.join(resstock_dir, 'project_national/housing_characteristics')
-
-        FileUtils.rm_rf(lib_dir)
-        Dir.mkdir(lib_dir)
-        FileUtils.cp_r(resources_dir, lib_dir)
-        FileUtils.cp_r(housing_characteristics_dir, lib_dir)
-        FileUtils.cp(buildstock_csv_path, File.join(housing_characteristics_dir, 'buildstock.csv'))
-      end    
     end # end class
   end
 end
