@@ -780,4 +780,14 @@ task update_all: [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
 end
 
+desc 'Update residential resources'
+task :update_residential do
+  resstock_version = 'latest-os-hpxml'
+  success = system("git subtree pull --prefix example_project/resources/resstock https://github.com/NREL/resstock #{resstock_version} --squash")
+  assert(success)
+
+  # TODO: rename resstock folder to something more generic?
+  # TODO: remove files and folders we don't need
+end
+
 task default: :update_all
