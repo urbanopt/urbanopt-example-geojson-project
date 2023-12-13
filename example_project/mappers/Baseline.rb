@@ -665,7 +665,7 @@ module URBANopt
             if !buildstock_csv_path.nil?
               require File.join(File.dirname(__FILE__), 'residential/samples/util')
               resstock_building_id = get_resstock_building_id(args, buildstock_csv_path)
-              residential_resstock(args, resstock_building_id, buildstock_csv_path)
+              residential_samples(args, resstock_building_id, buildstock_csv_path)
             end
 
             # Parse BuildResidentialModel measure xml so we can override defaults

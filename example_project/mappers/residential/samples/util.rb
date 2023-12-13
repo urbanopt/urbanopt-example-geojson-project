@@ -8,7 +8,7 @@ def get_resstock_building_id(args, buildstock_csv_path)
   return resstock_building_id
 end
 
-def residential_resstock(args, resstock_building_id, buildstock_csv_path)
+def residential_samples(args, resstock_building_id, buildstock_csv_path)
   '''Assign resstock_building_id that points to buildstock_csv_path.'''
 
   args[:resstock_building_id] = resstock_building_id
