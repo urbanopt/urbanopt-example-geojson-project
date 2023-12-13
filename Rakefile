@@ -780,4 +780,14 @@ task update_all: [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
 end
 
+desc 'Update residential resources'
+task :update_residential do
+  prefix = 'example_project/resources/hpxml-measures'
+  repository = 'https://github.com/NREL/OpenStudio-HPXML.git'
+  branch_or_tag = 'v1.7.0'
+
+  FileUtils.rm_rf(prefix)
+  system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+end
+
 task default: :update_all
