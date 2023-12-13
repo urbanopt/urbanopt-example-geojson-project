@@ -3,7 +3,6 @@
 require_relative '../../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/minitest_helper'
 require 'openstudio'
 require 'openstudio/measure/ShowRunnerOutput'
-# require 'fileutils'
 require_relative '../measure.rb'
 
 class BuildResidentialModelTest < Minitest::Test
@@ -108,9 +107,5 @@ class BuildResidentialModelTest < Minitest::Test
       show_output(result) unless result.value.valueName == 'Success'
       assert_equal('Success', result.value.valueName)
     end
-  end
-
-  def _create_hpxml(hpxml_name)
-    return HPXML.new(hpxml_path: File.join(@sample_files_path, hpxml_name), building_id: 'ALL')
   end
 end
