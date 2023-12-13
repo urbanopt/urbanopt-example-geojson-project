@@ -72,14 +72,17 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg.setDescription('The name of the folder containing a custom HPXML file, relative to the xml_building folder.')
     args << arg
 
+    arg = OpenStudio::Measure::OSArgument.makeStringArgument('output_dir', true)
+    arg.setDisplayName('Directory for Output Files')
+    arg.setDescription('Absolute/relative path for the output files directory.')
+    args << arg
+
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/hpxml-measures'))
     measure_subdir = 'BuildResidentialHPXML'
     full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
     measure = get_measure_instance(full_measure_path)
 
     measure.arguments(model).each do |arg|
-      next if ['hpxml_path'].include? arg.name
-
       args << arg
     end
 
@@ -152,7 +155,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       return false
     end
 
-    hpxml_path = File.expand_path('../feature.xml')
+    hpxml_path = File.expand_path(args[:hpxml_path])
     units.each_with_index do |unit, unit_num|
 
       measures = {}
@@ -162,7 +165,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_subdir = 'BuildResidentialHPXML'
         full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
         check_file_exists(full_measure_path, runner)
-        measures[measure_subdir] = []
 
         measure_args = args.clone.collect { |k, v| [k.to_s, v] }.to_h
         measure_args['hpxml_path'] = hpxml_path
@@ -187,13 +189,16 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args['geometry_foundation_type'] = unit['geometry_foundation_type'] if unit.key?('geometry_foundation_type')
         measure_args['geometry_attic_type'] = unit['geometry_attic_type'] if unit.key?('geometry_attic_type')
         measure_args['geometry_unit_orientation'] = unit['geometry_unit_orientation'] if unit.key?('geometry_unit_orientation')
-        measure_args.delete('feature_id')
-        measure_args.delete('schedules_type')
-        measure_args.delete('schedules_random_seed')
-        measure_args.delete('schedules_variation')
-        measure_args.delete('geometry_num_floors_above_grade')
 
-        measures[measure_subdir] << measure_args
+        # don't assign these to BuildResidentialHPXML
+        measure = get_measure_instance(full_measure_path)
+        arg_names = measure.arguments(model).collect { |arg| arg.name.to_sym }
+        args_to_delete = args.keys - arg_names
+        args_to_delete.each do |arg_to_delete|
+          measure_args.delete(arg_to_delete.to_s)
+        end
+
+        measures[measure_subdir] = [measure_args]
 
         if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
           return false
@@ -212,7 +217,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_subdir = 'BuildResidentialScheduleFile'
       full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
-      measures[measure_subdir] = []
 
       measure_args = {}
       measure_args['hpxml_path'] = hpxml_path
@@ -221,22 +225,21 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measure_args['building_id'] = 'ALL' # FIXME: schedules variation by building currently not supported; by unit currently hardcoded in Baseline.rb
       measure_args['output_csv_path'] = 'schedules.csv'
 
-      measures[measure_subdir] << measure_args
+      measures[measure_subdir] = [measure_args]
     end
 
     # HPXMLtoOpenStudio
     measure_subdir = 'HPXMLtoOpenStudio'
     full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
     check_file_exists(full_measure_path, runner)
-    measures[measure_subdir] = []
 
     measure_args = {}
     measure_args['hpxml_path'] = hpxml_path
-    measure_args['output_dir'] = File.expand_path('..')
+    measure_args['output_dir'] = File.expand_path(args[:output_dir])
     measure_args['debug'] = true
     measure_args['building_id'] = 'ALL'
 
-    measures[measure_subdir] << measure_args
+    measures[measure_subdir] = [measure_args]
 
     if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
       return false

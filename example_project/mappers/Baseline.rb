@@ -629,6 +629,8 @@ module URBANopt
             end
 
             args = {}
+            args[:hpxml_path] = '../feature.xml'
+            args[:output_dir] = '..'
 
             # Custom HPXML File
             begin
@@ -978,7 +980,6 @@ module URBANopt
             measure = REXML::Document.new(measure_xml).root
             measure.elements.each('arguments/argument') do |arg|
               arg_name = arg.elements['name'].text.to_sym
-              next if [:hpxml_path].include? arg_name
 
               default_args[arg_name] = nil
               if arg.elements['default_value']
@@ -987,7 +988,7 @@ module URBANopt
               end
             end
 
-            build_res_model_args = [:feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir]
+            build_res_model_args = [:feature_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir, :output_dir]
             args.each_key do |arg_name|
               unless default_args.key?(arg_name)
                 next if build_res_model_args.include?(arg_name)
