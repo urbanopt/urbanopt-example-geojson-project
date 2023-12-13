@@ -1,6 +1,6 @@
 # *********************************************************************************
 # URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-reopt-gem/blob/develop/LICENSE.md
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
 # *********************************************************************************
 
 require_relative 'constants'
@@ -1531,11 +1531,11 @@ class WholeBuildingGeometry
           runner.registerInfo("Removed existing people from space '#{space.name}'.")
         end
         objects_to_remove.uniq.each do |object|
-          
+
             object.remove
           rescue StandardError
             # no op
-          
+
         end
 
         space_num_occ = unit_occ * UnitConversions.convert(space.floorArea, 'm^2', 'ft^2') / ffa
