@@ -76,9 +76,9 @@ gem 'parser', '3.2.2.2'
 # if allow_local && File.exist?('../../openstudio-geb')
   # gem 'openstudio-geb', path: '../../openstudio-geb-gem'
 # elsif allow_local
-  gem 'openstudio-geb', github: 'vtnate/Openstudio-GEB-gem', branch: 'os37'
+  # gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'master'
 # else
-#   gem 'openstudio-geb', '~> 0.3.2'
+  gem 'openstudio-geb', '~> 0.4.0'
 # end
 
 # if allow_local && File.exists?('../urbanopt-geojson-gem')
