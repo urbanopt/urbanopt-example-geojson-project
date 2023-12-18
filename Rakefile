@@ -780,14 +780,24 @@ task update_all: [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
 end
 
-desc 'Update residential resources'
-task :update_residential do
-  prefix = 'example_project/resources/hpxml-measures'
-  repository = 'https://github.com/NREL/OpenStudio-HPXML.git'
-  branch_or_tag = 'v1.7.0'
+desc 'Run residential tasks'
+namespace :residential do
+  desc 'Update residential resources'
+  task :update_resources do
+    prefix = 'example_project/resources/hpxml-measures'
+    repository = 'https://github.com/NREL/OpenStudio-HPXML.git'
+    branch_or_tag = 'v1.7.0' # update this when pulling in updated OS-HPXML
 
-  FileUtils.rm_rf(prefix)
-  system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+    FileUtils.rm_rf(prefix)
+    system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+  end
+
+  desc 'Run residential measure tests'
+  Rake::TestTask.new('measure_tests') do |t|
+    t.test_files = Dir['example_project/measures/*/tests/*.rb']
+    t.warning = false
+    t.verbose = true
+  end
 end
 
 task default: :update_all
