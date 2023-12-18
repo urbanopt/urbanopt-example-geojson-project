@@ -58,6 +58,9 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_hpxml_dir
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "hpxml_directory"
+
     @args[:hpxml_dir] = '18'
     _test_measure(expected_errors: ["HPXML directory 'xml_building/18' was specified for feature ID = 1, but could not be found."])
 
@@ -73,6 +76,8 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_schedules_type
+    # Baseline.rb mapper currently hardcodes schedules_type to "stochastic"
+
     schedules_types = ['stochastic', 'smooth']
 
     schedules_types.each do |schedules_type|
@@ -84,6 +89,11 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_feature_building_types_num_units_and_stories
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "buildingType"
+    # - "number_of_residential_units"
+    # - "number_of_stories_above_ground"
+
     feature_building_types = ['Single-Family Detached', 'Single-Family Attached', 'Multifamily']
     feature_number_of_residential_unitss = (1..3).to_a
     feature_number_of_stories_above_grounds = (1..2).to_a
@@ -111,6 +121,12 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_feature_building_foundation_and_attic_types_and_num_stories
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "buildingType"
+    # - "foundationType"
+    # - "atticType"
+    # - "number_of_stories_above_ground"
+
     feature_building_types = ['Single-Family Detached', 'Single-Family Attached', 'Multifamily']
     feature_foundation_types = ['slab', 'crawlspace - vented', 'crawlspace - conditioned', 'basement - unconditioned',	'basement - conditioned', 'ambient']
     feature_attic_types = ['attic - vented', 'attic - conditioned', 'flat roof']
@@ -145,6 +161,11 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_feature_building_types_num_units_and_bedrooms
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "buildingType"
+    # - "number_of_residential_units"
+    # - "number_of_bedrooms"
+
     feature_building_types = ['Single-Family Detached', 'Multifamily']
     feature_number_of_residential_unitss = (2..4).to_a
     feature_number_of_bedroomss = (11..13).to_a    
@@ -164,6 +185,12 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_feature_building_occ_calc_types_num_occupants_and_units
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "buildingType"
+    # - "occupancy_calculation_type"
+    # - "number_of_residential_units"
+    # - "number_of_occupants"
+
     feature_building_types = ['Single-Family Detached', 'Multifamily']
     feature_occupancy_calculation_types = ['asset', 'operational']
     feature_number_of_residential_unitss = (2..3).to_a
@@ -187,6 +214,11 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_feature_building_foundation_types_and_garages
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "buildingType"
+    # - "foundationType"
+    # - "onsite_parking_fraction"
+
     feature_building_types = ['Single-Family Detached', 'Single-Family Attached', 'Multifamily']
     feature_foundation_types = ['slab', 'crawlspace - vented', 'crawlspace - conditioned', 'basement - unconditioned',	'basement - conditioned', 'ambient']
     feature_onsite_parking_fractions = [false, true]
@@ -215,6 +247,10 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_hvac_system_and_fuel_types
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "systemType" (those prefixed with "Residential")
+    # - "heatingSystemFuelType"
+
     feature_system_types = ['Residential - electric resistance and no cooling', 'Residential - electric resistance and central air conditioner',	'Residential - electric resistance and room air conditioner', 'Residential - electric resistance and evaporative cooler', 'Residential - furnace and no cooling', 'Residential - furnace and central air conditioner', 'Residential - furnace and room air conditioner', 'Residential - furnace and evaporative cooler', 'Residential - boiler and no cooling', 'Residential - boiler and central air conditioner', 'Residential - boiler and room air conditioner', 'Residential - boiler and evaporative cooler', 'Residential - air-to-air heat pump', 'Residential - mini-split heat pump', 'Residential - ground-to-air heat pump']
     feature_heating_system_fuel_types = ['electricity', 'natural gas', 'fuel oil', 'propane', 'wood']
 
@@ -230,6 +266,9 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def test_residential_template_types
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "templateType"
+
     feature_templates = ['Residential IECC 2006 - Customizable Template Sep 2020', 'Residential IECC 2009 - Customizable Template Sep 2020', 'Residential IECC 2012 - Customizable Template Sep 2020', 'Residential IECC 2015 - Customizable Template Sep 2020', 'Residential IECC 2018 - Customizable Template Sep 2020', 'Residential IECC 2006 - Customizable Template Apr 2022', 'Residential IECC 2009 - Customizable Template Apr 2022', 'Residential IECC 2012 - Customizable Template Apr 2022', 'Residential IECC 2015 - Customizable Template Apr 2022', 'Residential IECC 2018 - Customizable Template Apr 2022']
 
     feature_templates.each do |feature_template|
