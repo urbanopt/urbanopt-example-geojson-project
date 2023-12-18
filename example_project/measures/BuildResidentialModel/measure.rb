@@ -125,17 +125,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       standards_number_of_living_units = units.size
     else
-      hpxml_dir = File.join(File.dirname(__FILE__), "../../xml_building/#{args[:hpxml_dir]}")
+      xml_building_folder = "xml_building"
+      hpxml_dir = File.join(File.dirname(__FILE__), "../../#{xml_building_folder}/#{args[:hpxml_dir]}")
 
       if !File.exist?(hpxml_dir)
-        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} was specified for feature ID = #{args[:feature_id]}, but could not be found.")
+        runner.registerError("HPXML directory '#{File.join(xml_building_folder, File.basename(hpxml_dir))}' was specified for feature ID = #{args[:feature_id]}, but could not be found.")
         return false
       end
 
       units = []
       hpxml_paths = Dir["#{hpxml_dir}/*.xml"]
       if hpxml_paths.size != 1
-        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature.")
+        runner.registerError("HPXML directory '#{File.join(xml_building_folder, File.basename(hpxml_dir))}' must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature.")
         return false
       end
       hpxml_path = hpxml_paths[0]
@@ -310,7 +311,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     when 'apartment unit'
       num_units_per_floor = (Float(args[:geometry_building_num_units]) / Float(args[:geometry_num_floors_above_grade])).ceil
       if num_units_per_floor == 1
-        runner.registerError("num_units_per_floor='#{num_units_per_floor}' not supported.")
+        runner.registerError("Unit type '#{args[:geometry_unit_type]}' with num_units_per_floor=#{num_units_per_floor} is not supported.")
         return units
       end
 
