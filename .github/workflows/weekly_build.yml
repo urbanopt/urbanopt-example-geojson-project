@@ -29,6 +29,8 @@ jobs:
         run: |
           bundle update
           bundle exec certified-update
+      - name: Test residential measure variations
+        run: bundle exec rake residential:measure_tests
       - name: Simulate
         run: bundle exec rake run_${{ matrix.scenario }}
       - name: Post process
