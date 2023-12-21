@@ -41,7 +41,7 @@ end
 if allow_local && File.exist?('../openstudio-common-measures-gem')
  gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
 elsif allow_local
- gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: '3.7.0-rc1'
+ gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
 else
   gem 'openstudio-common-measures', '~> 0.9.0'
 end
@@ -49,7 +49,7 @@ end
 if allow_local && File.exist?('../openstudio-model-articulation-gem')
   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
 elsif allow_local
- gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: '3.7.0-rc1'
+ gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
 else
   gem 'openstudio-model-articulation', '~> 0.9.0'
 end
@@ -57,7 +57,7 @@ end
 if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
   gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
 elsif allow_local
- gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: '0.3.7-rc'
+ gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'develop'
 else
   gem 'openstudio-load-flexibility-measures', '~> 0.8.0'
 end
@@ -65,7 +65,7 @@ end
 if allow_local && File.exist?('../openstudio-ee-gem')
   gem 'openstudio-ee', path: '../opesntudio-ee-gem'
 elsif allow_local
- gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: '3.7.0-rc1'
+ gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'develop'
 else
   gem 'openstudio-ee', '~> 0.9.0'
 end
@@ -73,7 +73,7 @@ end
 if allow_local && File.exist?('../openstudio-calibration-gem')
   gem 'openstudio-calibration', path: '../openstudio-calibration-gem'
 elsif allow_local
- gem 'openstudio-calibration', github: 'NREL/openstudio-calibration-gem', branch: '0.3.7-rc1'
+ gem 'openstudio-calibration', github: 'NREL/openstudio-calibration-gem', branch: 'develop'
 else
   gem 'openstudio-calibration', '~> 0.9.0'
 end
