@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/minitest_helper'
+require_relative '../../../resources/residential-measures/resources/hpxml-measures/HPXMLtoOpenStudio/resources/minitest_helper'
 require_relative '../../../mappers/residential/util'
 require_relative '../../../mappers/residential/template//util'
 require 'openstudio'
@@ -27,7 +27,7 @@ class BuildResidentialModelTest < Minitest::Test
     # BuildResidentialModel arguments
     @args[:hpxml_path] = @hpxml_path
     @args[:output_dir] = @run_path
-    @args[:feature_id] = 1
+    @args[:urbanopt_feature_id] = 1
     @args[:schedules_type] = 'stochastic'
     @args[:schedules_random_seed] = 1
     @args[:schedules_variation] = 'unit'
