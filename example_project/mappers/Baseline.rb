@@ -571,7 +571,7 @@ module URBANopt
             buildstock_csv_path = nil
             begin
               # buildstock_csv_path = feature.buildstock_csv_path
-              buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv')) # FIXME: remove once this can be specified in geojson file
+              # buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv')) # FIXME: remove once this can be specified in geojson file
             rescue StandardError
             end
 

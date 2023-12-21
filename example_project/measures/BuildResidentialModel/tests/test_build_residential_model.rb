@@ -2,7 +2,8 @@
 
 require_relative '../../../resources/residential-measures/resources/hpxml-measures/HPXMLtoOpenStudio/resources/minitest_helper'
 require_relative '../../../mappers/residential/util'
-require_relative '../../../mappers/residential/template//util'
+require_relative '../../../mappers/residential/template/util'
+require_relative '../../../mappers/residential/samples/util'
 require 'openstudio'
 require 'openstudio/measure/ShowRunnerOutput'
 require_relative '../measure.rb'
@@ -53,8 +54,6 @@ class BuildResidentialModelTest < Minitest::Test
     @onsite_parking_fraction = false
     @system_type = 'Residential - furnace and central air conditioner'
     @heating_system_fuel_type = 'natural gas'
-    @template = nil
-    @climate_zone = '5A'
   end
 
   def test_hpxml_dir
@@ -265,21 +264,41 @@ class BuildResidentialModelTest < Minitest::Test
     end
   end
 
-  def test_residential_template_types
+  def test_residential_templates
     # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
     # - "templateType"
 
     feature_templates = ['Residential IECC 2006 - Customizable Template Sep 2020', 'Residential IECC 2009 - Customizable Template Sep 2020', 'Residential IECC 2012 - Customizable Template Sep 2020', 'Residential IECC 2015 - Customizable Template Sep 2020', 'Residential IECC 2018 - Customizable Template Sep 2020', 'Residential IECC 2006 - Customizable Template Apr 2022', 'Residential IECC 2009 - Customizable Template Apr 2022', 'Residential IECC 2012 - Customizable Template Apr 2022', 'Residential IECC 2015 - Customizable Template Apr 2022', 'Residential IECC 2018 - Customizable Template Apr 2022']
+    climate_zones = ['1B', '5A']
 
     feature_templates.each do |feature_template|
-      @args = {}
-      _initialize_arguments()
+      climate_zones.each do |climate_zone|
+        @args = {}
+        _initialize_arguments()
 
-      @template = feature_template
+        @template = feature_template
+        @climate_zone = climate_zone
 
-      _apply_residential()
-      _apply_residential_template()
-      _test_measure()
+        _apply_residential()
+        _apply_residential_template()
+        _test_measure()
+      end
+    end
+  end
+
+  def test_residential_samples
+    feature_buildstock_csv_paths = [File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))]
+    resstock_building_ids = [1, 3, 8, 15] # SFD, Mobile Home, SFA, MF
+
+    feature_buildstock_csv_paths.each do |feature_buildstock_csv_path|
+      resstock_building_ids.each do |resstock_building_id|
+        @resstock_building_id = resstock_building_id
+        @buildstock_csv_path = feature_buildstock_csv_path
+
+        _apply_residential()
+        _apply_residential_samples()
+        _test_measure()
+      end
     end
   end
 
@@ -296,6 +315,10 @@ class BuildResidentialModelTest < Minitest::Test
 
   def _apply_residential_template()
     residential_template(@args, @template, @climate_zone)
+  end
+
+  def _apply_residential_samples()
+    residential_samples(@args, @resstock_building_id, @buildstock_csv_path)
   end
 
   def _test_measure(expected_errors: [])
