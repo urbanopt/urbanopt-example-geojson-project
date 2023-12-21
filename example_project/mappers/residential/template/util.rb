@@ -58,3 +58,76 @@ def residential_template(args, template, climate_zone)
     end
   end
 end
+
+def get_lookup_tsv(args, filepath)
+  rows = []
+  headers = []
+  units = []
+  CSV.foreach(filepath, { col_sep: "\t" }) do |row|
+    if headers.empty?
+      row.each do |header|
+        next if header == 'Source'
+
+        if args.key?(header.gsub('Dependency=', '').to_sym)
+          header = header.gsub('Dependency=', '')
+        end
+        unless header.include?('Dependency=')
+          header = header.to_sym
+        end
+        headers << header
+      end
+      next
+    elsif units.empty?
+      row.each do |unit|
+        units << unit
+      end
+      next
+    end
+    if headers.length != row.length
+      row = row[0..-2] # leave out Source column
+    end
+    rows << headers.zip(row).to_h
+  end
+  return rows
+end
+
+def get_lookup_row(args, rows, template_vals)
+  rows.each do |row|
+    if row.key?('Dependency=Climate Zone') && (row['Dependency=Climate Zone'] != template_vals[:climate_zone])
+      next
+    end
+    if row.key?('Dependency=IECC Year') && (row['Dependency=IECC Year'] != template_vals[:iecc_year])
+      next
+    end
+    if row.key?('Dependency=Template Month') && (row['Dependency=Template Month'] != template_vals[:t_month])
+      next
+    end
+    if row.key?('Dependency=Template Year') && (row['Dependency=Template Year'] != template_vals[:t_year])
+      next
+    end
+
+    row.delete('Dependency=Climate Zone')
+    row.delete('Dependency=IECC Year')
+    row.delete('Dependency=Template Month')
+    row.delete('Dependency=Template Year')
+
+    row.each do |k, v|
+      next unless v.nil?
+
+      row.delete(k)
+    end
+
+    intersection = args.keys & row.keys
+    return row if intersection.empty? # found the correct row
+
+    skip = false
+    intersection.each do |k|
+      if args[k] != row[k]
+        skip = true
+      end
+    end
+
+    return row unless skip
+  end
+  return nil
+end

@@ -3,8 +3,8 @@
   <schema_version>3.1</schema_version>
   <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
-  <version_id>723f7c74-958f-44f3-aca2-2026722e400e</version_id>
-  <version_modified>2023-12-12T20:14:07Z</version_modified>
+  <version_id>7f05f64c-b676-49dd-abda-beee2b1ebc16</version_id>
+  <version_modified>2023-12-21T18:47:28Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
   <class_name>BuildResidentialModel</class_name>
   <display_name>Build Residential Model</display_name>
@@ -12,8 +12,8 @@
   <modeler_description>Builds the residential OpenStudio Model using the geojson feature file, which contains the specified parameters for each existing building.</modeler_description>
   <arguments>
     <argument>
-      <name>feature_id</name>
-      <display_name>Feature ID</display_name>
+      <name>urbanopt_feature_id</name>
+      <display_name>URBANopt: GeoJSON Feature ID</display_name>
       <description>The feature ID passed from Baseline.rb.</description>
       <type>Integer</type>
       <required>true</required>
@@ -88,6 +88,22 @@
       <description>The name of the folder containing a custom HPXML file, relative to the xml_building folder.</description>
       <type>String</type>
       <required>false</required>
+      <model_dependent>false</model_dependent>
+    </argument>
+    <argument>
+      <name>output_dir</name>
+      <display_name>Directory for Output Files</display_name>
+      <description>Absolute/relative path for the output files directory.</description>
+      <type>String</type>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+    </argument>
+    <argument>
+      <name>hpxml_path</name>
+      <display_name>HPXML File Path</display_name>
+      <description>Absolute/relative path of the HPXML file.</description>
+      <type>String</type>
+      <required>true</required>
       <model_dependent>false</model_dependent>
     </argument>
     <argument>
@@ -6827,31 +6843,49 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>A0636176</checksum>
+      <checksum>C81D0FFC</checksum>
     </file>
     <file>
       <filename>constants.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>BEF32B5B</checksum>
+      <checksum>82A13855</checksum>
     </file>
     <file>
       <filename>geometry.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>12C16DFB</checksum>
+      <checksum>5C6DA7A8</checksum>
     </file>
     <file>
       <filename>unit_conversions.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>E1DCEFDC</checksum>
+      <checksum>9B7AAA98</checksum>
     </file>
     <file>
       <filename>util.rb</filename>
       <filetype>rb</filetype>
       <usage_type>resource</usage_type>
-      <checksum>E2C2AEE5</checksum>
+      <checksum>42CACEFB</checksum>
+    </file>
+    <file>
+      <filename>test_build_residential_model.rb</filename>
+      <filetype>rb</filetype>
+      <usage_type>test</usage_type>
+      <checksum>DBC6CE04</checksum>
+    </file>
+    <file>
+      <filename>xml_building/17/feature1.xml</filename>
+      <filetype>xml</filetype>
+      <usage_type>test</usage_type>
+      <checksum>CADEF9CC</checksum>
+    </file>
+    <file>
+      <filename>xml_building/17/feature2.xml</filename>
+      <filetype>xml</filetype>
+      <usage_type>test</usage_type>
+      <checksum>CADEF9CC</checksum>
     </file>
   </files>
 </measure>

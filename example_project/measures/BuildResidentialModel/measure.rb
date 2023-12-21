@@ -77,14 +77,17 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg.setDescription('The name of the folder containing a custom HPXML file, relative to the xml_building folder.')
     args << arg
 
+    arg = OpenStudio::Measure::OSArgument.makeStringArgument('output_dir', true)
+    arg.setDisplayName('Directory for Output Files')
+    arg.setDescription('Absolute/relative path for the output files directory.')
+    args << arg
+
     measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/residential-measures/resources/hpxml-measures'))
     measure_subdir = 'BuildResidentialHPXML'
     full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
     measure = get_measure_instance(full_measure_path)
 
     measure.arguments(model).each do |arg|
-      next if ['hpxml_path'].include? arg.name
-
       args << arg
     end
 
@@ -202,17 +205,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       standards_number_of_living_units = units.size
     else
-      hpxml_dir = File.join(File.dirname(__FILE__), "../../xml_building/#{args[:hpxml_dir]}")
+      xml_building_folder = "xml_building"
+      hpxml_dir = File.join(File.dirname(__FILE__), "../../#{xml_building_folder}/#{args[:hpxml_dir]}")
 
       if !File.exist?(hpxml_dir)
-        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} was specified for feature ID = #{args[:urbanopt_feature_id]}, but could not be found.")
+        runner.registerError("HPXML directory '#{File.join(xml_building_folder, File.basename(hpxml_dir))}' was specified for feature ID = #{args[:urbanopt_feature_id]}, but could not be found.")
         return false
       end
 
       units = []
       hpxml_paths = Dir["#{hpxml_dir}/*.xml"]
       if hpxml_paths.size != 1
-        runner.registerError("HPXML directory #{File.expand_path(hpxml_dir)} must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature.")
+        runner.registerError("HPXML directory '#{File.join(xml_building_folder, File.basename(hpxml_dir))}' must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature.")
         return false
       end
       hpxml_path = hpxml_paths[0]
@@ -232,7 +236,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       return false
     end
 
-    hpxml_path = File.expand_path('../feature.xml')
+    hpxml_path = File.expand_path(args[:hpxml_path])
     units.each_with_index do |unit, unit_num|
 
       measures = {}
@@ -312,7 +316,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     measure_args = {}
     measure_args['hpxml_path'] = hpxml_path
-    measure_args['output_dir'] = File.expand_path('..')
+    measure_args['output_dir'] = File.expand_path(args[:output_dir])
     measure_args['debug'] = true
     measure_args['building_id'] = 'ALL'
 
@@ -390,7 +394,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     when 'apartment unit'
       num_units_per_floor = (geometry_building_num_units / geometry_num_floors_above_grade).ceil
       if num_units_per_floor == 1
-        runner.registerError("num_units_per_floor='#{num_units_per_floor}' not supported.")
+        runner.registerError("Unit type '#{args[:geometry_unit_type]}' with num_units_per_floor=#{num_units_per_floor} is not supported.")
         return units
       end
 

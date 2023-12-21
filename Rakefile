@@ -780,31 +780,41 @@ task update_all: [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
 end
 
-desc 'Update residential resources'
-task :update_residential do
-  prefix = 'example_project/resources/residential-measures'
-  repository = 'https://github.com/NREL/resstock.git'
-  branch_or_tag = 'latest-os-hpxml'
+desc 'Run residential tasks'
+namespace :residential do
+  desc 'Update residential resources'
+  task :update_resources do
+    prefix = 'example_project/resources/residential-measures'
+    repository = 'https://github.com/NREL/resstock.git'
+    branch_or_tag = 'v3.2.0' # update this when pulling in updated ResStock
 
-  FileUtils.rm_rf(prefix)
-  system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+    FileUtils.rm_rf(prefix)
+    system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
 
-  folders_to_remove = [
-    '.git',
-    '.github',
-    'docs',
-    'project_testing',
-    'resources/data',
-    'test/base_results/baseline/timeseries',
-    'test/base_results/upgrades',
-    'test/SetSpaceInfiltrationPerExteriorArea',
-    'test/tests_buildstock_csvs',
-    'test/tests_housing_characteristics',
-    'test/tests_yml_files'
-  ]
+    folders_to_remove = [
+      '.git',
+      '.github',
+      'docs',
+      'project_testing',
+      'resources/data',
+      'test/base_results/baseline/timeseries',
+      'test/base_results/upgrades',
+      'test/SetSpaceInfiltrationPerExteriorArea',
+      'test/tests_buildstock_csvs',
+      'test/tests_housing_characteristics',
+      'test/tests_yml_files'
+    ]
 
-  folders_to_remove.each do |f|
-    FileUtils.rm_rf(File.join(prefix, f))
+    folders_to_remove.each do |f|
+      FileUtils.rm_rf(File.join(prefix, f))
+    end
+  end
+
+  desc 'Run residential measure tests'
+  Rake::TestTask.new('measure_tests') do |t|
+    t.test_files = Dir['example_project/measures/*/tests/*.rb']
+    t.warning = false
+    t.verbose = true
   end
 end
 

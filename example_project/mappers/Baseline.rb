@@ -37,7 +37,7 @@ module URBANopt
 
             # add any paths local to the project
             @@osw[:measure_paths] << File.join(File.dirname(__FILE__), '../measures/')
-            @@osw[:measure_paths] << File.join(File.dirname(__FILE__), '../resources/hpxml-measures')
+            @@osw[:measure_paths] << File.join(File.dirname(__FILE__), '../resources/residential-measures/resources/hpxml-measures')
             @@osw[:file_paths] << File.join(File.dirname(__FILE__), '../weather/')
 
             # configures OSW with extension gem paths for measures and files, all extension gems must be
@@ -259,94 +259,6 @@ module URBANopt
           'Multifamily (5 or more units)',
           'Single-Family'
         ]
-      end
-
-      def get_arg_default(arg)
-        case arg.type.valueName.downcase
-        when 'boolean'
-          return arg.defaultValueAsBool
-        when 'double'
-          return arg.defaultValueAsDouble
-        when 'integer'
-          return arg.defaultValueAsInteger
-        when 'string'
-          return arg.defaultValueAsString
-        when 'choice'
-          return arg.defaultValueAsString
-        end
-      end
-
-      def get_lookup_tsv(args, filepath)
-        rows = []
-        headers = []
-        units = []
-        CSV.foreach(filepath, { col_sep: "\t" }) do |row|
-          if headers.empty?
-            row.each do |header|
-              next if header == 'Source'
-
-              if args.key?(header.gsub('Dependency=', '').to_sym)
-                header = header.gsub('Dependency=', '')
-              end
-              unless header.include?('Dependency=')
-                header = header.to_sym
-              end
-              headers << header
-            end
-            next
-          elsif units.empty?
-            row.each do |unit|
-              units << unit
-            end
-            next
-          end
-          if headers.length != row.length
-            row = row[0..-2] # leave out Source column
-          end
-          rows << headers.zip(row).to_h
-        end
-        return rows
-      end
-
-      def get_lookup_row(args, rows, template_vals)
-        rows.each do |row|
-          if row.key?('Dependency=Climate Zone') && (row['Dependency=Climate Zone'] != template_vals[:climate_zone])
-            next
-          end
-          if row.key?('Dependency=IECC Year') && (row['Dependency=IECC Year'] != template_vals[:iecc_year])
-            next
-          end
-          if row.key?('Dependency=Template Month') && (row['Dependency=Template Month'] != template_vals[:t_month])
-            next
-          end
-          if row.key?('Dependency=Template Year') && (row['Dependency=Template Year'] != template_vals[:t_year])
-            next
-          end
-
-          row.delete('Dependency=Climate Zone')
-          row.delete('Dependency=IECC Year')
-          row.delete('Dependency=Template Month')
-          row.delete('Dependency=Template Year')
-
-          row.each do |k, v|
-            next unless v.nil?
-
-            row.delete(k)
-          end
-
-          intersection = args.keys & row.keys
-          return row if intersection.empty? # found the correct row
-
-          skip = false
-          intersection.each do |k|
-            if args[k] != row[k]
-              skip = true
-            end
-          end
-
-          return row unless skip
-        end
-        return nil
       end
 
       def get_climate_zone_iecc(epw)
@@ -638,6 +550,7 @@ module URBANopt
 
             # Start general residential mapping
             args = {}
+            require File.join(File.dirname(__FILE__), 'residential/util')
             residential(scenario, feature, args, building_type)
 
             # Then onto optional "template" mapping
@@ -675,7 +588,6 @@ module URBANopt
             measure = REXML::Document.new(measure_xml).root
             measure.elements.each('arguments/argument') do |arg|
               arg_name = arg.elements['name'].text.to_sym
-              next if [:hpxml_path].include? arg_name
 
               default_args[arg_name] = nil
               if arg.elements['default_value']
@@ -684,7 +596,7 @@ module URBANopt
               end
             end
 
-            build_res_model_args = [:urbanopt_feature_id, :resstock_building_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir]
+            build_res_model_args = [:urbanopt_feature_id, :resstock_building_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir, :output_dir]
             args.each_key do |arg_name|
               unless default_args.key?(arg_name)
                 next if build_res_model_args.include?(arg_name)
@@ -1207,243 +1119,6 @@ module URBANopt
         OpenStudio::Extension.set_measure_argument(osw, 'default_feature_reports', 'feature_location', feature_location)
 
         return osw
-      end
-
-      def residential(scenario, feature, args, building_type)
-        '''Assign arguments from geojson file.'''
-
-        # Custom HPXML file
-        begin
-          args[:hpxml_dir] = feature.hpxml_directory
-        rescue StandardError
-        end
-
-        # Building -level arguments
-        args[:simulation_control_timestep] = 60
-        begin
-          args[:simulation_control_timestep] = 60 / feature.timesteps_per_hour
-        rescue StandardError
-        end
-
-        args[:simulation_control_run_period] = 'Jan 1 - Dec 31'
-        args[:simulation_control_run_period_calendar_year] = 2007
-        begin
-          abbr_monthnames = Date::ABBR_MONTHNAMES
-          begin_month = abbr_monthnames[feature.begin_date[5, 2].to_i]
-          begin_day_of_month = feature.begin_date[8, 2].to_i
-          end_month = abbr_monthnames[feature.end_date[5, 2].to_i]
-          end_day_of_month = feature.end_date[8, 2].to_i
-          args[:simulation_control_run_period] = "#{begin_month} #{begin_day_of_month} - #{end_month} #{end_day_of_month}"
-          args[:simulation_control_run_period_calendar_year] = feature.begin_date[0, 4].to_i
-        rescue StandardError
-        end
-
-        args[:weather_station_epw_filepath] = "../../../../../weather/#{feature.weather_filename}"
-
-        # Schedules
-        feature_ids = []
-        scenario.feature_file.features.each do |f|
-          feature_ids << f.id
-        end
-
-        args[:urbanopt_feature_id] = feature_ids.index(feature.id)
-        args[:schedules_random_seed] = feature_ids.index(feature.id)
-        args[:schedules_type] = 'stochastic' # smooth or stochastic
-        args[:schedules_variation] = 'unit' # building or unit
-
-        # Geometry
-        args[:geometry_num_floors_above_grade] = feature.number_of_stories_above_ground
-        args[:geometry_building_num_units] = 1
-        args[:geometry_unit_num_floors_above_grade] = 1
-        case building_type
-        when 'Single-Family Detached'
-          args[:geometry_unit_type] = 'single-family detached'
-          args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
-        when 'Single-Family Attached'
-          args[:geometry_unit_type] = 'single-family attached'
-          begin
-            args[:geometry_building_num_units] = feature.number_of_residential_units
-          rescue StandardError
-          end
-          args[:geometry_unit_num_floors_above_grade] = feature.number_of_stories_above_ground
-          args[:air_leakage_type] = 'unit exterior only'
-        when 'Multifamily'
-          args[:geometry_unit_type] = 'apartment unit'
-          begin
-            args[:geometry_building_num_units] = feature.number_of_residential_units
-          rescue StandardError
-          end
-          args[:air_leakage_type] = 'unit exterior only'
-        end
-
-        args[:geometry_foundation_type] = 'SlabOnGrade'
-        args[:geometry_foundation_height] = 0.0
-        case feature.foundation_type
-        when 'crawlspace - vented'
-          args[:geometry_foundation_type] = 'VentedCrawlspace'
-          args[:geometry_foundation_height] = 3.0
-        when 'crawlspace - unvented'
-          args[:geometry_foundation_type] = 'UnventedCrawlspace'
-          args[:geometry_foundation_height] = 3.0
-        when 'crawlspace - conditioned'
-          args[:geometry_foundation_type] = 'ConditionedCrawlspace'
-          args[:geometry_foundation_height] = 3.0
-        when 'basement - unconditioned'
-          args[:geometry_foundation_type] = 'UnconditionedBasement'
-          args[:geometry_foundation_height] = 8.0
-        when 'basement - conditioned'
-          args[:geometry_foundation_type] = 'ConditionedBasement'
-          args[:geometry_foundation_height] = 8.0
-        when 'ambient'
-          args[:geometry_foundation_type] = 'Ambient'
-          args[:geometry_foundation_height] = 8.0
-        end
-
-        begin
-          case feature.attic_type
-          when 'attic - vented'
-            args[:geometry_attic_type] = 'VentedAttic'
-            begin
-              args[:geometry_roof_type] = feature.roof_type
-            rescue StandardError
-            end
-          when 'attic - unvented'
-            args[:geometry_attic_type] = 'UnventedAttic'
-            begin
-              args[:geometry_roof_type] = feature.roof_type
-            rescue StandardError
-            end
-          when 'attic - conditioned'
-            args[:geometry_attic_type] = 'ConditionedAttic'
-            begin
-              args[:geometry_roof_type] = feature.roof_type
-            rescue StandardError
-            end
-          when 'flat roof'
-            args[:geometry_attic_type] = 'FlatRoof'
-          end
-        rescue StandardError
-        end
-
-        args[:geometry_roof_type] = 'gable'
-        begin
-          case feature.roof_type
-          when 'Hip'
-            args[:geometry_roof_type] = 'hip'
-          end
-        rescue StandardError
-        end
-
-        begin
-          args[:geometry_unit_cfa] = feature.floor_area / args[:geometry_building_num_units]
-        rescue StandardError
-        end
-
-        begin
-          args[:geometry_unit_num_bedrooms] = feature.number_of_bedrooms / args[:geometry_building_num_units]
-        rescue StandardError
-        end
-
-        # Geometry Orientation and Aspect Ratio
-        # Orientation (North=0, East=90, South=180, West=270)
-        begin
-          args[:geometry_unit_orientation] = feature.geometry_unit_orientation
-        rescue StandardError
-        end
-
-        # Aspect Ratio
-        # The ratio of front/back wall length to left/right wall length for the unit, excluding any protruding garage wall area.
-        begin
-          args[:geometry_unit_aspect_ratio] = feature.geometry_unit_aspect_ratio
-        rescue StandardError
-        end
-
-        # Occupancy Calculation Type
-        begin
-          if feature.occupancy_calculation_type == 'operational'
-            # set args[:geometry_unit_num_occupants]
-            begin
-              args[:geometry_unit_num_occupants] = feature.number_of_occupants / args[:geometry_building_num_units]
-            rescue StandardError # number_of_occupants is not defined: assume equal to number of bedrooms
-              args[:geometry_unit_num_occupants] = args[:geometry_unit_num_bedrooms]
-            end
-          elsif feature.occupancy_calculation_type == 'asset'
-            # do not set args[:geometry_unit_num_occupants]
-          end
-        rescue StandardError # occupancy_calculation_type is not defined: do nothing, i.e., asset calculation
-        end
-
-        args[:geometry_average_ceiling_height] = 8.0
-        begin
-          args[:geometry_average_ceiling_height] = feature.maximum_roof_height / feature.number_of_stories_above_ground
-        rescue StandardError
-        end
-
-        begin
-          num_garage_spaces = 0
-          if feature.onsite_parking_fraction
-            num_garage_spaces = 1
-            if args[:geometry_unit_cfa] > 2500.0
-              num_garage_spaces = 2
-            end
-          end
-          args[:geometry_garage_width] = 12.0 * num_garage_spaces
-          args[:geometry_garage_protrusion] = 1.0
-        rescue StandardError
-        end
-
-        args[:neighbor_left_distance] = 0.0
-        args[:neighbor_right_distance] = 0.0
-
-        # HVAC
-
-        system_type = 'Residential - furnace and central air conditioner'
-        begin
-          system_type = feature.system_type
-        rescue StandardError
-        end
-
-        args[:heating_system_type] = 'none'
-        if system_type.include?('electric resistance')
-          args[:heating_system_type] = 'ElectricResistance'
-        elsif system_type.include?('furnace')
-          args[:heating_system_type] = 'Furnace'
-        elsif system_type.include?('boiler')
-          args[:heating_system_type] = 'Boiler'
-        end
-
-        args[:cooling_system_type] = 'none'
-        if system_type.include?('central air conditioner')
-          args[:cooling_system_type] = 'central air conditioner'
-        elsif system_type.include?('room air conditioner')
-          args[:cooling_system_type] = 'room air conditioner'
-        elsif system_type.include?('evaporative cooler')
-          args[:cooling_system_type] = 'evaporative cooler'
-        end
-
-        args[:heat_pump_type] = 'none'
-        if system_type.include?('air-to-air')
-          args[:heat_pump_type] = 'air-to-air'
-        elsif system_type.include?('mini-split')
-          args[:heat_pump_type] = 'mini-split'
-        elsif system_type.include?('ground-to-air')
-          args[:heat_pump_type] = 'ground-to-air'
-        end
-
-        args[:heating_system_fuel] = 'natural gas'
-        begin
-          args[:heating_system_fuel] = feature.heating_system_fuel_type
-        rescue StandardError
-        end
-
-        if args[:heating_system_type] == 'ElectricResistance'
-          args[:heating_system_fuel] = 'electricity'
-        end
-
-        # Fuel types
-        args[:cooking_range_oven_fuel_type] = args[:heating_system_fuel]
-        args[:clothes_dryer_fuel_type] = args[:heating_system_fuel]
-        args[:water_heater_fuel_type] = args[:heating_system_fuel]
       end
     end # end class
   end
