@@ -11,7 +11,7 @@ def residential(scenario, feature, args, building_type)
   # BuildResidentialModel arguments
   args[:hpxml_path] = '../feature.xml'
   args[:output_dir] = '..'
-  args[:feature_id] = feature.id
+  args[:urbanopt_feature_id] = feature.id
   args[:schedules_type] = 'stochastic' # smooth or stochastic
   args[:schedules_random_seed] = feature_ids.index(feature.id)
   args[:schedules_variation] = 'unit' # building or unit
