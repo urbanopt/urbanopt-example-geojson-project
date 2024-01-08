@@ -794,6 +794,7 @@ namespace :residential do
     folders_to_remove = [
       '.git',
       '.github',
+      '.gitignore',
       'docs',
       'project_testing',
       'resources/data',
