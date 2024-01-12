@@ -82,37 +82,47 @@ end
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #  gem 'urbanopt-core', path: '../urbanopt-core-gem'
 # elsif allow_local
-  gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'os37'
-# end
-
-# if allow_local && File.exist?('../urbanopt-scenario-gem')
-  # gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
-# elsif allow_local
-  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'os37'
+#   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'develop'
 # else
-#   gem 'urbanopt-scenario', '~> 0.10.0'
+#   gem 'urbanopt-core', '~> 0.11.0'
 # end
 
-# if allow_local && File.exist?('../urbanopt-reporting-gem')
-  # gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
-# elsif allow_local
-gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'os37'
-# else
-#   gem 'urbanopt-reporting', '~> 0.8.0'
-# end
+if allow_local && File.exist?('../urbanopt-scenario-gem')
+  gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
+elsif allow_local
+  gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'
+else
+  gem 'urbanopt-scenario', '~> 0.11.0'
+end
 
-# if allow_local && File.exist?('../urbanopt-geojson-gem')
-  # gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
-# elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'os37'
-# else
-#   gem 'urbanopt-geojson', '~> 0.10.0'
-# end
+if allow_local && File.exist?('../urbanopt-reporting-gem')
+  gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
+elsif allow_local
+gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'develop'
+else
+  gem 'urbanopt-reporting', '~> 0.9.1'
+end
 
-# if allow_local && File.exist?('../urbanopt-reopt-gem')
-  # gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
-# elsif allow_local
+if allow_local && File.exist?('../urbanopt-geojson-gem')
+  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
+elsif allow_local
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+else
+  gem 'urbanopt-geojson', '~> 0.11.1'
+end
+
+if allow_local && File.exist?('../urbanopt-reopt-gem')
+  gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
+elsif allow_local
   gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'os37'
-# else
-#   gem 'urbanopt-reopt', '0.10.0'
-# end
+else
+  gem 'urbanopt-reopt', '0.11.0'
+end
+
+if allow_local && File.exist?('../urbanopt-rnm-us')
+  gem 'urbanopt-rnm-us', path: '../urbanopt-geojson-gem'
+elsif allow_local
+  gem 'urbanopt-rnm-us', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
+else
+  gem 'urbanopt-rnm-us', '~> 0.7.0'
+end
