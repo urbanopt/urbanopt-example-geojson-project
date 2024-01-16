@@ -121,7 +121,7 @@ end
 if allow_local && File.exist?('../urbanopt-rnm-us')
   gem 'urbanopt-rnm-us', path: '../urbanopt/urbanopt-rnm-us-gem'
 elsif allow_local
-  gem 'urbanopt-rnm-us', github: 'URBANopt/urbanopt/urbanopt-rnm-us-gem', branch: 'develop'
+  gem 'urbanopt-rnm-us', github: 'URBANopt/urbanopt-rnm-us-gem', branch: 'develop'
 else
   gem 'urbanopt-rnm-us', '~> 0.7.0'
 end
