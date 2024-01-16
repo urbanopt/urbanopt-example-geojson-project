@@ -7,6 +7,7 @@ gem 'rubocop-checkstyle_formatter', '~> 0.4.0', require: false
 gem 'rubocop-performance', '~> 1.11.3', require: false
 gem 'simplecov', '~> 0.18.2', require: false, group: :test
 gem 'simplecov-lcov', '~> 0.8.0', require: false, group: :test
+gem 'oga', '~> 3.4.0'
 
 # pin this dependency to avoid unicode_normalize error
 gem 'addressable', '2.8.1'
