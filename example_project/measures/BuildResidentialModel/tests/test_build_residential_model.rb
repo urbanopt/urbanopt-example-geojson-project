@@ -1,3 +1,8 @@
+# *********************************************************************************
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
+# *********************************************************************************
+
 # frozen_string_literal: true
 
 require_relative '../../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/minitest_helper'
@@ -168,7 +173,7 @@ class BuildResidentialModelTest < Minitest::Test
 
     feature_building_types = ['Single-Family Detached', 'Multifamily']
     feature_number_of_residential_unitss = (2..4).to_a
-    feature_number_of_bedroomss = (11..13).to_a    
+    feature_number_of_bedroomss = (11..13).to_a
 
     feature_building_types.each do |feature_building_type|
       feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
