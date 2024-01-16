@@ -42,6 +42,6 @@ jobs:
         # Only upload if something fails
         if: failure()
         with:
-          name: rspec_results
+          name: rspec_results_${{ matrix.scenario }}
           path: example_project/run/${{ matrix.scenario }}_scenario/
           retention-days: 7 # save for 1 week before deleting - useful for debugging
