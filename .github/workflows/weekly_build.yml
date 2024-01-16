@@ -30,6 +30,8 @@ jobs:
           bundle update
           bundle exec certified-update
       - name: Test residential measure variations
+        # We only need to run the residential measure_tests once, not for every iteration
+        if: matrix.scenario == 'baseline'
         run: bundle exec rake residential:measure_tests
       - name: Simulate
         run: bundle exec rake run_${{ matrix.scenario }}
