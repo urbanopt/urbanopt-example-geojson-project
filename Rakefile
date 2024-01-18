@@ -1,31 +1,6 @@
 # *********************************************************************************
-# URBANopt™, Copyright (c) 2019-2022, Alliance for Sustainable Energy, LLC, and other
-# contributors. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without modification,
-# are permitted provided that the following conditions are met:
-#
-# Redistributions of source code must retain the above copyright notice, this list
-# of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above copyright notice, this
-# list of conditions and the following disclaimer in the documentation and/or other
-# materials provided with the distribution.
-#
-# Neither the name of the copyright holder nor the names of its contributors may be
-# used to endorse or promote products derived from this software without specific
-# prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-# IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-# OF THE POSSIBILITY OF SUCH DAMAGE.
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
 # *********************************************************************************
 
 require 'openstudio/extension'
@@ -741,17 +716,17 @@ end
 ### All
 
 desc 'Clear all scenarios'
-task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed] do
+task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_chilled_water_storage, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task run_all: [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed] do
+task run_all: [:run_baseline, :run_high_efficiency, :run_chilled_water_storage, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed] do
+task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_chilled_water_storage, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed] do
   # post_process all the scenarios
 end
 
@@ -769,12 +744,35 @@ task :visualize_all do
   Rake::Task['visualize_features'].invoke('reopt_scenario.csv')
   Rake::Task['visualize_features'].reenable
   Rake::Task['visualize_features'].invoke('mixed_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('chilled_water_storage_scenario.csv')
   Rake::Task['visualize_scenarios'].invoke
+
 end
 
 desc 'Run and post process all scenarios'
 task update_all: [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
+end
+
+desc 'Run residential tasks'
+namespace :residential do
+  desc 'Update residential resources'
+  task :update_resources do
+    prefix = 'example_project/resources/hpxml-measures'
+    repository = 'https://github.com/NREL/OpenStudio-HPXML.git'
+    branch_or_tag = 'v1.7.0' # update this when pulling in updated OS-HPXML
+
+    FileUtils.rm_rf(prefix)
+    system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+  end
+
+  desc 'Run residential measure tests'
+  Rake::TestTask.new('measure_tests') do |t|
+    t.test_files = Dir['example_project/measures/*/tests/*.rb']
+    t.warning = false
+    t.verbose = true
+  end
 end
 
 task default: :update_all
