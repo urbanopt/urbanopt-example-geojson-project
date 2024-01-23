@@ -1,3 +1,11 @@
+<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/ReportUtilityBills/tests/test_report_utility_bills.rb
+=======
+# *********************************************************************************
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
+# *********************************************************************************
+
+>>>>>>> develop:example_project/resources/hpxml-measures/ReportUtilityBills/tests/test_report_utility_bills.rb
 # frozen_string_literal: true
 
 require 'oga'

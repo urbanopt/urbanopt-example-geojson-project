@@ -9,13 +9,36 @@
   <SoftwareInfo>
     <extension>
       <SimulationControl>
-        <Timestep>60</Timestep>
+        <Timestep>10</Timestep>
       </SimulationControl>
       <UtilityBillScenarios>
         <UtilityBillScenario>
           <Name>Bills</Name>
         </UtilityBillScenario>
       </UtilityBillScenarios>
+<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
+<<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
+========
+=======
+<<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
+>>>>>>> develop:example_project/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
+      <UnavailablePeriods>
+        <UnavailablePeriod>
+          <ColumnName>Power Outage</ColumnName>
+          <BeginMonth>12</BeginMonth>
+          <BeginDayOfMonth>1</BeginDayOfMonth>
+          <BeginHourOfDay>5</BeginHourOfDay>
+          <EndMonth>1</EndMonth>
+          <EndDayOfMonth>31</EndDayOfMonth>
+          <EndHourOfDay>14</EndHourOfDay>
+        </UnavailablePeriod>
+      </UnavailablePeriods>
+<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
+>>>>>>>> develop:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
+=======
+========
+>>>>>>>> develop:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
+>>>>>>> develop:example_project/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
     </extension>
   </SoftwareInfo>
   <Building>
@@ -51,6 +74,11 @@
           <ConditionedFloorArea>2700.0</ConditionedFloorArea>
           <ConditionedBuildingVolume>21600.0</ConditionedBuildingVolume>
         </BuildingConstruction>
+        <extension>
+          <SchedulesFilePath>../../HPXMLtoOpenStudio/resources/schedule_files/setpoints.csv</SchedulesFilePath>
+          <SchedulesFilePath>../../HPXMLtoOpenStudio/resources/schedule_files/water-heater-setpoints-10-mins.csv</SchedulesFilePath>
+          <SchedulesFilePath>../../HPXMLtoOpenStudio/resources/schedule_files/occupancy-stochastic-30-mins.csv</SchedulesFilePath>
+        </extension>
       </BuildingSummary>
       <ClimateandRiskZones>
         <ClimateZoneIECC>
@@ -352,8 +380,6 @@
           </HVACPlant>
           <HVACControl>
             <SystemIdentifier id='HVACControl1'/>
-            <SetpointTempHeatingSeason>68.0</SetpointTempHeatingSeason>
-            <SetpointTempCoolingSeason>78.0</SetpointTempCoolingSeason>
           </HVACControl>
           <HVACDistribution>
             <SystemIdentifier id='HVACDistribution1'/>
@@ -404,7 +430,6 @@
             <FractionDHWLoadServed>1.0</FractionDHWLoadServed>
             <HeatingCapacity>18767.0</HeatingCapacity>
             <EnergyFactor>0.95</EnergyFactor>
-            <HotWaterTemperature>125.0</HotWaterTemperature>
           </WaterHeatingSystem>
           <HotWaterDistribution>
             <SystemIdentifier id='HotWaterDistribution1'/>

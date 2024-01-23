@@ -16,6 +16,12 @@
           <Name>Bills</Name>
         </UtilityBillScenario>
       </UtilityBillScenarios>
+<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
+<<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
+=======
+<<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
+========
+>>>>>>> develop:example_project/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
       <UnavailablePeriods>
         <UnavailablePeriod>
           <ColumnName>Power Outage</ColumnName>
@@ -27,6 +33,12 @@
           <EndHourOfDay>14</EndHourOfDay>
         </UnavailablePeriod>
       </UnavailablePeriods>
+<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
+========
+>>>>>>>> develop:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-foundation-conditioned-basement-slab-insulation-full.xml
+=======
+>>>>>>>> develop:example_project/resources/residential-measures/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
+>>>>>>> develop:example_project/resources/hpxml-measures/workflow/sample_files/base-schedules-detailed-mixed-timesteps-power-outage.xml
     </extension>
   </SoftwareInfo>
   <Building>
@@ -252,8 +264,8 @@
             <UnderSlabInsulation>
               <SystemIdentifier id='Slab1UnderSlabInsulation'/>
               <Layer>
-                <NominalRValue>0.0</NominalRValue>
-                <InsulationWidth>0.0</InsulationWidth>
+                <NominalRValue>10.0</NominalRValue>
+                <InsulationSpansEntireSlab>true</InsulationSpansEntireSlab>
               </Layer>
             </UnderSlabInsulation>
             <extension>
