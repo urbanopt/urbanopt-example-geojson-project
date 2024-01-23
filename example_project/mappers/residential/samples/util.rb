@@ -1,3 +1,7 @@
+# *********************************************************************************
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
+# *********************************************************************************
 
 def get_resstock_building_id(args, buildstock_csv_path)
   '''Return ResStock building_id based on geojson file.'''
