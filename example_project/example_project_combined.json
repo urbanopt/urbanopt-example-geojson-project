@@ -19,7 +19,9 @@
     "electricity_emissions_annual_historical_subregion": "NYCW",
     "electricity_emissions_future_year": "2030",
     "electricity_emissions_hourly_historical_year": "2019",
-    "electricity_emissions_annual_historical_year": "2019"
+    "electricity_emissions_annual_historical_year": "2019",
+    "characterize_residential_buildings_from_buildstock_csv": true,
+    "resstock_buildstock_csv_path": "resources/results_df_Baltimore.csv"
   },
   "features": [
     {
@@ -37,7 +39,9 @@
         "surface_elevation": null,
         "tariff_filename": null,
         "timesteps_per_hour": 1,
-        "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw"
+        "weather_filename": "USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw",
+        "characterize_residential_buildings_from_buildstock_csv": true,
+        "resstock_buildstock_csv_path": "resources/results_df_Baltimore.csv"
       },
       "geometry": {
         "type": "Point",

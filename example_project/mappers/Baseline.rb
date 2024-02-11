@@ -566,20 +566,167 @@ module URBANopt
               residential_template(args, template, climate_zone)
             end
 
+
+            ########################################################################
+            ### Mapping methods from UO feature input names to buildstock characteristics names
+            #########################################################
+            # Define function to map 'building type to categories
+            def map_to_resstock_building_type(feature)
+              
+              res_type = feature.building_type
+
+              if res_type == 'Multifamily'
+                if feature.number_of_residential_units >= 5
+                  return 'Multi-Family with 2 - 4 Units'
+                elsif feature.number_of_residential_units.between?(2,4)
+                  return 'Multi-Family with 2 - 4 Units'
+                end              
+              elsif res_type == 'Single-Family Attached'
+                return 'Single-Family Attached'
+              elsif res_type == 'Single-Family Detached'
+                return 'Single-Family Detached'
+              elsif res_type == 'Mobile Home'
+                return 'Mobile Home'
+              else 
+                return 'Other Category'
+              end
+
+            end
+
+            # floor area mapping using 'Geometry Floor Area' floor area
+            def map_to_resstock_floor_area(feature)
+              floor_area_mapping = {
+                '750-999' => [750, 999],
+                '1000-1499' => [1000, 1499],
+                '500-749' => [500, 749],
+                '3000-3999' => [3000, 3999],
+                '2000-2499' => [2000, 2499],
+                '1500-1999' => [1500, 1999],
+                '2500-2999' => [2500, 2999],
+                '4000+' => [4000, Float::INFINITY],
+                '0-499' => [0, 499]
+              }
+              resstock_floor_area = nil
+
+              floor_area = feature.floor_area
+              floor_area_mapping.each do |key, range|
+                if floor_area >= range[0] && floor_area <= range[1]
+                  resstock_floor_area = key
+                  break # Exit the loop once the correct resstock floor area category is found
+                end
+              end
+              return resstock_floor_area # Return resstock floor area category
+            end
+
+            # Define function to map 'number_of_residential_units' to categories
+            def map_to_resstock_num_units(feature)
+              begin
+                value = feature.number_of_residential_units
+              rescue
+                value = 'None'
+              end
+              return value          
+            end
+            ########################################################################         
+            
+            ############## develop get_resstock_building_id method ################
+            require 'csv'
+            require 'securerandom'
+          
+            def get_resstock_building_id(buildstock_csv_path, feature)
+              # Assuming 'feature' is an instance with methods to access its properties
+              mapped_properties = {
+                'Geometry Building Type RECS' => map_to_resstock_building_type(feature),
+                'Geometry Stories' => feature.number_of_stories, # Assuming direct mapping or apply conversion if needed
+                'Geometry Building Number Units MF' => map_to_resstock_num_units(feature)
+              }
+              # Conditionally add properties if they exist
+              # year built
+              begin
+                mapped_properties['Vintage ACS'] = feature.year_built # Assuming direct mapping or apply conversion if needed
+              rescue StandardError
+                @@logger.info("\nyear_buit for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+              end
+              # floor_area
+              begin
+                mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(feature)
+              rescue StandardError
+                @@logger.info("\nfloor_area for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+              end
+              # number_of_bedrooms
+              begin
+                mapped_properties['Bedrooms'] = feature.number_of_bedrooms # Assuming direct mapping or apply conversion if needed
+              rescue StandardError
+                @@logger.info("\nnumber_of_bedrooms for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+              end
+              
+              # Find building matches
+              matches = []
+              CSV.foreach(buildstock_csv_path, headers: true) do |row|
+                is_match = mapped_properties.all? do |header, mapped_value|
+                  case header
+                  when 'Geometry Floor Area'
+                    # Special handling for ranges
+                    mapped_value == row[header]
+                  else
+                    # Direct string comparison for all other fields
+                    row[header].to_s == mapped_value.to_s
+                  end
+                end
+                matches << row['Building'] if is_match
+              end
+            
+              ## check the matches we got and select from them
+              case matches.size
+              when 0
+                @@logger.info("\n Feature #{feature.id}: No matching buildstock building ID found.")
+                nil
+              when 1
+                @@logger.info("\n Feature #{feature.id}: Matching buildstock building ID found: #{matches.first}")
+                matches.first
+              else
+                selected_id = matches.sample
+                # Replace 'puts' with '@@logger.info' if you are using a logger
+                @@logger.info("\n Feature #{feature.id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} : from #{matches}")
+                selected_id
+              end
+            end
+            ##############################################################################
+            
+            ####### UO resstock connection workflow ##############
             # Then onto optional "samples" mapping
             # mappers/residential/samples
             buildstock_csv_path = nil
+
+            #uo_resstock connection
             begin
-              # buildstock_csv_path = feature.buildstock_csv_path
-              # buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv')) # FIXME: remove once this can be specified in geojson file
+              uo_resstock_connection = feature.characterize_residential_buildings_from_buildstock_csv
             rescue StandardError
             end
+            
+            ### if uo_resstock_connect is true then check for resstock buildstock csv path
+            if uo_restock_connection = true
+              begin
+                csv_path = feature.resstock_buildstock_csv_path
+                # get full csv path 
+                buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../'+ csv_path))
+              rescue StandardError
+                @@logger.error("\n resstock_buildstock_csv_path was not assigned by the user. Add a path to a buildstock CSV.")
+              end
+            end
+
+            ###########################################################
+
+            ############### run uo-resstock workflow###################
 
             if !buildstock_csv_path.nil?
               require File.join(File.dirname(__FILE__), 'residential/samples/util')
-              resstock_building_id = get_resstock_building_id(args, buildstock_csv_path)
+              resstock_building_id = get_resstock_building_id(buildstock_csv_path,feature)
               residential_samples(args, resstock_building_id, buildstock_csv_path)
             end
+
+            ############################################################
+
 
             # Parse BuildResidentialModel measure xml so we can override defaults
             default_args = {}
