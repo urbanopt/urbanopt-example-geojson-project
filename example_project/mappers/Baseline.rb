@@ -618,6 +618,30 @@ module URBANopt
               return resstock_floor_area # Return resstock floor area category
             end
 
+            ## mapping to resstock Vintage ACS
+            def map_to_resstock_vintage(feature)
+              vintage_mapping = {
+                '2000-09' => (2000..2009),
+                '1940-59' => (1940..1959),
+                '2010s'   => (2010..2019),
+                '1980-99' => (1980..1999),
+                '1960-79' => (1960..1979),
+                '<1940'   => (..1939) 
+              }
+            
+              resstock_vintage_ACS_category = nil
+            
+              vintage_mapping.each do |key, range|
+                if range.cover?(feature.year_built)
+                  resstock_vintage_ACS_category = key
+                  break # Exit the loop once the correct resstock vintage ACS category is found
+                end
+              end
+            
+              return resstock_vintage_ACS_category # Return resstock vintage ACS category
+            end
+
+            
             # Define function to map 'number_of_residential_units' to categories
             def map_to_resstock_num_units(feature)
               begin
@@ -634,18 +658,24 @@ module URBANopt
             require 'securerandom'
           
             def get_resstock_building_id(buildstock_csv_path, feature)
-              # Assuming 'feature' is an instance with methods to access its properties
+              # Required properties to do the search
               mapped_properties = {
                 'Geometry Building Type RECS' => map_to_resstock_building_type(feature),
                 'Geometry Stories' => feature.number_of_stories, # Assuming direct mapping or apply conversion if needed
-                'Geometry Building Number Units MF' => map_to_resstock_num_units(feature)
               }
               # Conditionally add properties if they exist
+              # number_of_residential_units
+              begin
+                mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(feature)
+              rescue StandardError
+                @@logger.info("\nnumber_of_residential_units for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+              end
+
               # year built
               begin
-                mapped_properties['Vintage ACS'] = feature.year_built # Assuming direct mapping or apply conversion if needed
+               mapped_properties['Vintage ACS'] = map_to_resstock_vintage(feature) # Assuming direct mapping or apply conversion if needed
               rescue StandardError
-                @@logger.info("\nyear_buit for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+               @@logger.info("\nyear_buit for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
               end
               # floor_area
               begin
@@ -659,23 +689,32 @@ module URBANopt
               rescue StandardError
                 @@logger.info("\nnumber_of_bedrooms for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
               end
+
+              #puts "########### mapped_properties = #{mapped_properties}" ##for debugging
               
               # Find building matches
               matches = []
+
+
+              # read CSV FILE
               CSV.foreach(buildstock_csv_path, headers: true) do |row|
-                is_match = mapped_properties.all? do |header, mapped_value|
-                  case header
-                  when 'Geometry Floor Area'
-                    # Special handling for ranges
-                    mapped_value == row[header]
-                  else
-                    # Direct string comparison for all other fields
-                    row[header].to_s == mapped_value.to_s
-                  end
+                
+                # find if it's a match using reduce
+                is_match = mapped_properties.reduce(true) do |acc, (key, value)|
+                  current_match = row[key].to_s.strip.downcase == value.to_s.strip.downcase
+                  #puts "resstock = #{row[key].to_s.strip.downcase} :::::: uo_feature = #{value.to_s.strip.downcase}" ##for debugging
+                  acc && current_match
                 end
-                matches << row['Building'] if is_match
+
+                #puts "IS_MATCH = #{is_match}" #for debugging
+
+                if is_match
+                  # "Building" is the building id header in buildstock csv
+                  matches << row['Building']
+                end
+
               end
-            
+ 
               ## check the matches we got and select from them
               case matches.size
               when 0
@@ -687,7 +726,7 @@ module URBANopt
               else
                 selected_id = matches.sample
                 # Replace 'puts' with '@@logger.info' if you are using a logger
-                @@logger.info("\n Feature #{feature.id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} : from #{matches}")
+                @@logger.info("\n Feature #{feature.id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings")
                 selected_id
               end
             end
@@ -721,7 +760,10 @@ module URBANopt
 
             if !buildstock_csv_path.nil?
               require File.join(File.dirname(__FILE__), 'residential/samples/util')
+              start_time = Time.now # To document the time of get matching resstock building id method 
               resstock_building_id = get_resstock_building_id(buildstock_csv_path,feature)
+              end_time = Time.now
+              puts "TIME CHECK: Preprocessing time for finding a building match from the buildstock CSV: #{end_time - start_time} seconds"
               residential_samples(args, resstock_building_id, buildstock_csv_path)
             end
 
