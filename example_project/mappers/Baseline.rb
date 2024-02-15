@@ -745,10 +745,10 @@ module URBANopt
 
               ### Log matching results to csv 
               # Path to your log CSV file
-              log_csv_path = File.join(File.dirname(__FILE__), '../run/match_log.csv')
-              
+              log_csv_path = File.join(File.dirname(__FILE__), '../run/uo_buildstock_match_log.csv')
+    
               full_path = File.join(Dir.pwd, log_csv_path)
-              puts "################CSV is saved at: #{full_path}"
+              puts "CSV is saved at: #{full_path}"
 
               # Initialize CSV file with headers if it doesn't exist
               unless File.exist?(log_csv_path)
