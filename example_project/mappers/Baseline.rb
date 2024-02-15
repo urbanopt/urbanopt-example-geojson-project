@@ -661,14 +661,27 @@ module URBANopt
               # Required properties to do the search
               mapped_properties = {
                 'Geometry Building Type RECS' => map_to_resstock_building_type(feature),
-                'Geometry Stories' => feature.number_of_stories, # Assuming direct mapping or apply conversion if needed
               }
               # Conditionally add properties if they exist
-              # number_of_residential_units
+              # number_of_stories
+              begin
+                mapped_properties['Geometry Stories'] = feature.number_of_stories
+              rescue StandardError
+                @@logger.info("\nnumber_of_stories for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+              end
+
+              # number_of_residential_units MF
               begin
                 mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(feature)
               rescue StandardError
-                @@logger.info("\nnumber_of_residential_units for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+                @@logger.info("\nMF number_of_residential_units for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
+              end
+
+              # number_of_residential_units SFA
+              begin
+                mapped_properties['Geometry Building Number Units SFA'] = map_to_resstock_num_units(feature)
+              rescue StandardError
+                @@logger.info("\nSFA number_of_residential_units for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
               end
 
               # year built
@@ -694,7 +707,6 @@ module URBANopt
               
               # Find building matches
               matches = []
-
 
               # read CSV FILE
               CSV.foreach(buildstock_csv_path, headers: true) do |row|
@@ -754,9 +766,9 @@ module URBANopt
               end
             end
 
-            ###########################################################
+            #############################################################
 
-            ############### run uo-resstock workflow###################
+            ############### run uo-resstock workflow#####################
 
             if !buildstock_csv_path.nil?
               require File.join(File.dirname(__FILE__), 'residential/samples/util')
@@ -767,7 +779,7 @@ module URBANopt
               residential_samples(args, resstock_building_id, buildstock_csv_path)
             end
 
-            ############################################################
+            #############################################################
 
 
             # Parse BuildResidentialModel measure xml so we can override defaults
