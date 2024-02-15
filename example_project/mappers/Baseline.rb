@@ -731,16 +731,44 @@ module URBANopt
               case matches.size
               when 0
                 @@logger.info("\n Feature #{feature.id}: No matching buildstock building ID found.")
-                nil
+                selected_id = nil
               when 1
                 @@logger.info("\n Feature #{feature.id}: Matching buildstock building ID found: #{matches.first}")
-                matches.first
+                slected_id = matches.first
               else
                 selected_id = matches.sample
                 # Replace 'puts' with '@@logger.info' if you are using a logger
-                @@logger.info("\n Feature #{feature.id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings")
-                selected_id
+                @@logger.info("\n Feature #{feature.id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings: #{matches}")
+                
               end
+
+
+              ### Log matching results to csv 
+              # Path to your log CSV file
+              log_csv_path = File.join(File.dirname(__FILE__), '../run/match_log.csv')
+              
+              full_path = File.join(Dir.pwd, log_csv_path)
+              puts "################CSV is saved at: #{full_path}"
+
+              # Initialize CSV file with headers if it doesn't exist
+              unless File.exist?(log_csv_path)
+                CSV.open(log_csv_path, 'wb') do |csv|
+                  csv << ['uo_id', 'matches', 'selected_match']
+                end
+              end
+              # Append data to matching data CSV file
+              CSV.open(log_csv_path, 'ab') do |csv|
+                # Convert matches array to a string to store in CSV
+                matches_str = matches.join('; ')
+                selected_match_str = selected_id.to_s # selected_id is the result of the case statement
+
+                # Append new row with feature ID, matches, and selected match
+                csv << [feature.id, matches_str, selected_match_str]
+              end
+
+              #Return selected_id
+              return selected_id
+
             end
             ##############################################################################
             
@@ -774,6 +802,7 @@ module URBANopt
               require File.join(File.dirname(__FILE__), 'residential/samples/util')
               start_time = Time.now # To document the time of get matching resstock building id method 
               resstock_building_id = get_resstock_building_id(buildstock_csv_path,feature)
+              puts "resstock_building_id = #{resstock_building_id}"
               end_time = Time.now
               puts "TIME CHECK: Preprocessing time for finding a building match from the buildstock CSV: #{end_time - start_time} seconds"
               residential_samples(args, resstock_building_id, buildstock_csv_path)
