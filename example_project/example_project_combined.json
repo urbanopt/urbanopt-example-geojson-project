@@ -21,7 +21,8 @@
     "electricity_emissions_hourly_historical_year": "2019",
     "electricity_emissions_annual_historical_year": "2019",
     "characterize_residential_buildings_from_buildstock_csv": true,
-    "resstock_buildstock_csv_path": "resources/buildstock.csv"
+    "resstock_buildstock_csv_path": "resources/buildstock.csv",
+    "uo_buildstock_mapping_csv_path" : "resources/uo_buildstock_mapping.csv"
   },
   "features": [
     {
