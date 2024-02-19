@@ -17,3 +17,4 @@ Feature Id,Feature Name,Mapper Class
 16,Residential 3,URBANopt::Scenario::BaselineMapper
 17,Residential 4,URBANopt::Scenario::BaselineMapper
 18,Residential 5,URBANopt::Scenario::BaselineMapper
+19,Residential 6,URBANopt::Scenario::BaselineMapper
