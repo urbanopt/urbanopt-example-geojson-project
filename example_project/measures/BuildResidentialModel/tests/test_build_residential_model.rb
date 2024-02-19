@@ -309,7 +309,6 @@ class BuildResidentialModelTest < Minitest::Test
             # No matches
             next if @building_type == 'Single-Family Detached' && @number_of_residential_units > 1
             next if ['Single-Family Attached', 'Multifamily'].include?(@building_type) && @number_of_residential_units == 1
-            # next if @building_type == 'Multifamily' && [5, 7].include?(@number_of_residential_units) && @floor_area == 15000
 
             _apply_residential()
             _apply_residential_samples()
