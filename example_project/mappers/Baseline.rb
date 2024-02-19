@@ -566,228 +566,6 @@ module URBANopt
               residential_template(args, template, climate_zone)
             end
 
-
-            ########################################################################
-            ### Mapping methods from UO feature input names to buildstock characteristics names
-            #########################################################
-            # Define function to map 'building type to categories
-            def map_to_resstock_building_type(feature)
-              
-              res_type = feature.building_type
-
-              if res_type == 'Multifamily'
-                if feature.number_of_residential_units >= 5
-                  return 'Multi-Family with 2 - 4 Units'
-                elsif feature.number_of_residential_units.between?(2,4)
-                  return 'Multi-Family with 2 - 4 Units'
-                end              
-              elsif res_type == 'Single-Family Attached'
-                return 'Single-Family Attached'
-              elsif res_type == 'Single-Family Detached'
-                return 'Single-Family Detached'
-              elsif res_type == 'Mobile Home'
-                return 'Mobile Home'
-              else 
-                return 'Other Category'
-              end
-
-            end
-
-            # floor area mapping using 'Geometry Floor Area' floor area
-            def map_to_resstock_floor_area(feature)
-              floor_area_mapping = {
-                '750-999' => [750, 999],
-                '1000-1499' => [1000, 1499],
-                '500-749' => [500, 749],
-                '3000-3999' => [3000, 3999],
-                '2000-2499' => [2000, 2499],
-                '1500-1999' => [1500, 1999],
-                '2500-2999' => [2500, 2999],
-                '4000+' => [4000, Float::INFINITY],
-                '0-499' => [0, 499]
-              }
-              resstock_floor_area = nil
-
-              floor_area = feature.floor_area
-              floor_area_mapping.each do |key, range|
-                if floor_area >= range[0] && floor_area <= range[1]
-                  resstock_floor_area = key
-                  break # Exit the loop once the correct resstock floor area category is found
-                end
-              end
-              return resstock_floor_area # Return resstock floor area category
-            end
-
-            ## mapping to resstock Vintage ACS
-            def map_to_resstock_vintage(feature)
-              vintage_mapping = {
-                '2000-09' => (2000..2009),
-                '1940-59' => (1940..1959),
-                '2010s'   => (2010..2019),
-                '1980-99' => (1980..1999),
-                '1960-79' => (1960..1979),
-                '<1940'   => (..1939) 
-              }
-            
-              resstock_vintage_ACS_category = nil
-            
-              vintage_mapping.each do |key, range|
-                if range.cover?(feature.year_built)
-                  resstock_vintage_ACS_category = key
-                  break # Exit the loop once the correct resstock vintage ACS category is found
-                end
-              end
-            
-              return resstock_vintage_ACS_category # Return resstock vintage ACS category
-            end
-
-            
-            # Define function to map 'number_of_residential_units' to categories
-            def map_to_resstock_num_units(feature)
-              begin
-                value = feature.number_of_residential_units
-              rescue
-                value = 'None'
-              end
-              return value          
-            end
-            ########################################################################         
-            
-            ############## develop get_resstock_building_id method ################
-            require 'csv'
-            require 'securerandom'
-          
-            def get_resstock_building_id(buildstock_csv_path, feature)
-              # Required properties to do the search
-              mapped_properties = {
-                'Geometry Building Type RECS' => map_to_resstock_building_type(feature),
-              }
-              # Conditionally add properties if they exist
-              # number_of_stories
-              begin
-                mapped_properties['Geometry Stories'] = feature.number_of_stories
-              rescue StandardError
-                @@logger.info("\nnumber_of_stories for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
-              end
-
-              # number_of_residential_units MF
-              begin
-                mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(feature)
-              rescue StandardError
-                @@logger.info("\nMF number_of_residential_units for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
-              end
-
-              # number_of_residential_units SFA
-              begin
-                mapped_properties['Geometry Building Number Units SFA'] = map_to_resstock_num_units(feature)
-              rescue StandardError
-                @@logger.info("\nSFA number_of_residential_units for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
-              end
-
-              # year built
-              begin
-               mapped_properties['Vintage ACS'] = map_to_resstock_vintage(feature) # Assuming direct mapping or apply conversion if needed
-              rescue StandardError
-               @@logger.info("\nyear_buit for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
-              end
-              # floor_area
-              begin
-                mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(feature)
-              rescue StandardError
-                @@logger.info("\nfloor_area for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
-              end
-              # number_of_bedrooms
-              begin
-                mapped_properties['Bedrooms'] = feature.number_of_bedrooms # Assuming direct mapping or apply conversion if needed
-              rescue StandardError
-                @@logger.info("\nnumber_of_bedrooms for feature #{feature.id} was not used to filter buildstok csv since it does not exisit for this feature")
-              end
-
-              #puts "########### mapped_properties = #{mapped_properties}" ##for debugging
-              
-              # Find building matches
-              matches = []
-
-              # read CSV FILE
-              CSV.foreach(buildstock_csv_path, headers: true) do |row|
-                
-                # find if it's a match using reduce
-                is_match = mapped_properties.reduce(true) do |acc, (key, value)|
-                  current_match = row[key].to_s.strip.downcase == value.to_s.strip.downcase
-                  #puts "resstock = #{row[key].to_s.strip.downcase} :::::: uo_feature = #{value.to_s.strip.downcase}" ##for debugging
-                  acc && current_match
-                end
-
-                #puts "IS_MATCH = #{is_match}" #for debugging
-
-                if is_match
-                  # "Building" is the building id header in buildstock csv
-                  matches << row['Building']
-                end
-
-              end
- 
-              ## check the matches we got and select from them
-              case matches.size
-              when 0
-                @@logger.info("\n Feature #{feature.id}: No matching buildstock building ID found.")
-                selected_id = nil
-              when 1
-                @@logger.info("\n Feature #{feature.id}: Matching buildstock building ID found: #{matches.first}")
-                slected_id = matches.first
-              else
-                selected_id = matches.sample
-                # Replace 'puts' with '@@logger.info' if you are using a logger
-                @@logger.info("\n Feature #{feature.id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings: #{matches}")
-                
-              end
-
-              ### Log matching results to csv 
-              # Path to your log CSV file
-              log_csv_path = File.join(File.dirname(__FILE__), '../run/uo_buildstock_match_log.csv')
-    
-              full_path = File.join(Dir.pwd, log_csv_path)
-              puts "CSV is saved at: #{full_path}"
-
-              # Initialize CSV file with headers if it doesn't exist
-              unless File.exist?(log_csv_path)
-                CSV.open(log_csv_path, 'wb') do |csv|
-                  csv << ['uo_id', 'matches', 'selected_match']
-                end
-              end
-              # Append data to matching data CSV file
-              CSV.open(log_csv_path, 'ab') do |csv|
-                # Convert matches array to a string to store in CSV
-                matches_str = matches.join('; ')
-                selected_match_str = selected_id.to_s # selected_id is the result of the case statement
-
-                # Append new row with feature ID, matches, and selected match
-                csv << [feature.id, matches_str, selected_match_str]
-              end
-
-              #Return selected_id
-              return selected_id
-
-            end
-            ##############################################################################
-            
-            ##############################################################################
-            ## get buildistock building id from the uo_buildstock_mapping_csv
-            # Read csv file and find the resstock_building_id that correspond to the uo feature
-            def find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature)
-              building_id = nil
-              uo_id = feature.id
-              CSV.foreach(uo_buildstock_mapping_csv_path, headers: true) do |row|
-                if row['UO_id'].to_s == uo_id.to_s
-                  building_id = row['Building']
-                  break # Exit the loop once the matching building ID is found
-                end
-              end
-              return building_id # Returns the found building ID or nil if not found
-            end
-            ##############################################################################
-            
-
             ################# UO resstock connection workflow ############################
             # Then onto optional "samples" mapping
             # mappers/residential/samples
@@ -801,7 +579,7 @@ module URBANopt
             rescue StandardError
             end
 
-            # buidlstock csv path
+            # buildstock csv path
             begin
               csv_path = feature.resstock_buildstock_csv_path
               # get full csv path 
@@ -818,30 +596,27 @@ module URBANopt
               @@logger.error("\n uo_buildstock_mapping_csv_path was not assigned by the user")
             end
             
-            #############################################################
             ############### run uo-resstock workflow#####################
-
             # Run workflows if  UO-ResStock connection is established
             if uo_resstock_connection
 
               if !uo_buildstock_mapping_csv_path.nil?
                 ### If uo_buildstock_mapping_csv_path is provided
                 @@logger.info("Processing with UO-BuildStock mapping CSV path.")
-                resstock_building_id = find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature)
-                puts "restock_building_id = #{resstock_building_id }"
+                resstock_building_id = find_building_for_uo_id(buildstock_csv_path, uo_buildstock_mapping_csv_path, feature)
+                puts "restock_building_id = #{resstock_building_id}"
                 ## run residential_samples
                 ## TODO: this should be developed to run with as much charachteristics are provided in the buildstock csv for the uo feature
                 require File.join(File.dirname(__FILE__), 'residential/samples/util')
                 residential_samples(args, resstock_building_id, buildstock_csv_path) 
 
               elsif !buildstock_csv_path.nil?
-
                 ### If buildstock_csv_path is provided
                 @@logger.info("Processing with BuildStock CSV path.")
                 
                 require File.join(File.dirname(__FILE__), 'residential/samples/util')
                 start_time = Time.now # To document the time of get matching resstock building id method 
-                resstock_building_id = get_resstock_building_id(buildstock_csv_path,feature)
+                resstock_building_id = get_resstock_building_id(buildstock_csv_path, feature, building_type, @@logger)
                 puts "resstock_building_id = #{resstock_building_id}"
                 end_time = Time.now
                 puts "TIME CHECK: Preprocessing time for finding a building match from the buildstock CSV: #{end_time - start_time} seconds"
@@ -850,16 +625,11 @@ module URBANopt
               else
                 @@logger.error("The user did not specify neither the uo_buildstock_mapping_csv_path nor the buildstock_csv_path. At least one of these is required for UO - ResStock connection.")
               end
-
             else
-
               @@logger.error("UO-ResStock connection is not activated")
-
             end
-
             #############################################################
             #############################################################
-
 
             # Parse BuildResidentialModel measure xml so we can override defaults
             default_args = {}
