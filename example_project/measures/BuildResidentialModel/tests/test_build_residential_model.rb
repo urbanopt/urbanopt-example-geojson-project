@@ -293,16 +293,29 @@ class BuildResidentialModelTest < Minitest::Test
 
   def test_residential_samples
     feature_buildstock_csv_paths = [File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))]
-    resstock_building_ids = [1, 3, 8, 15] # SFD, Mobile Home, SFA, MF
+    feature_building_types = ['Single-Family Detached', 'Single-Family Attached', 'Multifamily']
+    feature_number_of_residential_unitss = [1, 5, 7]
+    feature_floor_areas = [5000, 9000]
 
     feature_buildstock_csv_paths.each do |feature_buildstock_csv_path|
-      resstock_building_ids.each do |resstock_building_id|
-        @resstock_building_id = resstock_building_id
-        @buildstock_csv_path = feature_buildstock_csv_path
+      feature_building_types.each do |feature_building_type|
+        feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
+          feature_floor_areas.each do |feature_floor_area|
+            @buildstock_csv_path = feature_buildstock_csv_path
+            @building_type = feature_building_type          
+            @number_of_residential_units = feature_number_of_residential_units
+            @floor_area = feature_floor_area
 
-        _apply_residential()
-        _apply_residential_samples()
-        _test_measure()
+            # No matches
+            next if @building_type == 'Single-Family Detached' && @number_of_residential_units > 1
+            next if ['Single-Family Attached', 'Multifamily'].include?(@building_type) && @number_of_residential_units == 1
+            # next if @building_type == 'Multifamily' && [5, 7].include?(@number_of_residential_units) && @floor_area == 15000
+
+            _apply_residential()
+            _apply_residential_samples()
+            _test_measure()
+          end
+        end
       end
     end
   end
@@ -323,7 +336,17 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def _apply_residential_samples()
-    residential_samples(@args, @resstock_building_id, @buildstock_csv_path)
+    mapped_properties = {}
+    mapped_properties['Geometry Building Type RECS'] = map_to_resstock_building_type(@building_type, @number_of_residential_units)
+    # mapped_properties['Geometry Stories'] = feature.number_of_stories_above_ground
+    mapped_properties['Geometry Building Number Units SFA'], mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(@building_type, @number_of_residential_units)
+    # mapped_properties['Vintage ACS'] = map_to_resstock_vintage(feature.year_built)
+    mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(@floor_area, @number_of_residential_units)
+    # mapped_properties['Bedrooms'] = feature.number_of_bedrooms
+    resstock_building_id, infos = get_selected_id(mapped_properties, @buildstock_csv_path, 'Test Feature')
+    puts infos.join
+    puts mapped_properties
+    residential_samples(@args, resstock_building_id, @buildstock_csv_path)
   end
 
   def _test_measure(expected_errors: [])
