@@ -126,6 +126,13 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # Assign resstock options
     if args.key?(:resstock_building_id)
+      resstock_building_id = args[:resstock_building_id]
+
+      if resstock_building_id == 0
+        runner.registerError("Feature ID = #{args[:urbanopt_feature_id]}: No matching buildstock building ID found.")
+        return false
+      end
+
       lib_dir = File.join(resources_dir, 'residential-measures/lib')
       characteristics_dir = File.join(lib_dir, 'housing_characteristics')
       buildstock_file = File.join(lib_dir, 'resources/buildstock.rb')
@@ -145,7 +152,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       lookup_csv_data = CSV.open(lookup_file, col_sep: "\t").each.to_a
 
       # Retrieve all data associated with sample number
-      bldg_data = get_data_for_sample(buildstock_csv_path, args[:resstock_building_id], runner)
+      bldg_data = get_data_for_sample(buildstock_csv_path, resstock_building_id, runner)
 
       # Retrieve order of parameters to run
       parameters_ordered = get_parameters_ordered_from_options_lookup_tsv(lookup_csv_data, characteristics_dir)

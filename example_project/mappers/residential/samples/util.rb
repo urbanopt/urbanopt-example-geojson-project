@@ -98,14 +98,14 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
   ## check the matches we got and select from them
   case matches.size
   when 0
-    infos << "\n Feature #{feature_id}: No matching buildstock building ID found. #{mapped_properties}"
-    selected_id = nil
+    infos << "\nFeature #{feature_id}: No matching buildstock building ID found. #{mapped_properties}"
+    selected_id = 0
   when 1
     selected_id = matches.first
-    infos << "\n Feature #{feature_id}: Matching buildstock building ID found: #{selected_id}. #{mapped_properties}"
+    infos << "\nFeature #{feature_id}: Matching buildstock building ID found: #{selected_id}. #{mapped_properties}"
   else
     selected_id = matches.sample
-    infos << "\n Feature #{feature_id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings: #{matches}. #{mapped_properties}"
+    infos << "\nFeature #{feature_id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings: #{matches}. #{mapped_properties}"
   end
 
   ### Log matching results to csv 
@@ -131,7 +131,6 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
     csv << [feature_id, matches_str, selected_match_str]
   end
 
-  #Return selected_id, infos
   return selected_id, infos
 end
 
