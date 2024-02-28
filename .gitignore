@@ -32,3 +32,5 @@ out.txt
 runner.conf
 # coveralls
 .coveralls.yml
+
+example_project/measures/BuildResidentialModel/tests/run
