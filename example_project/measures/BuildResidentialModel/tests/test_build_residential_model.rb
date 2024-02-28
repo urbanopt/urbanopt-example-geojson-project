@@ -128,16 +128,8 @@ class BuildResidentialModelTest < Minitest::Test
           @args[:geometry_num_floors_above_grade] = feature_number_of_stories_above_ground
           @args[:geometry_building_num_units] = feature_number_of_residential_units
 
-          expected_errors = []
-          if feature_building_type == 'Multifamily'
-            num_units_per_floor = (Float(@args[:geometry_building_num_units]) / Float(@args[:geometry_num_floors_above_grade])).ceil
-            if num_units_per_floor == 1
-              expected_errors = ["Unit type 'apartment unit' with num_units_per_floor=#{num_units_per_floor} is not supported."]
-            end
-          end
-
           _apply_residential()
-          _test_measure(expected_errors: expected_errors)
+          _test_measure(expected_errors: [])
         end
       end
     end
@@ -170,13 +162,10 @@ class BuildResidentialModelTest < Minitest::Test
 
             expected_errors = []
             if feature_attic_type == 'attic - conditioned' && feature_number_of_stories_above_ground == 1
-              expected_errors = ['Units with a conditioned attic must have at least two above-grade floors.']
+              expected_errors += ['Units with a conditioned attic must have at least two above-grade floors.']
             end
-            if feature_building_type == 'Multifamily'
-              num_units_per_floor = (Float(@args[:geometry_building_num_units]) / Float(@args[:geometry_num_floors_above_grade])).ceil
-              if num_units_per_floor == 1
-                expected_errors = ["Unit type 'apartment unit' with num_units_per_floor=#{num_units_per_floor} is not supported."]
-              end
+            if feature_building_type == 'Multifamily' && ['basement - conditioned', 'crawlspace - conditioned'].include?(feature_foundation_type)
+              expected_errors += ['Conditioned basement/crawlspace foundation type for apartment units is not currently supported.']
             end
 
             _apply_residential()
@@ -272,10 +261,10 @@ class BuildResidentialModelTest < Minitest::Test
 
           expected_errors = []
           if feature_foundation_type == 'ambient' && feature_onsite_parking_fraction
-            expected_errors = ['Cannot handle garages with an ambient foundation type.']
+            expected_errors += ['Cannot handle garages with an ambient foundation type.']
           end
-          if feature_building_type == 'Multifamily' && feature_foundation_type.include?('- conditioned')
-            expected_errors = ['Conditioned basement/crawlspace foundation type for apartment units is not currently supported.']
+          if feature_building_type == 'Multifamily' && ['basement - conditioned', 'crawlspace - conditioned'].include?(feature_foundation_type)
+            expected_errors += ['Conditioned basement/crawlspace foundation type for apartment units is not currently supported.']
           end
 
           _apply_residential()
