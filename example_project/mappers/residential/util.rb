@@ -67,7 +67,7 @@ def residential(scenario, feature, args, building_type)
   rescue StandardError
   end
 
-  maximum_roof_height = 8.0
+  maximum_roof_height = 8.0 * args[:geometry_num_floors_above_grade]
   begin
     maximum_roof_height = feature.maximum_roof_height
   rescue StandardError
