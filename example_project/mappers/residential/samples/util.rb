@@ -44,21 +44,21 @@ def get_resstock_building_id(buildstock_csv_path, feature, building_type, logger
   begin
    mapped_properties['Vintage ACS'] = map_to_resstock_vintage(feature.year_built) # Assuming direct mapping or apply conversion if needed
   rescue StandardError
-   logger.info("\nyear_buit for feature #{feature.id} was not used to filter buildstok csv since it does not exist for this feature")
+   logger.info("\nyear_built for feature #{feature.id} was not used to filter buildstock csv since it does not exist for this feature")
   end
 
   # floor_area
   begin
     mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(feature.floor_area, number_of_residential_units)
   rescue StandardError
-    logger.info("\nfloor_area for feature #{feature.id} was not used to filter buildstok csv since it does not exist for this feature")
+    logger.info("\nfloor_area for feature #{feature.id} was not used to filter buildstock csv since it does not exist for this feature")
   end
 
   # number_of_bedrooms
   begin
     mapped_properties['Bedrooms'] = feature.number_of_bedrooms / number_of_residential_units # Assuming direct mapping or apply conversion if needed
   rescue StandardError
-    logger.info("\nnumber_of_bedrooms for feature #{feature.id} was not used to filter buildstok csv since it does not exist for this feature")
+    logger.info("\nnumber_of_bedrooms for feature #{feature.id} was not used to filter buildstock csv since it does not exist for this feature")
   end
 
   #puts "########### mapped_properties = #{mapped_properties}" ##for debugging
@@ -104,7 +104,9 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
     selected_id = matches.first
     infos << "\nFeature #{feature_id}: Matching buildstock building ID found: #{selected_id}. #{mapped_properties}"
   else
-    selected_id = matches.sample
+    selected_ids = matches.sample(1, random: Random.new(12345))
+    selected_id = selected_ids[0]
+    selected_id = '1975'###
     infos << "\nFeature #{feature_id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings: #{matches}. #{mapped_properties}"
   end
 
