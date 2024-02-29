@@ -12,11 +12,12 @@ require 'openstudio'
 require 'openstudio/measure/ShowRunnerOutput'
 require_relative '../measure.rb'
 require 'csv'
+require 'pathname'
 
 class BuildResidentialModelTest < Minitest::Test
   def setup
-    @tests_path = File.dirname(__FILE__)
-    @run_path = File.join(@tests_path, 'run')
+    @tests_path = Pathname(__FILE__).dirname
+    @run_path = @tests_path / 'run'
     FileUtils.mkdir_p(@run_path)
     @model_save = true # true helpful for debugging, i.e., save the HPXML files
   end
@@ -34,7 +35,7 @@ class BuildResidentialModelTest < Minitest::Test
     @args[:schedules_random_seed] = 1
     @args[:schedules_variation] = 'unit'
     @args[:geometry_num_floors_above_grade] = 1
-    @args[:hpxml_path] = @hpxml_path
+    @args[:hpxml_path] = @hpxml_path.to_s
     @args[:output_dir] = File.dirname(@hpxml_path)
 
     # Optionals / Feature
@@ -65,24 +66,25 @@ class BuildResidentialModelTest < Minitest::Test
     # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
     # - "hpxml_directory"
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
 
-    @hpxml_path = File.join(test_folder, "", 'feature.xml')
+    @hpxml_path = test_folder / '' / 'feature.xml'
+    puts @hpxml_path
     _initialize_arguments()
     @args[:hpxml_dir] = '18'
     _test_measure(expected_errors: ["HPXML directory 'xml_building/18' was specified for feature ID = 1, but could not be found."])
 
-    @hpxml_path = File.join(test_folder, "", 'feature.xml')
+    @hpxml_path = test_folder / '' / 'feature.xml'
     _initialize_arguments()
     @args[:hpxml_dir] = '../measures/BuildResidentialModel/tests/xml_building/17'
     _test_measure(expected_errors: ["HPXML directory 'xml_building/17' must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature."])
 
-    @hpxml_path = File.join(test_folder, "", 'feature.xml')
+    @hpxml_path = test_folder / '' / 'feature.xml'
     _initialize_arguments()
     @args[:hpxml_dir] = '17'
     _test_measure(expected_errors: ['The number of actual dwelling units (4) differs from the specified number of units (1).'])
 
-    @hpxml_path = File.join(test_folder, "17", 'feature.xml')
+    @hpxml_path = test_folder / '17' / 'feature.xml'
     FileUtils.mkdir_p(File.dirname(@hpxml_path))
     _initialize_arguments()
     @args[:hpxml_dir] = '17'
@@ -95,9 +97,9 @@ class BuildResidentialModelTest < Minitest::Test
 
     schedules_types = ['stochastic', 'smooth']
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     schedules_types.each do |schedules_type|
-      @hpxml_path = File.join(test_folder, "#{schedules_type}", 'feature.xml')
+      @hpxml_path = test_folder / "#{schedules_type}" / 'feature.xml'
       _initialize_arguments()
 
       @args[:schedules_type] = schedules_type
@@ -117,11 +119,11 @@ class BuildResidentialModelTest < Minitest::Test
     feature_number_of_residential_unitss = (1..3).to_a
     feature_number_of_stories_above_grounds = (1..2).to_a
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
         feature_number_of_stories_above_grounds.each do |feature_number_of_stories_above_ground|
-          @hpxml_path = File.join(test_folder, "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_number_of_stories_above_ground}", 'feature.xml')
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_number_of_stories_above_ground}" / 'feature.xml'
           _initialize_arguments()
 
           @building_type = feature_building_type
@@ -147,12 +149,12 @@ class BuildResidentialModelTest < Minitest::Test
     feature_attic_types = ['attic - vented', 'attic - conditioned', 'flat roof']
     feature_number_of_stories_above_grounds = (1..2).to_a
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_foundation_types.each do |feature_foundation_type|
         feature_attic_types.each do |feature_attic_type|
           feature_number_of_stories_above_grounds.each do |feature_number_of_stories_above_ground|
-            @hpxml_path = File.join(test_folder, "#{feature_building_type}_#{feature_foundation_type}_#{feature_attic_type}_#{feature_number_of_stories_above_ground}", 'feature.xml')
+            @hpxml_path = test_folder / "#{feature_building_type}_#{feature_foundation_type}_#{feature_attic_type}_#{feature_number_of_stories_above_ground}" / 'feature.xml'
             _initialize_arguments()
 
             @building_type = feature_building_type
@@ -186,11 +188,11 @@ class BuildResidentialModelTest < Minitest::Test
     feature_number_of_residential_unitss = (2..4).to_a
     feature_number_of_bedroomss = (11..13).to_a
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
         feature_number_of_bedroomss.each do |feature_number_of_bedrooms|
-          @hpxml_path = File.join(test_folder, "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_number_of_bedrooms}", 'feature.xml')
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_number_of_bedrooms}" / 'feature.xml'
           _initialize_arguments()
 
           @building_type = feature_building_type
@@ -216,12 +218,12 @@ class BuildResidentialModelTest < Minitest::Test
     feature_number_of_residential_unitss = (2..3).to_a
     feature_number_of_occupantss = [nil, 3]
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_occupancy_calculation_types.each do |feature_occupancy_calculation_type|
         feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
           feature_number_of_occupantss.each do |feature_number_of_occupants|
-            @hpxml_path = File.join(test_folder, "#{feature_building_type}_#{feature_occupancy_calculation_type}_#{feature_number_of_residential_units}_#{feature_number_of_occupants}", 'feature.xml')
+            @hpxml_path = test_folder / "#{feature_building_type}_#{feature_occupancy_calculation_type}_#{feature_number_of_residential_units}_#{feature_number_of_occupants}" / 'feature.xml'
             _initialize_arguments()
 
             @building_type = feature_building_type
@@ -247,11 +249,11 @@ class BuildResidentialModelTest < Minitest::Test
     feature_foundation_types = ['slab', 'crawlspace - vented', 'crawlspace - conditioned', 'basement - unconditioned',	'basement - conditioned', 'ambient']
     feature_onsite_parking_fractions = [false, true]
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_foundation_types.each do |feature_foundation_type|
         feature_onsite_parking_fractions.each do |feature_onsite_parking_fraction|
-          @hpxml_path = File.join(test_folder, "#{feature_building_type}_#{feature_foundation_type}_#{feature_onsite_parking_fraction}", 'feature.xml')
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_foundation_type}_#{feature_onsite_parking_fraction}" / 'feature.xml'
           _initialize_arguments()
 
           @building_type = feature_building_type
@@ -282,10 +284,10 @@ class BuildResidentialModelTest < Minitest::Test
     feature_system_types = ['Residential - electric resistance and no cooling', 'Residential - electric resistance and central air conditioner',	'Residential - electric resistance and room air conditioner', 'Residential - electric resistance and evaporative cooler', 'Residential - furnace and no cooling', 'Residential - furnace and central air conditioner', 'Residential - furnace and room air conditioner', 'Residential - furnace and evaporative cooler', 'Residential - boiler and no cooling', 'Residential - boiler and central air conditioner', 'Residential - boiler and room air conditioner', 'Residential - boiler and evaporative cooler', 'Residential - air-to-air heat pump', 'Residential - mini-split heat pump', 'Residential - ground-to-air heat pump']
     feature_heating_system_fuel_types = ['electricity', 'natural gas', 'fuel oil', 'propane', 'wood']
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_system_types.each do |feature_system_type|
       feature_heating_system_fuel_types.each do |feature_heating_system_fuel_type|
-        @hpxml_path = File.join(test_folder, "#{feature_system_type}_#{feature_heating_system_fuel_type}", 'feature.xml')
+        @hpxml_path = test_folder / "#{feature_system_type}_#{feature_heating_system_fuel_type}" / 'feature.xml'
         _initialize_arguments()
         
         @system_type = feature_system_type
@@ -303,9 +305,9 @@ class BuildResidentialModelTest < Minitest::Test
 
     feature_templates = ['Residential IECC 2006 - Customizable Template Sep 2020', 'Residential IECC 2009 - Customizable Template Sep 2020', 'Residential IECC 2012 - Customizable Template Sep 2020', 'Residential IECC 2015 - Customizable Template Sep 2020', 'Residential IECC 2018 - Customizable Template Sep 2020', 'Residential IECC 2006 - Customizable Template Apr 2022', 'Residential IECC 2009 - Customizable Template Apr 2022', 'Residential IECC 2012 - Customizable Template Apr 2022', 'Residential IECC 2015 - Customizable Template Apr 2022', 'Residential IECC 2018 - Customizable Template Apr 2022']
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_templates.each do |feature_template|
-      @hpxml_path = File.join(test_folder, feature_template, 'feature.xml')
+      @hpxml_path = test_folder / feature_template / 'feature.xml'
       _initialize_arguments()
 
       @template = feature_template
@@ -320,10 +322,10 @@ class BuildResidentialModelTest < Minitest::Test
     feature_building_types = ['Multifamily']
     feature_number_of_residential_unitss = (1..5).to_a
 
-    test_folder = File.join(@run_path, __method__.to_s)
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
-        @hpxml_path = File.join(test_folder, "#{feature_building_type}_#{feature_number_of_residential_units}", 'feature.xml')
+        @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}" / 'feature.xml'
         _initialize_arguments()
         
         @building_type = feature_building_type

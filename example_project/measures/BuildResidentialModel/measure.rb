@@ -204,7 +204,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         if !apply_measures(measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', nil)
           return false
         end
-        model.save(hpxml_path.gsub('.xml', '.osm'), true)
       else # we're using an HPXML file from the xml_building folder
         FileUtils.cp(File.expand_path(unit['hpxml_path']), hpxml_path)
 
@@ -298,6 +297,15 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     when 'single-family detached'
       units << {}
     when 'single-family attached'
+
+      ###################################################
+      #         #         #         #         #         #
+      #         #         #         #         #         #
+      #    1    #    2    #    3    #    4    #    5    #
+      #         #         #         #         #         #
+      #         #         #         #         #         #
+      ###################################################
+
       (1..args[:geometry_building_num_units]).to_a.each do |unit_num|
         case unit_num
         when 1
@@ -314,6 +322,21 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
       end
     when 'apartment unit'
+
+      #####################
+      #         #         #
+      #         #         #
+      #    2    #    4    #
+      #         #         #
+      #         #         #
+      ###############################
+      #         #         #         #
+      #         #         #         #
+      #    1    #    3    #    5    #
+      #         #         #         #
+      #         #         #         #
+      ###############################
+
       num_units_per_floor = (Float(args[:geometry_building_num_units]) / Float(args[:geometry_num_floors_above_grade])).ceil
 
       floor = 1
@@ -328,20 +351,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         geometry_unit_right_wall_is_adiabatic = true
         geometry_unit_front_wall_is_adiabatic = false
         geometry_unit_back_wall_is_adiabatic = true
-
-        #####################
-        #         #         #
-        #         #         #
-        #    2    #    4    #
-        #         #         #
-        #         #         #
-        ###############################
-        #         #         #         #
-        #         #         #         #
-        #    1    #    3    #    5    #
-        #         #         #         #
-        #         #         #         #
-        ###############################
 
         if position == 1
           geometry_unit_right_wall_is_adiabatic = false
