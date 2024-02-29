@@ -124,8 +124,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     check_dir_exists(resources_dir, runner)
     check_dir_exists(hpxml_measures_dir, runner)
 
-    # Assign resstock options
-    if args.key?(:resstock_building_id)
+    # Either:
+    # (A) Assign ResStock options; all units of the building are identical
+    # (B) Create units of the building using logic in get_unit_positions()
+    # (C) Run an HPXML file that has already been created
+    if args.key?(:resstock_building_id) # assign resstock options
       resstock_building_id = args[:resstock_building_id]
 
       if resstock_building_id == 0
@@ -201,17 +204,23 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         args[step_value.name.to_sym] = value # FIXME: we'd probably want to check that lookup assignments don't conflict with geojson assignments?
       end
-    end
 
-    # either create units or get pre-made units
-    if args[:hpxml_dir].nil?
+      units = []
+      geometry_building_num_units = 1
+      geometry_building_num_units = Integer(args[:geometry_building_num_units]) if args.key?(:geometry_building_num_units)
+      (1..geometry_building_num_units).to_a.each do |unit_num|
+        units << {}
+      end
+      standards_number_of_living_units = units.size
+
+    elsif args[:hpxml_dir].nil? # create units of the building
       units = get_unit_positions(runner, args)
       if units.empty?
         return false
       end
 
       standards_number_of_living_units = units.size
-    else
+    else # get pre-made units
       xml_building_folder = "xml_building"
       hpxml_dir = File.join(File.dirname(__FILE__), "../../#{xml_building_folder}/#{args[:hpxml_dir]}")
 
