@@ -106,7 +106,6 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
   else
     selected_ids = matches.sample(1, random: Random.new(12345))
     selected_id = selected_ids[0]
-    selected_id = '1975'###
     infos << "\nFeature #{feature_id}: Multiple matches found. Selected one buildstock building ID randomly: #{selected_id} from #{matches.size} matching buildings: #{matches}. #{mapped_properties}"
   end
 
@@ -253,4 +252,5 @@ def residential_samples(args, resstock_building_id, buildstock_csv_path)
   FileUtils.cp_r(resources_dir, lib_dir)
   FileUtils.cp_r(housing_characteristics_dir, lib_dir)
   FileUtils.cp(buildstock_csv_path, File.join(housing_characteristics_dir, 'buildstock.csv'))
+  sleep(1) # avoid Cannot find file /path/to/lib/housing_characteristics/buildstock.csv.
 end    

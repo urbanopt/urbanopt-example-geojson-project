@@ -297,7 +297,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         measures[measure_subdir] = [measure_args]
 
-        if !apply_measures(hpxml_measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+        if !apply_measures(hpxml_measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', nil)
           return false
         end
       else # we're using an HPXML file from the xml_building folder
@@ -338,7 +338,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     measures[measure_subdir] = [measure_args]
 
-    if !apply_measures(hpxml_measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', 'feature.osw')
+    if !apply_measures(hpxml_measures_dir, measures, runner, model, true, 'OpenStudio::Measure::ModelMeasure', nil)
       return false
     end
 
@@ -396,23 +396,47 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     when 'single-family detached'
       units << {}
     when 'single-family attached'
+
+      ###################################################
+      #         #         #         #         #         #
+      #         #         #         #         #         #
+      #    1    #    2    #    3    #    4    #    5    #
+      #         #         #         #         #         #
+      #         #         #         #         #         #
+      ###################################################
+
       (1..geometry_building_num_units).to_a.each do |unit_num|
         case unit_num
         when 1
-          units << { 'geometry_unit_left_wall_is_adiabatic' => true }
+          if geometry_building_num_units > 1
+            units << { 'geometry_unit_left_wall_is_adiabatic' => true } # right end unit, one adiabatic wall
+          else
+            units << { 'geometry_unit_left_wall_is_adiabatic' => false } # only one unit, no adiabatic walls
+          end
         when geometry_building_num_units
-          units << { 'geometry_unit_right_wall_is_adiabatic' => true }
+          units << { 'geometry_unit_right_wall_is_adiabatic' => true } # left end unit, one adiabatic wall
         else
           units << { 'geometry_unit_left_wall_is_adiabatic' => true,
-                     'geometry_unit_right_wall_is_adiabatic' => true }
+                     'geometry_unit_right_wall_is_adiabatic' => true } # everything in between
         end
       end
     when 'apartment unit'
+
+      #####################
+      #         #         #
+      #         #         #
+      #    2    #    4    #
+      #         #         #
+      #         #         #
+      ###############################
+      #         #         #         #
+      #         #         #         #
+      #    1    #    3    #    5    #
+      #         #         #         #
+      #         #         #         #
+      ###############################
+
       num_units_per_floor = (geometry_building_num_units / geometry_num_floors_above_grade).ceil
-      if num_units_per_floor == 1
-        runner.registerError("Unit type '#{args[:geometry_unit_type]}' with num_units_per_floor=#{num_units_per_floor} is not supported.")
-        return units
-      end
 
       floor = 1
       position = 1
@@ -424,21 +448,29 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         geometry_unit_left_wall_is_adiabatic = true
         geometry_unit_right_wall_is_adiabatic = true
-        geometry_unit_front_wall_is_adiabatic = true
-        geometry_unit_back_wall_is_adiabatic = false
+        geometry_unit_front_wall_is_adiabatic = false
+        geometry_unit_back_wall_is_adiabatic = true
 
         if position == 1
           geometry_unit_right_wall_is_adiabatic = false
+          geometry_unit_left_wall_is_adiabatic = false if num_units_per_floor == 2
         elsif position == 2
           geometry_unit_left_wall_is_adiabatic = false
-        elsif (position == num_units_per_floor) && num_units_per_floor.even?
+          geometry_unit_right_wall_is_adiabatic = false if [2, 3].include?(num_units_per_floor)
+        elsif position == num_units_per_floor and num_units_per_floor.even?
           geometry_unit_right_wall_is_adiabatic = false
-        elsif (position == num_units_per_floor) && num_units_per_floor.odd?
+        elsif position == num_units_per_floor and num_units_per_floor.odd?
           geometry_unit_left_wall_is_adiabatic = false
-        elsif (position + 1 == num_units_per_floor) && num_units_per_floor.even?
+        elsif position + 1 == num_units_per_floor and num_units_per_floor.even?
           geometry_unit_left_wall_is_adiabatic = false
-        elsif (position + 1 == num_units_per_floor) && num_units_per_floor.odd?
+        elsif position + 1 == num_units_per_floor and num_units_per_floor.odd?
           geometry_unit_right_wall_is_adiabatic = false
+        end
+
+        if num_units_per_floor == 1
+          geometry_unit_left_wall_is_adiabatic = false
+          geometry_unit_right_wall_is_adiabatic = false
+          geometry_unit_back_wall_is_adiabatic = false
         end
 
         geometry_foundation_type = args[:geometry_foundation_type]

@@ -13,31 +13,31 @@ require 'openstudio'
 require 'openstudio/measure/ShowRunnerOutput'
 require_relative '../measure.rb'
 require 'csv'
+require 'pathname'
 
 class BuildResidentialModelTest < Minitest::Test
   def setup
-    @tests_path = File.dirname(__FILE__)
-    @run_path = File.join(@tests_path, 'run')
-    @hpxml_path = File.join(@run_path, 'feature.xml')
+    @tests_path = Pathname(__FILE__).dirname
+    @run_path = @tests_path / 'run'
     FileUtils.mkdir_p(@run_path)
-
-    @args = {}
-    _initialize_arguments()
+    @model_save = true # true helpful for debugging, i.e., save the HPXML files
   end
 
   def teardown
-    FileUtils.rm_rf(@run_path)
+    FileUtils.rm_rf(@run_path) if !@model_save
   end
 
   def _initialize_arguments()
-    # BuildResidentialModel arguments
-    @args[:hpxml_path] = @hpxml_path
-    @args[:output_dir] = @run_path
+    @args = {}
+
+    # BuildResidentialModel required arguments
     @args[:urbanopt_feature_id] = 1
     @args[:schedules_type] = 'stochastic'
     @args[:schedules_random_seed] = 1
     @args[:schedules_variation] = 'unit'
     @args[:geometry_num_floors_above_grade] = 1
+    @args[:hpxml_path] = @hpxml_path.to_s
+    @args[:output_dir] = File.dirname(@hpxml_path)
 
     # Optionals / Feature
     @args[:geometry_building_num_units] = 1
@@ -65,17 +65,29 @@ class BuildResidentialModelTest < Minitest::Test
     # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
     # - "hpxml_directory"
 
+    test_folder = @run_path / __method__.to_s
+
+    @hpxml_path = test_folder / '' / 'feature.xml'
+    puts @hpxml_path
+    _initialize_arguments()
     @args[:hpxml_dir] = '18'
     _test_measure(expected_errors: ["HPXML directory 'xml_building/18' was specified for feature ID = 1, but could not be found."])
 
+    @hpxml_path = test_folder / '' / 'feature.xml'
+    _initialize_arguments()
     @args[:hpxml_dir] = '../measures/BuildResidentialModel/tests/xml_building/17'
     _test_measure(expected_errors: ["HPXML directory 'xml_building/17' must contain exactly 1 HPXML file; the single file can describe multiple dwelling units of a feature."])
 
+    @hpxml_path = test_folder / '' / 'feature.xml'
+    _initialize_arguments()
     @args[:hpxml_dir] = '17'
     _test_measure(expected_errors: ['The number of actual dwelling units (4) differs from the specified number of units (1).'])
 
+    @hpxml_path = test_folder / '17' / 'feature.xml'
+    FileUtils.mkdir_p(File.dirname(@hpxml_path))
+    _initialize_arguments()
+    @args[:hpxml_dir] = '17'
     @args[:geometry_building_num_units] = 4
-
     _test_measure()
   end
 
@@ -84,7 +96,11 @@ class BuildResidentialModelTest < Minitest::Test
 
     schedules_types = ['stochastic', 'smooth']
 
+    test_folder = @run_path / __method__.to_s
     schedules_types.each do |schedules_type|
+      @hpxml_path = test_folder / "#{schedules_type}" / 'feature.xml'
+      _initialize_arguments()
+
       @args[:schedules_type] = schedules_type
 
       _apply_residential()
@@ -102,23 +118,19 @@ class BuildResidentialModelTest < Minitest::Test
     feature_number_of_residential_unitss = (1..3).to_a
     feature_number_of_stories_above_grounds = (1..2).to_a
 
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
         feature_number_of_stories_above_grounds.each do |feature_number_of_stories_above_ground|
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_number_of_stories_above_ground}" / 'feature.xml'
+          _initialize_arguments()
+
           @building_type = feature_building_type
           @args[:geometry_num_floors_above_grade] = feature_number_of_stories_above_ground
           @args[:geometry_building_num_units] = feature_number_of_residential_units
 
-          expected_errors = []
-          if feature_building_type == 'Multifamily'
-            num_units_per_floor = (Float(@args[:geometry_building_num_units]) / Float(@args[:geometry_num_floors_above_grade])).ceil
-            if num_units_per_floor == 1
-              expected_errors = ["Unit type 'apartment unit' with num_units_per_floor=#{num_units_per_floor} is not supported."]
-            end
-          end
-
           _apply_residential()
-          _test_measure(expected_errors: expected_errors)
+          _test_measure(expected_errors: [])
         end
       end
     end
@@ -136,10 +148,14 @@ class BuildResidentialModelTest < Minitest::Test
     feature_attic_types = ['attic - vented', 'attic - conditioned', 'flat roof']
     feature_number_of_stories_above_grounds = (1..2).to_a
 
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_foundation_types.each do |feature_foundation_type|
         feature_attic_types.each do |feature_attic_type|
           feature_number_of_stories_above_grounds.each do |feature_number_of_stories_above_ground|
+            @hpxml_path = test_folder / "#{feature_building_type}_#{feature_foundation_type}_#{feature_attic_type}_#{feature_number_of_stories_above_ground}" / 'feature.xml'
+            _initialize_arguments()
+
             @building_type = feature_building_type
             @foundation_type = feature_foundation_type
             @attic_type = feature_attic_type
@@ -147,13 +163,10 @@ class BuildResidentialModelTest < Minitest::Test
 
             expected_errors = []
             if feature_attic_type == 'attic - conditioned' && feature_number_of_stories_above_ground == 1
-              expected_errors = ['Units with a conditioned attic must have at least two above-grade floors.']
+              expected_errors += ['Units with a conditioned attic must have at least two above-grade floors.']
             end
-            if feature_building_type == 'Multifamily'
-              num_units_per_floor = (Float(@args[:geometry_building_num_units]) / Float(@args[:geometry_num_floors_above_grade])).ceil
-              if num_units_per_floor == 1
-                expected_errors = ["Unit type 'apartment unit' with num_units_per_floor=#{num_units_per_floor} is not supported."]
-              end
+            if feature_building_type == 'Multifamily' && ['basement - conditioned', 'crawlspace - conditioned'].include?(feature_foundation_type)
+              expected_errors += ['Conditioned basement/crawlspace foundation type for apartment units is not currently supported.']
             end
 
             _apply_residential()
@@ -172,11 +185,15 @@ class BuildResidentialModelTest < Minitest::Test
 
     feature_building_types = ['Single-Family Detached', 'Multifamily']
     feature_number_of_residential_unitss = (2..4).to_a
-    feature_number_of_bedroomss = (11..13).to_a    
+    feature_number_of_bedroomss = (11..13).to_a
 
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
         feature_number_of_bedroomss.each do |feature_number_of_bedrooms|
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_number_of_bedrooms}" / 'feature.xml'
+          _initialize_arguments()
+
           @building_type = feature_building_type
           @args[:geometry_building_num_units] = feature_number_of_residential_units
           @number_of_bedrooms = feature_number_of_bedrooms
@@ -200,10 +217,14 @@ class BuildResidentialModelTest < Minitest::Test
     feature_number_of_residential_unitss = (2..3).to_a
     feature_number_of_occupantss = [nil, 3]
 
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_occupancy_calculation_types.each do |feature_occupancy_calculation_type|
         feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
           feature_number_of_occupantss.each do |feature_number_of_occupants|
+            @hpxml_path = test_folder / "#{feature_building_type}_#{feature_occupancy_calculation_type}_#{feature_number_of_residential_units}_#{feature_number_of_occupants}" / 'feature.xml'
+            _initialize_arguments()
+
             @building_type = feature_building_type
             @occupancy_calculation_type = feature_occupancy_calculation_type
             @args[:geometry_building_num_units] = feature_number_of_residential_units
@@ -227,9 +248,13 @@ class BuildResidentialModelTest < Minitest::Test
     feature_foundation_types = ['slab', 'crawlspace - vented', 'crawlspace - conditioned', 'basement - unconditioned',	'basement - conditioned', 'ambient']
     feature_onsite_parking_fractions = [false, true]
 
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_foundation_types.each do |feature_foundation_type|
         feature_onsite_parking_fractions.each do |feature_onsite_parking_fraction|
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_foundation_type}_#{feature_onsite_parking_fraction}" / 'feature.xml'
+          _initialize_arguments()
+
           @building_type = feature_building_type
           @foundation_type = feature_foundation_type
           @onsite_parking_fraction = feature_onsite_parking_fraction
@@ -237,10 +262,10 @@ class BuildResidentialModelTest < Minitest::Test
 
           expected_errors = []
           if feature_foundation_type == 'ambient' && feature_onsite_parking_fraction
-            expected_errors = ['Cannot handle garages with an ambient foundation type.']
+            expected_errors += ['Cannot handle garages with an ambient foundation type.']
           end
-          if feature_building_type == 'Multifamily' && feature_foundation_type.include?('- conditioned')
-            expected_errors = ['Conditioned basement/crawlspace foundation type for apartment units is not currently supported.']
+          if feature_building_type == 'Multifamily' && ['basement - conditioned', 'crawlspace - conditioned'].include?(feature_foundation_type)
+            expected_errors += ['Conditioned basement/crawlspace foundation type for apartment units is not currently supported.']
           end
 
           _apply_residential()
@@ -258,8 +283,12 @@ class BuildResidentialModelTest < Minitest::Test
     feature_system_types = ['Residential - electric resistance and no cooling', 'Residential - electric resistance and central air conditioner',	'Residential - electric resistance and room air conditioner', 'Residential - electric resistance and evaporative cooler', 'Residential - furnace and no cooling', 'Residential - furnace and central air conditioner', 'Residential - furnace and room air conditioner', 'Residential - furnace and evaporative cooler', 'Residential - boiler and no cooling', 'Residential - boiler and central air conditioner', 'Residential - boiler and room air conditioner', 'Residential - boiler and evaporative cooler', 'Residential - air-to-air heat pump', 'Residential - mini-split heat pump', 'Residential - ground-to-air heat pump']
     feature_heating_system_fuel_types = ['electricity', 'natural gas', 'fuel oil', 'propane', 'wood']
 
+    test_folder = @run_path / __method__.to_s
     feature_system_types.each do |feature_system_type|
       feature_heating_system_fuel_types.each do |feature_heating_system_fuel_type|
+        @hpxml_path = test_folder / "#{feature_system_type}_#{feature_heating_system_fuel_type}" / 'feature.xml'
+        _initialize_arguments()
+        
         @system_type = feature_system_type
         @heating_system_fuel_type = feature_heating_system_fuel_type
 
@@ -276,9 +305,10 @@ class BuildResidentialModelTest < Minitest::Test
     feature_templates = ['Residential IECC 2006 - Customizable Template Sep 2020', 'Residential IECC 2009 - Customizable Template Sep 2020', 'Residential IECC 2012 - Customizable Template Sep 2020', 'Residential IECC 2015 - Customizable Template Sep 2020', 'Residential IECC 2018 - Customizable Template Sep 2020', 'Residential IECC 2006 - Customizable Template Apr 2022', 'Residential IECC 2009 - Customizable Template Apr 2022', 'Residential IECC 2012 - Customizable Template Apr 2022', 'Residential IECC 2015 - Customizable Template Apr 2022', 'Residential IECC 2018 - Customizable Template Apr 2022']
     climate_zones = ['1B', '5A']
 
+    test_folder = @run_path / __method__.to_s
     feature_templates.each do |feature_template|
       climate_zones.each do |climate_zone|
-        @args = {}
+        @hpxml_path = test_folder / "#{feature_template}_#{climate_zone}" / 'feature.xml'
         _initialize_arguments()
 
         @template = feature_template
@@ -300,6 +330,8 @@ class BuildResidentialModelTest < Minitest::Test
     # - "characterize_residential_buildings_from_buildstock_csv"
     # - "resstock_buildstock_csv_path"
 
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
+
     @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
     @number_of_stories_above_ground = nil
     @year_built = nil
@@ -308,9 +340,13 @@ class BuildResidentialModelTest < Minitest::Test
     feature_number_of_residential_unitss = [1, 5, 7]
     feature_floor_areas = [5000, 9000]
 
+    test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
       feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
         feature_floor_areas.each do |feature_floor_area|
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_floor_area}" / 'feature.xml'
+          _initialize_arguments()
+
           @building_type = feature_building_type          
           @number_of_residential_units = feature_number_of_residential_units
           @floor_area = feature_floor_area
@@ -342,18 +378,24 @@ class BuildResidentialModelTest < Minitest::Test
     # - "characterize_residential_buildings_from_buildstock_csv"
     # - "resstock_buildstock_csv_path"
 
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
+
     @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
-    @building_type = 'Multifamily'
     @number_of_residential_units = 8
-    @floor_area = 505 * @number_of_residential_units
 
     feature_number_of_stories_above_grounds = [2, 3]
     feature_year_builts = [1967, 1985]
     feature_number_of_bedroomss = [8, 16]
 
+    test_folder = @run_path / __method__.to_s
     feature_number_of_stories_above_grounds.each do |feature_number_of_stories_above_ground|
       feature_year_builts.each do |feature_year_built|
         feature_number_of_bedroomss.each do |feature_number_of_bedrooms|
+          @hpxml_path = test_folder / "#{feature_number_of_stories_above_ground}_#{feature_year_built}_#{feature_number_of_bedrooms}" / 'feature.xml'
+          _initialize_arguments()
+
+          @building_type = 'Multifamily'
+          @floor_area = 505 * @number_of_residential_units
           @number_of_stories_above_ground = feature_number_of_stories_above_ground          
           @year_built = feature_year_built
           @number_of_bedrooms = feature_number_of_bedrooms
@@ -368,6 +410,28 @@ class BuildResidentialModelTest < Minitest::Test
           _apply_residential_samples()
           _test_measure(expected_errors: expected_errors)
         end
+      end
+    end
+  end
+
+  def test_multifamily_one_unit_per_floor
+    feature_building_types = ['Multifamily']
+    feature_number_of_residential_unitss = (1..5).to_a
+
+    test_folder = @run_path / __method__.to_s
+    feature_building_types.each do |feature_building_type|
+      feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
+        @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}" / 'feature.xml'
+        _initialize_arguments()
+        
+        @building_type = feature_building_type
+        @args[:geometry_building_num_units] = feature_number_of_residential_units
+        @args[:geometry_num_floors_above_grade] = feature_number_of_residential_units
+        @number_of_bedrooms *= feature_number_of_residential_units
+        @maximum_roof_height *= @args[:geometry_num_floors_above_grade]
+
+        _apply_residential()
+        _test_measure()
       end
     end
   end
