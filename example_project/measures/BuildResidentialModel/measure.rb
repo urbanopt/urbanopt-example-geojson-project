@@ -124,8 +124,18 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     check_dir_exists(resources_dir, runner)
     check_dir_exists(hpxml_measures_dir, runner)
 
-    # Assign resstock options
-    if args.key?(:resstock_building_id)
+    # Either:
+    # (A) Assign ResStock options; all units of the building are identical
+    # (B) Create units of the building using logic in get_unit_positions()
+    # (C) Run an HPXML file that has already been created
+    if args.key?(:resstock_building_id) # assign resstock options
+      resstock_building_id = args[:resstock_building_id]
+
+      if resstock_building_id == 0
+        runner.registerError("Feature ID = #{args[:urbanopt_feature_id]}: No matching buildstock building ID found.")
+        return false
+      end
+
       lib_dir = File.join(resources_dir, 'residential-measures/lib')
       characteristics_dir = File.join(lib_dir, 'housing_characteristics')
       buildstock_file = File.join(lib_dir, 'resources/buildstock.rb')
@@ -145,7 +155,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       lookup_csv_data = CSV.open(lookup_file, col_sep: "\t").each.to_a
 
       # Retrieve all data associated with sample number
-      bldg_data = get_data_for_sample(buildstock_csv_path, args[:resstock_building_id], runner)
+      bldg_data = get_data_for_sample(buildstock_csv_path, resstock_building_id, runner)
 
       # Retrieve order of parameters to run
       parameters_ordered = get_parameters_ordered_from_options_lookup_tsv(lookup_csv_data, characteristics_dir)
@@ -194,17 +204,23 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
         args[step_value.name.to_sym] = value # FIXME: we'd probably want to check that lookup assignments don't conflict with geojson assignments?
       end
-    end
 
-    # either create units or get pre-made units
-    if args[:hpxml_dir].nil?
+      units = []
+      geometry_building_num_units = 1
+      geometry_building_num_units = Integer(args[:geometry_building_num_units]) if args.key?(:geometry_building_num_units)
+      (1..geometry_building_num_units).to_a.each do |unit_num|
+        units << {}
+      end
+      standards_number_of_living_units = units.size
+
+    elsif args[:hpxml_dir].nil? # create units of the building
       units = get_unit_positions(runner, args)
       if units.empty?
         return false
       end
 
       standards_number_of_living_units = units.size
-    else
+    else # get pre-made units
       xml_building_folder = "xml_building"
       hpxml_dir = File.join(File.dirname(__FILE__), "../../#{xml_building_folder}/#{args[:hpxml_dir]}")
 
