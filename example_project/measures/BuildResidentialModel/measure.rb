@@ -201,13 +201,17 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         value = get_value_from_workflow_step_value(step_value)
         next if value == ''
 
-        # Ignore the following since location is already defined by the GeoJSON
-        next if step_value.name == 'simulation_control_daylight_saving_enabled'
-        next if step_value.name == 'weather_station_epw_filepath'
-        next if step_value.name == 'site_zip_code'
-        next if step_value.name == 'site_time_zone_utc_offset'
+        # We want to use the GeoJSON weather_filename
+        next if step_value.name == 'weather_station_epw_filepath' # County
 
-        args[step_value.name.to_sym] = value # FIXME: we'd probably want to check that lookup assignments don't conflict with geojson assignments?
+        # Assuming buildstock.csv is already filtered based on PUMA, we CAN set the following from the lookup?
+        # next if step_value.name == 'simulation_control_daylight_saving_enabled' # County
+        # next if step_value.name == 'site_zip_code' # County
+        # next if step_value.name == 'site_time_zone_utc_offset' # County
+        # next if step_value.name == 'site_state_code' # State
+        # next if step_value.name == 'site_iecc_zone' # ASHRAE IECC Climate Zone 2004
+
+        args[step_value.name.to_sym] = value
       end
 
       units = []
