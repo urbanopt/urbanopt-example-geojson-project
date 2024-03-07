@@ -414,6 +414,28 @@ class BuildResidentialModelTest < Minitest::Test
     end
   end
 
+  def test_residential_samples3
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "characterize_residential_buildings_from_buildstock_csv"
+    # - "uo_buildstock_mapping_csv_path"
+
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
+
+    @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
+    @uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/uo_buildstock_mapping.csv'))
+
+    feature_id = '15'
+
+    test_folder = @run_path / __method__.to_s
+    @hpxml_path = test_folder / "#{feature_id}" / 'feature.xml'
+    _initialize_arguments()
+
+    _apply_residential()
+    resstock_building_id = find_building_for_uo_id(@uo_buildstock_mapping_csv_path, feature_id)
+    residential_samples(@args, resstock_building_id, @buildstock_csv_path)
+    _test_measure(expected_errors: [])
+  end
+
   def test_multifamily_one_unit_per_floor
     feature_building_types = ['Multifamily']
     feature_number_of_residential_unitss = (1..5).to_a
