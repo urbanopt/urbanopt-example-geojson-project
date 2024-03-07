@@ -566,70 +566,58 @@ module URBANopt
               residential_template(args, template, climate_zone)
             end
 
-            ################# UO resstock connection workflow ############################
             # Then onto optional "samples" mapping
             # mappers/residential/samples
-            buildstock_csv_path = nil
-            uo_buildstock_mapping_csv_path = nil
             uo_resstock_connection = false
-
-            #uo_resstock connection
             begin
               uo_resstock_connection = feature.characterize_residential_buildings_from_buildstock_csv
             rescue StandardError
             end
-
-            # buildstock csv path
-            begin
-              csv_path = feature.resstock_buildstock_csv_path
-              # get full csv path 
-              buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../'+ csv_path))
-            rescue StandardError
-              @@logger.error("\n resstock_buildstock_csv_path was not assigned by the user.")
-            end
-            #uo_buildstock_mapping_csv_path
-            begin
-              mapping_csv_path = feature.uo_buildstock_mapping_csv_path
-              #get full path
-              uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../'+ mapping_csv_path))
-            rescue StandardError
-              @@logger.error("\n uo_buildstock_mapping_csv_path was not assigned by the user")
-            end
             
-            ############### run uo-resstock workflow#####################
-            # Run workflows if  UO-ResStock connection is established
+            # Run workflows if UO-ResStock connection is established
             if uo_resstock_connection
 
-              if !uo_buildstock_mapping_csv_path.nil?
-                ### If uo_buildstock_mapping_csv_path is provided
-                @@logger.info("Processing with UO-BuildStock mapping CSV path.")
-                resstock_building_id = find_building_for_uo_id(buildstock_csv_path, uo_buildstock_mapping_csv_path, feature)
-                puts "restock_building_id = #{resstock_building_id}"
-                ## run residential_samples
-                ## TODO: this should be developed to run with as much charachteristics are provided in the buildstock csv for the uo feature
-                require File.join(File.dirname(__FILE__), 'residential/samples/util')
-                residential_samples(args, resstock_building_id, buildstock_csv_path) 
+              buildstock_csv_path = nil
+              begin
+                csv_path = feature.resstock_buildstock_csv_path
+                buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '..', csv_path))
+              rescue StandardError
+                @@logger.error("\n resstock_buildstock_csv_path was not assigned by the user.")
+              end
 
-              elsif !buildstock_csv_path.nil?
-                ### If buildstock_csv_path is provided
+              uo_buildstock_mapping_csv_path = nil
+              begin
+                mapping_csv_path = feature.uo_buildstock_mapping_csv_path
+                uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '..', mapping_csv_path))
+              rescue StandardError
+                @@logger.error("\n uo_buildstock_mapping_csv_path was not assigned by the user")
+              end
+
+              require File.join(File.dirname(__FILE__), 'residential/samples/util')
+              if !buildstock_csv_path.nil? # If buildstock_csv_path is provided
                 @@logger.info("Processing with BuildStock CSV path.")
-                
-                require File.join(File.dirname(__FILE__), 'residential/samples/util')
+
                 start_time = Time.now # To document the time of get matching resstock building id method 
                 resstock_building_id = get_resstock_building_id(buildstock_csv_path, feature, building_type, @@logger)
                 puts "resstock_building_id = #{resstock_building_id}"
                 end_time = Time.now
                 puts "TIME CHECK: Preprocessing time for finding a building match from the buildstock CSV: #{end_time - start_time} seconds"
+
+                residential_samples(args, resstock_building_id, buildstock_csv_path)
+
+              elsif !uo_buildstock_mapping_csv_path.nil? # If uo_buildstock_mapping_csv_path is provided
+                @@logger.info("Processing with UO-BuildStock mapping CSV path.")
+
+                resstock_building_id = find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature.id)
+                puts "restock_building_id = #{resstock_building_id}"
+                # TODO: this should be developed to run with as many characteristics provided in the buildstock csv for the uo feature
+
                 residential_samples(args, resstock_building_id, buildstock_csv_path)
 
               else
-                @@logger.error("The user did not specify neither the uo_buildstock_mapping_csv_path nor the buildstock_csv_path. At least one of these is required for UO - ResStock connection.")
+                @@logger.error("The user did not specify either the uo_buildstock_mapping_csv_path or the buildstock_csv_path. At least one of these is required for UO - ResStock connection.")
               end
-            else
-              @@logger.error("UO-ResStock connection is not activated")
             end
-            #############################################################
-            #############################################################
 
             # Parse BuildResidentialModel measure xml so we can override defaults
             default_args = {}

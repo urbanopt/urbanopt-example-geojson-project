@@ -218,12 +218,12 @@ def map_to_resstock_num_units(res_type, number_of_residential_units)
   end          
 end
 
-def find_building_for_uo_id(buildstock_csv_path, uo_buildstock_mapping_csv_path, feature)
+def find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature_id)
   '''get buildstock building id from the uo_buildstock_mapping_csv'''
   '''Read csv file and find the resstock_building_id that correspond to the uo feature'''
 
   building_id = nil
-  uo_id = feature.id
+  uo_id = feature_id
   CSV.foreach(uo_buildstock_mapping_csv_path, headers: true) do |row|
     if row['UO_id'].to_s == uo_id.to_s
       building_id = row['Building']
