@@ -252,5 +252,5 @@ def residential_samples(args, resstock_building_id, buildstock_csv_path)
   FileUtils.cp_r(resources_dir, lib_dir)
   FileUtils.cp_r(housing_characteristics_dir, lib_dir)
   FileUtils.cp(buildstock_csv_path, File.join(housing_characteristics_dir, 'buildstock.csv'))
-  sleep(1) # avoid Cannot find file /path/to/lib/housing_characteristics/buildstock.csv.
+  sleep(2) # avoid Cannot find file /path/to/lib/housing_characteristics/buildstock.csv.
 end    
