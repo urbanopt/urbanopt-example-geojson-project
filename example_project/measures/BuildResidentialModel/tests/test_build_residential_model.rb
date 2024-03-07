@@ -424,16 +424,18 @@ class BuildResidentialModelTest < Minitest::Test
     @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
     @uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/uo_buildstock_mapping.csv'))
 
-    feature_id = '15'
+    feature_ids = ['14', '15', '16']
 
     test_folder = @run_path / __method__.to_s
-    @hpxml_path = test_folder / "#{feature_id}" / 'feature.xml'
-    _initialize_arguments()
+    feature_ids.each do |feature_id|
+      @hpxml_path = test_folder / "#{feature_id}" / 'feature.xml'
+      _initialize_arguments()
 
-    _apply_residential()
-    resstock_building_id = find_building_for_uo_id(@uo_buildstock_mapping_csv_path, feature_id)
-    residential_samples(@args, resstock_building_id, @buildstock_csv_path)
-    _test_measure(expected_errors: [])
+      _apply_residential()
+      resstock_building_id = find_building_for_uo_id(@uo_buildstock_mapping_csv_path, feature_id)
+      residential_samples(@args, resstock_building_id, @buildstock_csv_path)
+      _test_measure(expected_errors: [])
+    end
   end
 
   def test_multifamily_one_unit_per_floor
