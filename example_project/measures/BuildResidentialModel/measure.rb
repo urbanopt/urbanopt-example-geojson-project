@@ -200,7 +200,12 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       resstock_arguments_runner.result.stepValues.each do |step_value|
         value = get_value_from_workflow_step_value(step_value)
         next if value == ''
-        next if step_value.name == 'weather_station_epw_filepath' # we already assign this in the Baseline.rb mapper
+
+        # Ignore the following since location is already defined by the GeoJSON
+        next if step_value.name == 'simulation_control_daylight_saving_enabled'
+        next if step_value.name == 'weather_station_epw_filepath'
+        next if step_value.name == 'site_zip_code'
+        next if step_value.name == 'site_time_zone_utc_offset'
 
         args[step_value.name.to_sym] = value # FIXME: we'd probably want to check that lookup assignments don't conflict with geojson assignments?
       end
