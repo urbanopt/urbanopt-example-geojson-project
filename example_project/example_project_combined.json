@@ -652,9 +652,7 @@
         "onsite_parking_fraction": 1,
         "template": "Residential IECC 2015 - Customizable Template Sep 2020",
         "geometry_unit_orientation": 90.0,
-        "geometry_unit_aspect_ratio": 1.0,
-        "characterize_residential_buildings_from_buildstock_csv": true,
-        "resstock_buildstock_csv_path": "resources/buildstock.csv"
+        "geometry_unit_aspect_ratio": 1.0
       },
       "geometry": {
         "type": "Polygon",
@@ -701,7 +699,7 @@
         "roof_type": "Hip",
         "system_type": "Residential - boiler and room air conditioner",
         "heating_system_fuel_type": "propane",
-        "template": "Residential IECC 2015 - Customizable Template Sep 2020",
+        "year_built": 1986,
         "characterize_residential_buildings_from_buildstock_csv": true,
         "resstock_buildstock_csv_path": "resources/buildstock.csv",
         "uo_buildstock_mapping_csv_path": "resources/uo_buildstock_mapping.csv"
@@ -752,9 +750,7 @@
         "heating_system_fuel_type": "electricity",
         "template": "Residential IECC 2015 - Customizable Template Sep 2020",
         "occupancy_calculation_type": "operational",
-        "number_of_occupants": 2,
-        "characterize_residential_buildings_from_buildstock_csv": true,
-        "resstock_buildstock_csv_path": "resources/buildstock.csv"
+        "number_of_occupants": 2
       },
       "geometry": {
         "type": "Polygon",
@@ -850,7 +846,6 @@
         "system_type": "Residential - furnace and room air conditioner",
         "heating_system_fuel_type": "wood",
         "number_of_residential_units": 8,
-        "template": "Residential IECC 2015 - Customizable Template Sep 2020",
         "characterize_residential_buildings_from_buildstock_csv": true,
         "resstock_buildstock_csv_path": "resources/buildstock.csv"
       },
@@ -877,55 +872,6 @@
             [
               -78.84857296921837,
               42.81262558701127
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "19",
-        "name": "Residential 6",
-        "type": "Building",
-        "building_type": "Single-Family Attached",
-        "floor_area": 18320,
-        "footprint_area": 9160,
-        "number_of_stories_above_ground": 2,
-        "number_of_stories": 2,
-        "number_of_bedrooms": 18,
-        "foundation_type": "slab",
-        "attic_type": "attic - vented",
-        "system_type": "Residential - furnace and room air conditioner",
-        "heating_system_fuel_type": "fuel oil",
-        "number_of_residential_units": 6,
-        "template": "Residential IECC 2015 - Customizable Template Sep 2020",
-        "characterize_residential_buildings_from_buildstock_csv": true,
-        "resstock_buildstock_csv_path": "resources/buildstock.csv"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -78.84911656368786,
-              42.81252982958267
-            ],
-            [
-              -78.84890198696667,
-              42.81258229954116
-            ],
-            [
-              -78.84870886759019,
-              42.81219926882915
-            ],
-            [
-              -78.84893774986267,
-              42.812152045720157
-            ],
-            [
-              -78.84911656368786,
-              42.81252982958267
             ]
           ]
         ]
