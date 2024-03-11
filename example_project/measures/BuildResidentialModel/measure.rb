@@ -201,8 +201,10 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         value = get_value_from_workflow_step_value(step_value)
         next if value == ''
 
-        # We want to use the GeoJSON weather_filename
+        # We want to use the GeoJSON properties, not what ResStock maps?
         next if step_value.name == 'weather_station_epw_filepath' # County
+        next if step_value.name == 'geometry_unit_cfa' # Geometry Floor Area
+        next if step_value.name == 'year_built' && args.key?(:year_built) # Vintage
 
         # Assuming buildstock.csv is already filtered based on PUMA, we CAN set the following from the lookup?
         # next if step_value.name == 'simulation_control_daylight_saving_enabled' # County
@@ -445,7 +447,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       #         #         #         #
       ###############################
 
-      num_units_per_floor = (geometry_building_num_units / geometry_num_floors_above_grade).ceil
+      # If geometry_building_num_units < geometry_num_floors_above_grade, assume 1 unit per floor
+      num_units_per_floor = (Float(geometry_building_num_units) / Float(geometry_num_floors_above_grade)).ceil
 
       floor = 1
       position = 1

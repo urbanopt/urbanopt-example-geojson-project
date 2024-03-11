@@ -8,6 +8,25 @@ require 'securerandom'
 
 ### Mapping methods from UO feature input names to buildstock characteristics names
 
+def residential_samples(args, resstock_building_id, buildstock_csv_path)
+  '''Assign resstock_building_id that points to buildstock_csv_path.'''
+
+  args[:resstock_building_id] = resstock_building_id
+
+  # Create lib folder (so we can more easily copy code from BuildExistingModel)
+  res_measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures'))
+  lib_dir = File.join(res_measures_dir, 'lib')
+  resources_dir = File.join(res_measures_dir, 'resources')
+  housing_characteristics_dir = File.join(res_measures_dir, 'project_national/housing_characteristics')
+
+  FileUtils.rm_rf(lib_dir)
+  Dir.mkdir(lib_dir) if !File.exist?(lib_dir)
+  FileUtils.cp_r(resources_dir, lib_dir)
+  FileUtils.cp_r(housing_characteristics_dir, lib_dir)
+  FileUtils.cp(buildstock_csv_path, File.join(housing_characteristics_dir, 'buildstock.csv'))
+  sleep(2) # avoid Cannot find file /path/to/lib/housing_characteristics/buildstock.csv.
+end
+
 def get_resstock_building_id(buildstock_csv_path, feature, building_type, logger)
   '''develop get_resstock_building_id method'''
 
@@ -30,35 +49,35 @@ def get_resstock_building_id(buildstock_csv_path, feature, building_type, logger
   begin
     mapped_properties['Geometry Stories'] = feature.number_of_stories_above_ground
   rescue StandardError
-    logger.info("\nnumber_of_stories_above_ground for feature #{feature.id} was not used to filter buildstok csv since it does not exist for this feature")
+    logger.info("\nFeature #{feature.id}: number_of_stories_above_ground was not used to filter buildstok csv since it does not exist for this feature")
   end
 
   # number_of_residential_units SFA/MF
   begin
     mapped_properties['Geometry Building Number Units SFA'], mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(building_type, number_of_residential_units)
   rescue StandardError
-    logger.info("\nMF number_of_residential_units for feature #{feature.id} was not used to filter buildstock csv since it does not exist for this feature")
+    logger.info("\nFeature #{feature.id}: number_of_residential_units was not used to filter buildstock csv since it does not exist for this feature")
   end
 
-  # year built
+  # year_built
   begin
    mapped_properties['Vintage ACS'] = map_to_resstock_vintage(feature.year_built) # Assuming direct mapping or apply conversion if needed
   rescue StandardError
-   logger.info("\nyear_built for feature #{feature.id} was not used to filter buildstock csv since it does not exist for this feature")
+   logger.info("\nFeature #{feature.id}: year_built was not used to filter buildstock csv since it does not exist for this feature")
   end
 
   # floor_area
   begin
     mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(feature.floor_area, number_of_residential_units)
   rescue StandardError
-    logger.info("\nfloor_area for feature #{feature.id} was not used to filter buildstock csv since it does not exist for this feature")
+    logger.info("\nFeature #{feature.id}: floor_area was not used to filter buildstock csv since it does not exist for this feature")
   end
 
   # number_of_bedrooms
   begin
     mapped_properties['Bedrooms'] = feature.number_of_bedrooms / number_of_residential_units # Assuming direct mapping or apply conversion if needed
   rescue StandardError
-    logger.info("\nnumber_of_bedrooms for feature #{feature.id} was not used to filter buildstock csv since it does not exist for this feature")
+    logger.info("\nFeature #{feature.id}: number_of_bedrooms was not used to filter buildstock csv since it does not exist for this feature")
   end
 
   #puts "########### mapped_properties = #{mapped_properties}" ##for debugging
@@ -235,22 +254,4 @@ def find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature_id)
   end
   return building_id # Returns the found building ID or nil if not found
 end
-
-def residential_samples(args, resstock_building_id, buildstock_csv_path)
-  '''Assign resstock_building_id that points to buildstock_csv_path.'''
-
-  args[:resstock_building_id] = resstock_building_id
-
-  # Create lib folder (so we can more easily copy code from BuildExistingModel)
-  res_measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures'))
-  lib_dir = File.join(res_measures_dir, 'lib')
-  resources_dir = File.join(res_measures_dir, 'resources')
-  housing_characteristics_dir = File.join(res_measures_dir, 'project_national/housing_characteristics')
-
-  FileUtils.rm_rf(lib_dir)
-  Dir.mkdir(lib_dir) if !File.exist?(lib_dir)
-  FileUtils.cp_r(resources_dir, lib_dir)
-  FileUtils.cp_r(housing_characteristics_dir, lib_dir)
-  FileUtils.cp(buildstock_csv_path, File.join(housing_characteristics_dir, 'buildstock.csv'))
-  sleep(2) # avoid Cannot find file /path/to/lib/housing_characteristics/buildstock.csv.
-end    
+  

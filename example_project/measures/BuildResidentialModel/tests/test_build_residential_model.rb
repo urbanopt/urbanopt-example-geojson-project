@@ -45,6 +45,7 @@ class BuildResidentialModelTest < Minitest::Test
     @run_period = 'Jan 1 - Dec 31'
     @calendar_year = 2007
     @weather_filename = 'USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw'
+    @year_built = nil
     @building_type = 'Single-Family Detached'
     @floor_area = 3055
     @number_of_bedrooms = 3
@@ -334,7 +335,6 @@ class BuildResidentialModelTest < Minitest::Test
 
     @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
     @number_of_stories_above_ground = nil
-    @year_built = nil
 
     feature_building_types = ['Single-Family Detached', 'Single-Family Attached', 'Multifamily']
     feature_number_of_residential_unitss = [1, 5, 7]
@@ -461,7 +461,7 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def _apply_residential()
-    residential_simulation(@args, @timestep, @run_period, @calendar_year, @weather_filename)
+    residential_simulation(@args, @timestep, @run_period, @calendar_year, @weather_filename, @year_built)
     residential_geometry_unit(@args, @building_type, @floor_area, @number_of_bedrooms, @geometry_unit_orientation, @geometry_unit_aspect_ratio, @occupancy_calculation_type, @number_of_occupants, @maximum_roof_height)
     residential_geometry_foundation(@args, @foundation_type)
     residential_geometry_attic(@args, @attic_type, @roof_type)
