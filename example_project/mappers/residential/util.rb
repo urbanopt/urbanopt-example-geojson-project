@@ -102,6 +102,18 @@ def residential(scenario, feature, args, building_type)
   rescue StandardError
   end
 
+  system_type = 'Residential - furnace and central air conditioner'
+  begin
+    system_type = feature.system_type
+  rescue StandardError
+  end
+
+  heating_system_fuel_type = 'natural gas'
+  begin
+    heating_system_fuel_type = feature.heating_system_fuel_type
+  rescue StandardError
+  end
+
   # Apply residential
   residential_simulation(args, timestep, run_period, calendar_year, feature.weather_filename, year_built)
   residential_geometry_unit(args, building_type, feature.floor_area, feature.number_of_bedrooms, geometry_unit_orientation, geometry_unit_aspect_ratio, occupancy_calculation_type, number_of_occupants, maximum_roof_height)
@@ -109,7 +121,7 @@ def residential(scenario, feature, args, building_type)
   residential_geometry_attic(args, feature.attic_type, roof_type)
   residential_geometry_garage(args, onsite_parking_fraction)
   residential_geometry_neighbor(args)
-  residential_hvac(args, feature.system_type, feature.heating_system_fuel_type)
+  residential_hvac(args, system_type, heating_system_fuel_type)
   residential_appliances(args)
 end
 
@@ -231,12 +243,6 @@ def residential_geometry_neighbor(args)
 end
 
 def residential_hvac(args, system_type, heating_system_fuel_type)
-  system_type = 'Residential - furnace and central air conditioner'
-  begin
-    system_type = system_type
-  rescue StandardError
-  end
-
   args[:heating_system_type] = 'none'
   if system_type.include?('electric resistance')
     args[:heating_system_type] = 'ElectricResistance'
@@ -251,6 +257,8 @@ def residential_hvac(args, system_type, heating_system_fuel_type)
     args[:cooling_system_type] = 'central air conditioner'
   elsif system_type.include?('room air conditioner')
     args[:cooling_system_type] = 'room air conditioner'
+    args[:cooling_system_cooling_efficiency_type] = HPXML::UnitsEER
+    args[:cooling_system_cooling_efficiency] = 8.5
   elsif system_type.include?('evaporative cooler')
     args[:cooling_system_type] = 'evaporative cooler'
   end
@@ -262,16 +270,19 @@ def residential_hvac(args, system_type, heating_system_fuel_type)
     args[:heat_pump_type] = 'mini-split'
   elsif system_type.include?('ground-to-air')
     args[:heat_pump_type] = 'ground-to-air'
+    args[:heat_pump_heating_efficiency_type] = HPXML::UnitsCOP
+    args[:heat_pump_heating_efficiency] = 3.6
+    args[:heat_pump_cooling_efficiency_type] = HPXML::UnitsEER
+    args[:heat_pump_cooling_efficiency] = 17.1
   end
 
-  args[:heating_system_fuel] = 'natural gas'
-  begin
-    args[:heating_system_fuel] = heating_system_fuel_type
-  rescue StandardError
-  end
-
+  args[:heating_system_fuel] = heating_system_fuel_type
   if args[:heating_system_type] == 'ElectricResistance'
     args[:heating_system_fuel] = 'electricity'
+  end
+
+  if args[:heating_system_fuel] == 'electricity'
+    args[:heating_system_heating_efficiency] = 1.0
   end
 end
 
