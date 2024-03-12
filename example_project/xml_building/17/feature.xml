@@ -3,11 +3,11 @@
   <XMLTransactionHeaderInformation>
     <XMLType>HPXML</XMLType>
     <XMLGeneratedBy>BuildResidentialHPXML</XMLGeneratedBy>
-    <CreatedDateAndTime>2023-11-30T15:05:03-07:00</CreatedDateAndTime>
+    <CreatedDateAndTime>2024-03-12T12:58:13-07:00</CreatedDateAndTime>
     <Transaction>create</Transaction>
   </XMLTransactionHeaderInformation>
   <SoftwareInfo>
-    <SoftwareProgramUsed>uo-example-project</SoftwareProgramUsed>
+    <SoftwareProgramUsed>uo-ex-proj</SoftwareProgramUsed>
     <extension>
       <SimulationControl>
         <Timestep>60</Timestep>
@@ -49,7 +49,7 @@
           <SystemIdentifier id='WeatherStation'/>
           <Name>USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3</Name>
           <extension>
-            <EPWFilePath>../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
+            <EPWFilePath>../../../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
           </extension>
         </WeatherStation>
       </ClimateandRiskZones>
@@ -585,7 +585,7 @@
           <SystemIdentifier id='WeatherStation_2'/>
           <Name>USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3</Name>
           <extension>
-            <EPWFilePath>../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
+            <EPWFilePath>../../../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
           </extension>
         </WeatherStation>
       </ClimateandRiskZones>
@@ -1094,7 +1094,7 @@
           <SystemIdentifier id='WeatherStation_3'/>
           <Name>USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3</Name>
           <extension>
-            <EPWFilePath>../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
+            <EPWFilePath>../../../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
           </extension>
         </WeatherStation>
       </ClimateandRiskZones>
@@ -1603,7 +1603,7 @@
           <SystemIdentifier id='WeatherStation_4'/>
           <Name>USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3</Name>
           <extension>
-            <EPWFilePath>../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
+            <EPWFilePath>../../../../../weather/USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw</EPWFilePath>
           </extension>
         </WeatherStation>
       </ClimateandRiskZones>
