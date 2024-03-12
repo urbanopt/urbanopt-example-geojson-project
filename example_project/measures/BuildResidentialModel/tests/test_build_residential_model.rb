@@ -509,21 +509,24 @@ class BuildResidentialModelTest < Minitest::Test
     end
 
     # run the measure
+    puts "\n#{@hpxml_path}"
     measure.run(model, runner, argument_map)
     result = runner.result
 
     # assert that it ran correctly
     if !expected_errors.empty?
-      # show_output(result) unless result.value.valueName == 'Fail'
+      show_output(result) unless result.value.valueName == 'Fail'
       assert_equal('Fail', result.value.valueName)
 
       error_msgs = result.errors.map { |x| x.logMessage }
       expected_errors.each do |expected_error|
         assert_includes(error_msgs, expected_error)
       end
+      assert(!File.exist?(@hpxml_path))
     else
       show_output(result) unless result.value.valueName == 'Success'
       assert_equal('Success', result.value.valueName)
+      assert(File.exist?(@hpxml_path))
     end
   end
 end

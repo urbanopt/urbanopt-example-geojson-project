@@ -223,7 +223,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         units << {}
       end
       standards_number_of_living_units = units.size
-
     elsif args[:hpxml_dir].nil? # create units of the building
       units = get_unit_positions(runner, args)
       if units.empty?
