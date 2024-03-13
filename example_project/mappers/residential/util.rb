@@ -257,7 +257,7 @@ def residential_hvac(args, system_type, heating_system_fuel_type)
     args[:cooling_system_type] = 'central air conditioner'
   elsif system_type.include?('room air conditioner')
     args[:cooling_system_type] = 'room air conditioner'
-    args[:cooling_system_cooling_efficiency_type] = HPXML::UnitsEER
+    args[:cooling_system_cooling_efficiency_type] = 'EER'
     args[:cooling_system_cooling_efficiency] = 8.5
   elsif system_type.include?('evaporative cooler')
     args[:cooling_system_type] = 'evaporative cooler'
@@ -270,9 +270,9 @@ def residential_hvac(args, system_type, heating_system_fuel_type)
     args[:heat_pump_type] = 'mini-split'
   elsif system_type.include?('ground-to-air')
     args[:heat_pump_type] = 'ground-to-air'
-    args[:heat_pump_heating_efficiency_type] = HPXML::UnitsCOP
+    args[:heat_pump_heating_efficiency_type] = 'COP'
     args[:heat_pump_heating_efficiency] = 3.6
-    args[:heat_pump_cooling_efficiency_type] = HPXML::UnitsEER
+    args[:heat_pump_cooling_efficiency_type] = 'EER'
     args[:heat_pump_cooling_efficiency] = 17.1
   end
 

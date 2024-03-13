@@ -279,16 +279,17 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
           measure_args['existing_hpxml_path'] = hpxml_path
           measure_args['battery_present'] = 'false' # limitation of OS-HPXML
         end
-        begin
-          measure_args['software_info_program_used'] = File.basename(File.absolute_path(File.join(File.dirname(__FILE__), '../../..')))
-        rescue StandardError
-        end
+
+        measure_args['software_info_program_used'] = 'URBANopt'
         begin
           version_rb File.absolute_path(File.join(File.dirname(__FILE__), '../../../lib/uo_cli/version.rb'))
           require version_rb
           measure_args['software_info_program_version'] = URBANopt::CLI::VERSION
         rescue StandardError
+          measure_args['software_info_program_version'] = '0.10.0' # FIXME: is there a way to get the version of urbanopt-example-geojson-project?
         end
+        measure_args['apply_defaults'] = true
+
         measure_args['geometry_unit_left_wall_is_adiabatic'] = unit['geometry_unit_left_wall_is_adiabatic'] if unit.key?('geometry_unit_left_wall_is_adiabatic')
         measure_args['geometry_unit_right_wall_is_adiabatic'] = unit['geometry_unit_right_wall_is_adiabatic'] if unit.key?('geometry_unit_right_wall_is_adiabatic')
         measure_args['geometry_unit_front_wall_is_adiabatic'] = unit['geometry_unit_front_wall_is_adiabatic'] if unit.key?('geometry_unit_front_wall_is_adiabatic')
