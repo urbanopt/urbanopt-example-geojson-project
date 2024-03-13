@@ -5,9 +5,10 @@
 
 # frozen_string_literal: true
 
-require_relative '../../../resources/hpxml-measures/HPXMLtoOpenStudio/resources/minitest_helper'
+require_relative '../../../resources/residential-measures/resources/hpxml-measures/HPXMLtoOpenStudio/resources/minitest_helper'
 require_relative '../../../mappers/residential/util'
-require_relative '../../../mappers/residential/template//util'
+require_relative '../../../mappers/residential/template/util'
+require_relative '../../../mappers/residential/samples/util'
 require 'openstudio'
 require 'openstudio/measure/ShowRunnerOutput'
 require_relative '../measure.rb'
@@ -30,7 +31,7 @@ class BuildResidentialModelTest < Minitest::Test
     @args = {}
 
     # BuildResidentialModel required arguments
-    @args[:feature_id] = 1
+    @args[:urbanopt_feature_id] = 1
     @args[:schedules_type] = 'stochastic'
     @args[:schedules_random_seed] = 1
     @args[:schedules_variation] = 'unit'
@@ -44,6 +45,7 @@ class BuildResidentialModelTest < Minitest::Test
     @run_period = 'Jan 1 - Dec 31'
     @calendar_year = 2007
     @weather_filename = 'USA_NY_Buffalo-Greater.Buffalo.Intl.AP.725280_TMY3.epw'
+    @year_built = nil
     @building_type = 'Single-Family Detached'
     @floor_area = 3055
     @number_of_bedrooms = 3
@@ -58,8 +60,6 @@ class BuildResidentialModelTest < Minitest::Test
     @onsite_parking_fraction = false
     @system_type = 'Residential - furnace and central air conditioner'
     @heating_system_fuel_type = 'natural gas'
-    @template = nil
-    @climate_zone = '5A'
   end
 
   def test_hpxml_dir
@@ -299,22 +299,142 @@ class BuildResidentialModelTest < Minitest::Test
     end
   end
 
-  def test_residential_template_types
+  def test_residential_templates
     # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
     # - "templateType"
 
     feature_templates = ['Residential IECC 2006 - Customizable Template Sep 2020', 'Residential IECC 2009 - Customizable Template Sep 2020', 'Residential IECC 2012 - Customizable Template Sep 2020', 'Residential IECC 2015 - Customizable Template Sep 2020', 'Residential IECC 2018 - Customizable Template Sep 2020', 'Residential IECC 2006 - Customizable Template Apr 2022', 'Residential IECC 2009 - Customizable Template Apr 2022', 'Residential IECC 2012 - Customizable Template Apr 2022', 'Residential IECC 2015 - Customizable Template Apr 2022', 'Residential IECC 2018 - Customizable Template Apr 2022']
+    climate_zones = ['1B', '5A']
 
     test_folder = @run_path / __method__.to_s
     feature_templates.each do |feature_template|
-      @hpxml_path = test_folder / feature_template / 'feature.xml'
+      climate_zones.each do |climate_zone|
+        @hpxml_path = test_folder / "#{feature_template}_#{climate_zone}" / 'feature.xml'
+        _initialize_arguments()
+
+        @template = feature_template
+        @climate_zone = climate_zone
+
+        _apply_residential()
+        _apply_residential_template()
+        _test_measure()
+      end
+    end
+  end
+
+  def test_residential_samples
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "buildingType"
+    # - "number_of_residential_units"
+    # - "floor_area"
+    # - "number_of_bedrooms"
+    # - "characterize_residential_buildings_from_buildstock_csv"
+    # - "resstock_buildstock_csv_path"
+
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
+
+    @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
+    @number_of_stories_above_ground = nil
+
+    feature_building_types = ['Single-Family Detached', 'Single-Family Attached', 'Multifamily']
+    feature_number_of_residential_unitss = [1, 5, 7]
+    feature_floor_areas = [5000, 9000]
+
+    test_folder = @run_path / __method__.to_s
+    feature_building_types.each do |feature_building_type|
+      feature_number_of_residential_unitss.each do |feature_number_of_residential_units|
+        feature_floor_areas.each do |feature_floor_area|
+          @hpxml_path = test_folder / "#{feature_building_type}_#{feature_number_of_residential_units}_#{feature_floor_area}" / 'feature.xml'
+          _initialize_arguments()
+
+          @building_type = feature_building_type          
+          @number_of_residential_units = feature_number_of_residential_units
+          @floor_area = feature_floor_area
+          @number_of_bedrooms = 2 * @number_of_residential_units
+
+          # Skip
+          next if @building_type == 'Single-Family Detached' && @number_of_residential_units > 1
+
+          expected_errors = []
+          if ['Single-Family Attached', 'Multifamily'].include?(@building_type) && @number_of_residential_units == 1
+            expected_errors = ['Feature ID = 1: No matching buildstock building ID found.']
+          end
+
+          _apply_residential()
+          _apply_residential_samples()
+          _test_measure(expected_errors: expected_errors)
+        end
+      end
+    end
+  end
+
+  def test_residential_samples2
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "buildingType"
+    # - "number_of_residential_units"
+    # - "number_of_stories_above_ground"
+    # - "year_built"
+    # - "number_of_bedrooms"
+    # - "characterize_residential_buildings_from_buildstock_csv"
+    # - "resstock_buildstock_csv_path"
+
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
+
+    @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
+    @number_of_residential_units = 8
+
+    feature_number_of_stories_above_grounds = [2, 3]
+    feature_year_builts = [1967, 1985]
+    feature_number_of_bedroomss = [8, 16]
+
+    test_folder = @run_path / __method__.to_s
+    feature_number_of_stories_above_grounds.each do |feature_number_of_stories_above_ground|
+      feature_year_builts.each do |feature_year_built|
+        feature_number_of_bedroomss.each do |feature_number_of_bedrooms|
+          @hpxml_path = test_folder / "#{feature_number_of_stories_above_ground}_#{feature_year_built}_#{feature_number_of_bedrooms}" / 'feature.xml'
+          _initialize_arguments()
+
+          @building_type = 'Multifamily'
+          @floor_area = 505 * @number_of_residential_units
+          @number_of_stories_above_ground = feature_number_of_stories_above_ground          
+          @year_built = feature_year_built
+          @number_of_bedrooms = feature_number_of_bedrooms
+
+          expected_errors = []
+          if ( @number_of_stories_above_ground == 3 && @year_built == 1967 && @number_of_bedrooms == 16 ) ||
+             ( @number_of_stories_above_ground == 3 && @year_built == 1985 )
+            expected_errors = ['Feature ID = 1: No matching buildstock building ID found.']
+          end
+
+          _apply_residential()
+          _apply_residential_samples()
+          _test_measure(expected_errors: expected_errors)
+        end
+      end
+    end
+  end
+
+  def test_residential_samples3
+    # in https://github.com/urbanopt/urbanopt-geojson-gem/blob/develop/lib/urbanopt/geojson/schema/building_properties.json, see:
+    # - "characterize_residential_buildings_from_buildstock_csv"
+    # - "uo_buildstock_mapping_csv_path"
+
+    FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
+
+    @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
+    @uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/uo_buildstock_mapping.csv'))
+
+    feature_ids = ['14', '15', '16']
+
+    test_folder = @run_path / __method__.to_s
+    feature_ids.each do |feature_id|
+      @hpxml_path = test_folder / "#{feature_id}" / 'feature.xml'
       _initialize_arguments()
 
-      @template = feature_template
-
       _apply_residential()
-      _apply_residential_template()
-      _test_measure()
+      resstock_building_id = find_building_for_uo_id(@uo_buildstock_mapping_csv_path, feature_id)
+      residential_samples(@args, resstock_building_id, @buildstock_csv_path)
+      _test_measure(expected_errors: [])
     end
   end
 
@@ -341,7 +461,7 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def _apply_residential()
-    residential_simulation(@args, @timestep, @run_period, @calendar_year, @weather_filename)
+    residential_simulation(@args, @timestep, @run_period, @calendar_year, @weather_filename, @year_built)
     residential_geometry_unit(@args, @building_type, @floor_area, @number_of_bedrooms, @geometry_unit_orientation, @geometry_unit_aspect_ratio, @occupancy_calculation_type, @number_of_occupants, @maximum_roof_height)
     residential_geometry_foundation(@args, @foundation_type)
     residential_geometry_attic(@args, @attic_type, @roof_type)
@@ -353,6 +473,19 @@ class BuildResidentialModelTest < Minitest::Test
 
   def _apply_residential_template()
     residential_template(@args, @template, @climate_zone)
+  end
+
+  def _apply_residential_samples()
+    mapped_properties = {}
+    mapped_properties['Geometry Building Type RECS'] = map_to_resstock_building_type(@building_type, @number_of_residential_units)
+    mapped_properties['Geometry Stories'] = @number_of_stories_above_ground if !@number_of_stories_above_ground.nil?
+    mapped_properties['Geometry Building Number Units SFA'], mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(@building_type, @number_of_residential_units) if !@number_of_residential_units.nil?
+    mapped_properties['Vintage ACS'] = map_to_resstock_vintage(@year_built) if !@year_built.nil?
+    mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(@floor_area, @number_of_residential_units) if !@floor_area.nil?
+    mapped_properties['Bedrooms'] = @number_of_bedrooms / @number_of_residential_units if !@number_of_bedrooms.nil?
+    resstock_building_id, infos = get_selected_id(mapped_properties, @buildstock_csv_path, @args[:urbanopt_feature_id])
+    puts infos.join
+    residential_samples(@args, resstock_building_id, @buildstock_csv_path)
   end
 
   def _test_measure(expected_errors: [])
@@ -376,21 +509,24 @@ class BuildResidentialModelTest < Minitest::Test
     end
 
     # run the measure
+    puts "\n#{@hpxml_path}"
     measure.run(model, runner, argument_map)
     result = runner.result
 
     # assert that it ran correctly
     if !expected_errors.empty?
-      # show_output(result) unless result.value.valueName == 'Fail'
+      show_output(result) unless result.value.valueName == 'Fail'
       assert_equal('Fail', result.value.valueName)
 
       error_msgs = result.errors.map { |x| x.logMessage }
       expected_errors.each do |expected_error|
         assert_includes(error_msgs, expected_error)
       end
+      assert(!File.exist?(@hpxml_path))
     else
       show_output(result) unless result.value.valueName == 'Success'
       assert_equal('Success', result.value.valueName)
+      assert(File.exist?(@hpxml_path))
     end
   end
 end

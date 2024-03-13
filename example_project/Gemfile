@@ -81,13 +81,13 @@ else
   gem 'openstudio-geb', '~> 0.4.0'
 end
 
-if allow_local && File.exists?('../urbanopt-geojson-gem')
-  gem 'urbanopt-geojson', path: '../../urbanopt-geojson-gem'
-elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
-else
-  gem 'urbanopt-geojson', '~> 0.11.1'
-end
+#if allow_local && File.exists?('../urbanopt-geojson-gem')
+#  gem 'urbanopt-geojson', path: '../../urbanopt-geojson-gem'
+#elsif allow_local
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'uo-resstock_connection'
+#else
+#  gem 'urbanopt-geojson', '~> 0.11.1'
+#end
 
 # NEVER put SCENARIO-GEM in this file...it will make all simulations fail due to the sqlite dependency
 # gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'develop'

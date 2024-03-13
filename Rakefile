@@ -759,12 +759,31 @@ desc 'Run residential tasks'
 namespace :residential do
   desc 'Update residential resources'
   task :update_resources do
-    prefix = 'example_project/resources/hpxml-measures'
-    repository = 'https://github.com/NREL/OpenStudio-HPXML.git'
-    branch_or_tag = 'v1.7.0' # update this when pulling in updated OS-HPXML
+    prefix = 'example_project/resources/residential-measures'
+    repository = 'https://github.com/NREL/resstock.git'
+    branch_or_tag = 'v3.2.0' # update this when pulling in updated ResStock
 
     FileUtils.rm_rf(prefix)
     system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+
+    folders_to_remove = [
+      '.git',
+      '.github',
+      '.gitignore',
+      'docs',
+      'project_testing',
+      'resources/data',
+      'test/base_results/baseline/timeseries',
+      'test/base_results/upgrades',
+      'test/SetSpaceInfiltrationPerExteriorArea',
+      'test/tests_buildstock_csvs',
+      'test/tests_housing_characteristics',
+      'test/tests_yml_files'
+    ]
+
+    folders_to_remove.each do |f|
+      FileUtils.rm_rf(File.join(prefix, f))
+    end
   end
 
   desc 'Run residential measure tests'
