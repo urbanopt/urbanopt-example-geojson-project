@@ -701,7 +701,6 @@
         "heating_system_fuel_type": "propane",
         "year_built": 1986,
         "characterize_residential_buildings_from_buildstock_csv": true,
-        "resstock_buildstock_csv_path": "resources/buildstock.csv",
         "uo_buildstock_mapping_csv_path": "resources/uo_buildstock_mapping.csv"
       },
       "geometry": {
