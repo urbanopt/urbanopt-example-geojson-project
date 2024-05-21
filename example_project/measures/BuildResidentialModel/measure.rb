@@ -163,8 +163,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       # Check buildstock.csv has all parameters
       missings = parameters_ordered - bldg_data.keys
       if !missings.empty?
-        runner.registerError("Mismatch between buildstock.csv and options_lookup.tsv. Missing parameters: #{missings.join(', ')}.")
-        return false
+        # The following is warning and not error because we support uo_buildstock_mapping_csv_path having a subset of all parameters
+        runner.registerWarning("Mismatch between buildstock.csv and options_lookup.tsv. Missing parameters: #{missings.join(', ')}.")
       end
 
       # Check buildstock.csv doesn't have extra parameters
@@ -178,6 +178,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       parameters_ordered.each do |parameter_name|
         # Register the option chosen for parameter_name with the runner
         option_name = bldg_data[parameter_name]
+        next if option_name.nil? # can be nil if parameter doesn't exist
+
         register_value(runner, parameter_name, option_name)
       end
 
@@ -185,6 +187,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measures = {}
       parameters_ordered.each do |parameter_name|
         option_name = bldg_data[parameter_name]
+        next if option_name.nil? # can be nil if parameter doesn't exist
+
         print_option_assignment(parameter_name, option_name, runner)
         options_measure_args, _errors = get_measure_args_from_option_names(lookup_csv_data, [option_name], parameter_name, lookup_file, runner)
         options_measure_args[option_name].each do |measure_subdir, args_hash|
