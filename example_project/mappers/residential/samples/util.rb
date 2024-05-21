@@ -22,9 +22,23 @@ def residential_samples(args, resstock_building_id, buildstock_csv_path)
   FileUtils.rm_rf(lib_dir)
   Dir.mkdir(lib_dir) if !File.exist?(lib_dir)
   FileUtils.cp_r(resources_dir, lib_dir)
+  create_single_row_buildstock_csv(resstock_building_id, buildstock_csv_path, housing_characteristics_dir)
   FileUtils.cp_r(housing_characteristics_dir, lib_dir)
-  FileUtils.cp(buildstock_csv_path, File.join(housing_characteristics_dir, 'buildstock.csv'))
-  sleep(2) # avoid Cannot find file /path/to/lib/housing_characteristics/buildstock.csv.
+end
+
+def create_single_row_buildstock_csv(resstock_building_id, buildstock_csv_path, housing_characteristics_dir)
+  rows = []
+  buildstock_csv = CSV.read(buildstock_csv_path, headers: true)
+  buildstock_csv.delete('UO_id')
+
+  CSV.open(File.join(housing_characteristics_dir, 'buildstock.csv'), 'w') do |csv|
+    csv << buildstock_csv.headers
+    buildstock_csv.each do |row|
+      next if row['Building'] != resstock_building_id.to_s
+
+      csv << row
+    end
+  end
 end
 
 def get_resstock_building_id(buildstock_csv_path, feature, building_type, logger)
@@ -248,9 +262,6 @@ def find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature_id)
       building_id = row['Building']
       break # Exit the loop once the matching building ID is found
     end
-  end
-  if building_id.nil?
-    
   end
   return building_id # Returns the found building ID or nil if not found
 end
