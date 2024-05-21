@@ -20,7 +20,7 @@ class BuildResidentialModelTest < Minitest::Test
     @tests_path = Pathname(__FILE__).dirname
     @run_path = @tests_path / 'run'
     FileUtils.mkdir_p(@run_path)
-    @model_save = true # true helpful for debugging, i.e., save the HPXML files
+    @model_save = false # true helpful for debugging, i.e., save the HPXML files
   end
 
   def teardown
@@ -421,8 +421,10 @@ class BuildResidentialModelTest < Minitest::Test
 
     FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
 
-    @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
-    @uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/uo_buildstock_mapping.csv'))
+    # From this mapping file, we've removed the State parameter.
+    # It doesn't matter any required arguments, so we are OK.
+    # If, for example, we remove Lighting which does contain required arguments, we run into trouble.
+    @uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), 'samples/uo_buildstock_mapping.csv'))
 
     feature_ids = ['14', '15', '16']
 
@@ -433,7 +435,7 @@ class BuildResidentialModelTest < Minitest::Test
 
       _apply_residential()
       resstock_building_id = find_building_for_uo_id(@uo_buildstock_mapping_csv_path, feature_id)
-      residential_samples(@args, resstock_building_id, @buildstock_csv_path)
+      residential_samples(@args, resstock_building_id, @uo_buildstock_mapping_csv_path)
       _test_measure(expected_errors: [])
     end
   end
