@@ -549,12 +549,13 @@ module URBANopt
             end
 
             # Start general residential mapping
+            # mappers/residential/util.rb
             args = {}
             require File.join(File.dirname(__FILE__), 'residential/util')
             residential(scenario, feature, args, building_type)
 
             # Then onto optional "template" mapping
-            # mappers/residential/template
+            # mappers/residential/template/util.rb
             template = nil
             begin
               template = feature.template
@@ -567,7 +568,7 @@ module URBANopt
             end
 
             # Then onto optional "samples" mapping
-            # mappers/residential/samples
+            # mappers/residential/samples/util.rb
             uo_resstock_connection = false
             begin
               uo_resstock_connection = feature.characterize_residential_buildings_from_buildstock_csv
@@ -600,8 +601,7 @@ module URBANopt
                 start_time = Time.now # To document the time of get matching resstock building id method 
                 resstock_building_id = get_resstock_building_id(buildstock_csv_path, feature, building_type, @@logger)
                 puts "resstock_building_id = #{resstock_building_id}"
-                end_time = Time.now
-                puts "TIME CHECK: Preprocessing time for finding a building match from the buildstock CSV: #{end_time - start_time} seconds"
+                puts "TIME CHECK: Preprocessing time for finding a building match from the buildstock CSV: #{Time.now - start_time} seconds"
 
                 residential_samples(args, resstock_building_id, buildstock_csv_path)
 
@@ -610,9 +610,8 @@ module URBANopt
 
                 resstock_building_id = find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature.id)
                 puts "restock_building_id = #{resstock_building_id}"
-                # TODO: this should be developed to run with as many characteristics provided in the buildstock csv for the uo feature
 
-                residential_samples(args, resstock_building_id, buildstock_csv_path)
+                residential_samples(args, resstock_building_id, uo_buildstock_mapping_csv_path) # uo_buildstock_mapping_csv_path may contain a subset of all parameters
 
               else
                 @@logger.error("The user did not specify either the uo_buildstock_mapping_csv_path or the buildstock_csv_path. At least one of these is required for UO - ResStock connection.")
