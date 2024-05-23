@@ -163,7 +163,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       # Check buildstock.csv has all parameters
       missings = parameters_ordered - bldg_data.keys
       if !missings.empty?
-        # The following is warning and not error because we support uo_buildstock_mapping_csv_path having a subset of all parameters
+        # The following is a warning and not an error because we support uo_buildstock_mapping_csv_path having a subset of all parameters
         runner.registerWarning("Mismatch between buildstock.csv and options_lookup.tsv. Missing parameters: #{missings.join(', ')}.")
       end
 
@@ -196,11 +196,31 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
       end      
 
+      # Fill in defaults where any missing parameters from the buildstock csv haven't assigned arguments
+      args.each_key do |arg_name|
+        measures['ResStockArguments'][0][arg_name.to_s] = args[arg_name] if measures['ResStockArguments'][0][arg_name.to_s].nil?
+      end
+
+      # ResStockArguments
+      measure_subdir = 'ResStockArguments'
+      full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
+      check_file_exists(full_measure_path, runner)
+
+      # Don't assign arguments from this measure to ResStockArguments
+      measure = get_measure_instance(full_measure_path)
+      arg_names = measure.arguments(model).collect { |arg| arg.name.to_sym }
+      args_to_delete = args.keys - arg_names
+      args_to_delete.each do |arg_to_delete|
+        measures['ResStockArguments'][0].delete(arg_to_delete.to_s)
+      end
+
+      # Apply the ResStockArguments measure
       resstock_arguments_runner = OpenStudio::Measure::OSRunner.new(OpenStudio::WorkflowJSON.new) # we want only ResStockArguments registered argument values
       if !apply_measures(measures_dir, { 'ResStockArguments' => measures['ResStockArguments'] }, resstock_arguments_runner, model, true, 'OpenStudio::Measure::ModelMeasure', nil)
         return false
       end
 
+      # Transfer output of ResStockArguments over to the args hash, which will feed into BuildResidentialHPXML
       resstock_arguments_runner.result.stepValues.each do |step_value|
         value = get_value_from_workflow_step_value(step_value)
         next if value == ''
@@ -211,6 +231,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         next if step_value.name == 'year_built' && args.key?(:year_built) # Vintage
 
         # Assuming buildstock.csv is already filtered based on PUMA, we CAN set the following from the lookup?
+        # Otherwise, the following could conflict with the EPW found in the GeoJSON.
         # next if step_value.name == 'simulation_control_daylight_saving_enabled' # County
         # next if step_value.name == 'site_zip_code' # County
         # next if step_value.name == 'site_time_zone_utc_offset' # County
@@ -302,7 +323,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         measure_args['geometry_attic_type'] = unit['geometry_attic_type'] if unit.key?('geometry_attic_type')
         measure_args['geometry_unit_orientation'] = unit['geometry_unit_orientation'] if unit.key?('geometry_unit_orientation')
 
-        # don't assign these to BuildResidentialHPXML
+        # Don't assign arguments from this measure to BuildResidentialHPXML
         measure = get_measure_instance(full_measure_path)
         arg_names = measure.arguments(model).collect { |arg| arg.name.to_sym }
         args_to_delete = args.keys - arg_names

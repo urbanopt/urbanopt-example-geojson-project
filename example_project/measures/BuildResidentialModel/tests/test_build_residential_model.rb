@@ -421,9 +421,9 @@ class BuildResidentialModelTest < Minitest::Test
 
     FileUtils.mkdir_p(File.join(File.dirname(__FILE__), '../../../run'))
 
-    # From this mapping file, we've removed the State parameter.
-    # It doesn't matter any required arguments, so we are OK.
-    # If, for example, we remove Lighting which does contain required arguments, we run into trouble.
+    # From this test mapping file, we've removed the State and Lighting parameters.
+    # The State parameter doesn't map any required arguments, so we are OK.
+    # The Lighting parameter does map some required arguments. But, we fill in with default values what doesn't get mapped, so we are still OK.
     @uo_buildstock_mapping_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), 'samples/uo_buildstock_mapping.csv'))
 
     feature_ids = ['14', '15', '16']
