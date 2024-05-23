@@ -595,7 +595,7 @@ module URBANopt
               end
 
               require File.join(File.dirname(__FILE__), 'residential/samples/util')
-              if !buildstock_csv_path.nil? # If buildstock_csv_path is provided
+              if !buildstock_csv_path.nil? # If resstock_buildstock_csv_path is provided
                 @@logger.info("Processing with BuildStock CSV path.")
 
                 start_time = Time.now # To document the time of get matching resstock building id method 
@@ -614,11 +614,11 @@ module URBANopt
                 residential_samples(args, resstock_building_id, uo_buildstock_mapping_csv_path) # uo_buildstock_mapping_csv_path may contain a subset of all parameters
 
               else
-                @@logger.error("The user did not specify either the uo_buildstock_mapping_csv_path or the buildstock_csv_path. At least one of these is required for UO - ResStock connection.")
+                @@logger.error("The user did not specify either the uo_buildstock_mapping_csv_path or the resstock_buildstock_csv_path. At least one of these is required for UO - ResStock connection.")
               end
             end
 
-            # Parse BuildResidentialModel measure xml so we can override defaults
+            # Parse BuildResidentialHPXML measure xml so we can fill "args" in with default values where keys aren't already assigned
             default_args = {}
             measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../resources/residential-measures/resources/hpxml-measures'))
             measure_xml = File.read(File.join(measures_dir, 'BuildResidentialHPXML', 'measure.xml'))
