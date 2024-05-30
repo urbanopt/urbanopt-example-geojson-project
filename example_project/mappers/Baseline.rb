@@ -598,18 +598,18 @@ module URBANopt
               if !buildstock_csv_path.nil? # If resstock_buildstock_csv_path is provided
                 @@logger.info("Processing with BuildStock CSV path.")
 
-                start_time = Time.now # To document the time of get matching resstock building id method 
-                resstock_building_id = get_resstock_building_id(buildstock_csv_path, feature, building_type, @@logger)
-                puts "resstock_building_id = #{resstock_building_id}"
-                puts "TIME CHECK: Preprocessing time for finding a building match from the buildstock CSV: #{Time.now - start_time} seconds"
+                start_time = Time.now # To document the time of finding the resstock building id
+                resstock_building_id = find_resstock_building_id(buildstock_csv_path, feature, building_type, @@logger)
+                puts "Processing time for finding a building match (resstock_building_id = #{resstock_building_id}) from the buildstock CSV: #{Time.now - start_time} seconds."
 
                 residential_samples(args, resstock_building_id, buildstock_csv_path)
 
               elsif !uo_buildstock_mapping_csv_path.nil? # If uo_buildstock_mapping_csv_path is provided
                 @@logger.info("Processing with UO-BuildStock mapping CSV path.")
 
+                start_time = Time.now # To document the time of getting the resstock building id
                 resstock_building_id = find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature.id)
-                puts "restock_building_id = #{resstock_building_id}"
+                puts "Processing time for finding the building match (resstock_building_id = #{resstock_building_id}) from the buildstock CSV: #{Time.now - start_time} seconds."
 
                 residential_samples(args, resstock_building_id, uo_buildstock_mapping_csv_path) # uo_buildstock_mapping_csv_path may contain a subset of all parameters
 
@@ -633,7 +633,7 @@ module URBANopt
               end
             end
 
-            build_res_model_args = [:urbanopt_feature_id, :resstock_building_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir, :output_dir]
+            build_res_model_args = [:urbanopt_feature_id, :resstock_buildstock_csv_path, :resstock_building_id, :schedules_type, :schedules_random_seed, :schedules_variation, :geometry_num_floors_above_grade, :hpxml_dir, :output_dir]
             args.each_key do |arg_name|
               unless default_args.key?(arg_name)
                 next if build_res_model_args.include?(arg_name)

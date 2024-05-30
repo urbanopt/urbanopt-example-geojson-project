@@ -7,8 +7,9 @@
 # http://nrel.github.io/OpenStudio-user-documentation/measures/measure_writing_guide/
 
 require 'openstudio'
-resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources/residential-measures/resources/hpxml-measures/HPXMLtoOpenStudio/resources'))
-require File.join(resources_path, 'meta_measure')
+resources_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
+require File.join(resources_path, 'residential-measures/resources/buildstock')
+require File.join(resources_path, 'residential-measures/resources/hpxml-measures/HPXMLtoOpenStudio/resources/meta_measure')
 
 # start the measure
 class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
@@ -34,6 +35,11 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     arg = OpenStudio::Ruleset::OSArgument.makeIntegerArgument('urbanopt_feature_id', true)
     arg.setDisplayName('URBANopt: GeoJSON Feature ID')
     arg.setDescription('The feature ID passed from Baseline.rb.')
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument.makeStringArgument('resstock_buildstock_csv_path', false)
+    arg.setDisplayName('ResStock: Buildstock CSV File Path')
+    arg.setDescription('Absolute path of the buildstock CSV file.')
     args << arg
 
     arg = OpenStudio::Measure::OSArgument.makeIntegerArgument('resstock_building_id', false)
@@ -118,44 +124,42 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
     # Get file/dir paths
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
-    hpxml_measures_dir = File.join(resources_dir, 'residential-measures/resources/hpxml-measures')
+    residential_measures_dir = File.join(resources_dir, 'residential-measures')
+    hpxml_measures_dir = File.join(residential_measures_dir, 'resources/hpxml-measures')
 
     # Check file/dir paths exist
     check_dir_exists(resources_dir, runner)
+    check_dir_exists(residential_measures_dir, runner)
     check_dir_exists(hpxml_measures_dir, runner)
 
     # Either:
     # (A) Assign ResStock options; all units of the building are identical
     # (B) Create units of the building using logic in get_unit_positions()
     # (C) Run an HPXML file that has already been created
-    if args.key?(:resstock_building_id) # assign resstock options
-      resstock_building_id = args[:resstock_building_id]
+    if args.key?(:resstock_buildstock_csv_path) && args.key?(:resstock_building_id) # assign resstock options
+      buildstock_csv_path = args[:resstock_buildstock_csv_path]
+      building_id = args[:resstock_building_id]
 
-      if resstock_building_id == 0
+      if building_id == 0
         runner.registerError("Feature ID = #{args[:urbanopt_feature_id]}: No matching buildstock building ID found.")
         return false
       end
 
-      lib_dir = File.join(resources_dir, 'residential-measures/lib')
-      characteristics_dir = File.join(lib_dir, 'housing_characteristics')
-      buildstock_file = File.join(lib_dir, 'resources/buildstock.rb')
-      measures_dir = File.join(resources_dir, 'residential-measures/measures')
-      lookup_file = File.join(lib_dir, 'resources/options_lookup.tsv')
-      buildstock_csv_path = File.absolute_path(File.join(characteristics_dir, 'buildstock.csv'))
+      # Get file/dir paths
+      characteristics_dir = File.join(residential_measures_dir, 'project_national/housing_characteristics')
+      measures_dir = File.join(residential_measures_dir, 'measures')
+      lookup_file = File.join(residential_measures_dir, 'resources/options_lookup.tsv')
 
-      # Load buildstock_file
-      require File.join(File.dirname(buildstock_file), File.basename(buildstock_file, File.extname(buildstock_file)))
-
-      check_dir_exists(resources_dir, runner)
-      check_dir_exists(measures_dir, runner)
+      # Check file/dir paths exist
       check_dir_exists(characteristics_dir, runner)
+      check_dir_exists(measures_dir, runner)
       check_file_exists(lookup_file, runner)
       check_file_exists(buildstock_csv_path, runner)
 
       lookup_csv_data = CSV.open(lookup_file, col_sep: "\t").each.to_a
 
       # Retrieve all data associated with sample number
-      bldg_data = get_data_for_sample(buildstock_csv_path, resstock_building_id, runner)
+      bldg_data = get_data_for_sample(buildstock_csv_path, building_id, runner)
 
       # Retrieve order of parameters to run
       parameters_ordered = get_parameters_ordered_from_options_lookup_tsv(lookup_csv_data, characteristics_dir)
@@ -168,7 +172,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
 
       # Check buildstock.csv doesn't have extra parameters
-      extras = bldg_data.keys - parameters_ordered - ['Building', 'sample_weight']
+      extras = bldg_data.keys - parameters_ordered - ['Feature ID', 'Building', 'sample_weight']
       if !extras.empty?
         runner.registerError("Mismatch between buildstock.csv and options_lookup.tsv. Extra parameters: #{extras.join(', ')}.")
         return false

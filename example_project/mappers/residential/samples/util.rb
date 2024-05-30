@@ -6,43 +6,15 @@
 require 'csv'
 require 'securerandom'
 
-### Mapping methods from UO feature input names to buildstock characteristics names
-
 def residential_samples(args, resstock_building_id, buildstock_csv_path)
-  '''Assign resstock_building_id that points to buildstock_csv_path.'''
+  '''Assign resstock_building_id that points to a row in buildstock_csv_path.'''
 
   args[:resstock_building_id] = resstock_building_id
-
-  # Create lib folder (so we can more easily copy code from BuildExistingModel)
-  res_measures_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures'))
-  lib_dir = File.join(res_measures_dir, 'lib')
-  resources_dir = File.join(res_measures_dir, 'resources')
-  housing_characteristics_dir = File.join(res_measures_dir, 'project_national/housing_characteristics')
-
-  FileUtils.rm_rf(lib_dir)
-  Dir.mkdir(lib_dir) if !File.exist?(lib_dir)
-  FileUtils.cp_r(resources_dir, lib_dir)
-  create_single_row_buildstock_csv(resstock_building_id, buildstock_csv_path, housing_characteristics_dir)
-  FileUtils.cp_r(housing_characteristics_dir, lib_dir)
+  args[:resstock_buildstock_csv_path] = buildstock_csv_path
 end
 
-def create_single_row_buildstock_csv(resstock_building_id, buildstock_csv_path, housing_characteristics_dir)
-  rows = []
-  buildstock_csv = CSV.read(buildstock_csv_path, headers: true)
-  buildstock_csv.delete('UO_id')
-
-  CSV.open(File.join(housing_characteristics_dir, 'buildstock.csv'), 'w') do |csv|
-    csv << buildstock_csv.headers
-    buildstock_csv.each do |row|
-      next if row['Building'] != resstock_building_id.to_s
-
-      csv << row
-    end
-  end
-end
-
-def get_resstock_building_id(buildstock_csv_path, feature, building_type, logger)
-  '''develop get_resstock_building_id method'''
+def find_resstock_building_id(buildstock_csv_path, feature, building_type, logger)
+  '''Map feature properties to resstock options for some parameters.'''
 
   number_of_residential_units = 1
   begin
@@ -94,8 +66,6 @@ def get_resstock_building_id(buildstock_csv_path, feature, building_type, logger
     logger.info("\nFeature #{feature.id}: number_of_bedrooms was not used to filter buildstock csv since it does not exist for this feature")
   end
 
-  #puts "########### mapped_properties = #{mapped_properties}" ##for debugging
-
   selected_id, infos = get_selected_id(mapped_properties, buildstock_csv_path, feature.id)
 
   infos.each do |info|
@@ -116,11 +86,8 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
     # find if it's a match using reduce
     is_match = mapped_properties.reduce(true) do |acc, (key, value)|
       current_match = row[key].to_s.strip.downcase == value.to_s.strip.downcase
-      #puts "resstock = #{row[key].to_s.strip.downcase} :::::: uo_feature = #{value.to_s.strip.downcase}" ##for debugging
       acc && current_match
     end
-
-    #puts "IS_MATCH = #{is_match}" #for debugging
 
     if is_match
       # "Building" is the building id header in buildstock csv
@@ -144,9 +111,9 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
 
   ### Log matching results to csv 
   # Path to your log CSV file
-  log_csv_path = File.join(File.dirname(__FILE__), '../../../run/uo_buildstock_match_log.csv')
+  log_csv_path = File.join(File.dirname(__FILE__), '../../../run/resstock_buildstock_csv_match_log.csv')
 
-  full_path = File.join(Dir.pwd, log_csv_path)
+  full_path = File.absolute_path(File.join(Dir.pwd, log_csv_path))
   puts "CSV is saved at: #{full_path}"
 
   # Initialize CSV file with headers if it doesn't exist
@@ -155,6 +122,7 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
       csv << ['uo_id', 'matches', 'selected_match']
     end
   end
+
   # Append data to matching data CSV file
   CSV.open(log_csv_path, 'ab') do |csv|
     # Convert matches array to a string to store in CSV
@@ -168,8 +136,25 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
   return selected_id, infos
 end
 
+def find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature_id)
+  '''Get resstock Building ID from the uo_buildstock_mapping_csv.'''
+  '''Read csv file and find the resstock_building_id that correspond to the uo feature.'''
+
+  building_id = nil
+  uo_id = feature_id
+  CSV.foreach(uo_buildstock_mapping_csv_path, headers: true) do |row|
+    if row['Feature ID'].to_s == uo_id.to_s
+      building_id = row['Building']
+      break # Exit the loop once the matching building ID is found
+    end
+  end
+  return building_id # Returns the found building ID or nil if not found
+end
+
+### Mapping methods from UO feature input names to buildstock characteristics names
+
 def map_to_resstock_building_type(res_type, number_of_residential_units)
-  '''Define function to map building type to categories'''
+  '''Define function to map building type to categories.'''
   
   if res_type == 'Multifamily'
     if number_of_residential_units >= 5
@@ -190,7 +175,7 @@ def map_to_resstock_building_type(res_type, number_of_residential_units)
 end
 
 def map_to_resstock_floor_area(floor_area, number_of_residential_units)
-  '''floor area mapping using "Geometry Floor Area" floor area'''
+  '''Floor area mapping using "Geometry Floor Area" floor area.'''
 
   floor_area_mapping = {
     '750-999' => [750, 999],
@@ -216,7 +201,7 @@ def map_to_resstock_floor_area(floor_area, number_of_residential_units)
 end
 
 def map_to_resstock_vintage(year_built)
-  '''mapping to resstock Vintage ACS'''
+  '''Mapping to resstock Vintage ACS.'''
 
   vintage_mapping = {
     '2000-09' => (2000..2009),
@@ -240,7 +225,7 @@ def map_to_resstock_vintage(year_built)
 end
 
 def map_to_resstock_num_units(res_type, number_of_residential_units)
-  '''Define function to map "number_of_residential_units" to categories'''
+  '''Define function to map "number_of_residential_units" to categories.'''
 
   if res_type == 'Single-Family Detached'
     return 'None', 'None'
@@ -249,20 +234,5 @@ def map_to_resstock_num_units(res_type, number_of_residential_units)
   elsif res_type == 'Multifamily'
     return 'None', number_of_residential_units
   end          
-end
-
-def find_building_for_uo_id(uo_buildstock_mapping_csv_path, feature_id)
-  '''get buildstock building id from the uo_buildstock_mapping_csv'''
-  '''Read csv file and find the resstock_building_id that correspond to the uo feature'''
-
-  building_id = nil
-  uo_id = feature_id
-  CSV.foreach(uo_buildstock_mapping_csv_path, headers: true) do |row|
-    if row['UO_id'].to_s == uo_id.to_s
-      building_id = row['Building']
-      break # Exit the loop once the matching building ID is found
-    end
-  end
-  return building_id # Returns the found building ID or nil if not found
 end
   

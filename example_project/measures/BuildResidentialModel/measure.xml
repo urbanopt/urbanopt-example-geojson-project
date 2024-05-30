@@ -3,8 +3,8 @@
   <schema_version>3.1</schema_version>
   <name>build_residential_model</name>
   <uid>259dc35f-65e8-47d4-913f-69efede5a267</uid>
-  <version_id>fe3fef72-8a39-4144-b293-a0707251e488</version_id>
-  <version_modified>2024-03-07T21:37:59Z</version_modified>
+  <version_id>8738e0d8-b7b4-41cd-8e1f-352a2644b0ee</version_id>
+  <version_modified>2024-05-30T17:01:37Z</version_modified>
   <xml_checksum>2C38F48B</xml_checksum>
   <class_name>BuildResidentialModel</class_name>
   <display_name>Build Residential Model</display_name>
@@ -17,6 +17,14 @@
       <description>The feature ID passed from Baseline.rb.</description>
       <type>Integer</type>
       <required>true</required>
+      <model_dependent>false</model_dependent>
+    </argument>
+    <argument>
+      <name>resstock_buildstock_csv_path</name>
+      <display_name>ResStock: Buildstock CSV File Path</display_name>
+      <description>Absolute path of the buildstock CSV file.</description>
+      <type>String</type>
+      <required>false</required>
       <model_dependent>false</model_dependent>
     </argument>
     <argument>
@@ -6843,7 +6851,7 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>64E42ED8</checksum>
+      <checksum>154C4F86</checksum>
     </file>
     <file>
       <filename>constants.rb</filename>
@@ -6870,10 +6878,16 @@
       <checksum>42CACEFB</checksum>
     </file>
     <file>
+      <filename>samples/uo_buildstock_mapping.csv</filename>
+      <filetype>csv</filetype>
+      <usage_type>test</usage_type>
+      <checksum>0FF0E67A</checksum>
+    </file>
+    <file>
       <filename>test_build_residential_model.rb</filename>
       <filetype>rb</filetype>
       <usage_type>test</usage_type>
-      <checksum>FCC2FD8E</checksum>
+      <checksum>B3EE28D5</checksum>
     </file>
     <file>
       <filename>xml_building/17/feature1.xml</filename>
