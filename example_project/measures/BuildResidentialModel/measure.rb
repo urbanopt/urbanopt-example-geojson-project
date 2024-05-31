@@ -202,7 +202,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # Fill in defaults where any missing parameters from the buildstock csv haven't assigned arguments
       args.each_key do |arg_name|
-        measures['ResStockArguments'][0][arg_name.to_s] = args[arg_name] if measures['ResStockArguments'][0][arg_name.to_s].nil?
+        measures['ResStockArguments'][0][arg_name.to_s] = args[arg_name].to_s if measures['ResStockArguments'][0][arg_name.to_s].nil?
       end
 
       # ResStockArguments
@@ -228,19 +228,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       resstock_arguments_runner.result.stepValues.each do |step_value|
         value = get_value_from_workflow_step_value(step_value)
         next if value == ''
-
-        # We want to use the GeoJSON properties, not what ResStock maps?
-        next if step_value.name == 'weather_station_epw_filepath' # County
-        next if step_value.name == 'geometry_unit_cfa' # Geometry Floor Area
-        next if step_value.name == 'year_built' && args.key?(:year_built) # Vintage
-
-        # Assuming buildstock.csv is already filtered based on PUMA, we CAN set the following from the lookup?
-        # Otherwise, the following could conflict with the EPW found in the GeoJSON.
-        # next if step_value.name == 'simulation_control_daylight_saving_enabled' # County
-        # next if step_value.name == 'site_zip_code' # County
-        # next if step_value.name == 'site_time_zone_utc_offset' # County
-        # next if step_value.name == 'site_state_code' # State
-        # next if step_value.name == 'site_iecc_zone' # ASHRAE IECC Climate Zone 2004
+        next if skip_step_value(step_value, args)
 
         args[step_value.name.to_sym] = value
       end
@@ -545,6 +533,32 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       end
     end
     return units
+  end
+
+  def skip_step_value(step_value, args)
+    # Avoid overwriting the following arguments with values from the lookup -- they are either:
+    # - geometry related arguments that won't conflict with other lookup options
+    # - weather related arguments that area already specified in the GeoJSON file
+
+    # Geometry Floor Area
+    return true if step_value.name == 'geometry_unit_cfa'
+
+    # County
+    return true if step_value.name == 'simulation_control_daylight_saving_enabled'
+    return true if step_value.name == 'weather_station_epw_filepath'
+    return true if step_value.name == 'site_zip_code'
+    return true if step_value.name == 'site_time_zone_utc_offset'
+
+    # State
+    return true if step_value.name == 'site_state_code'
+
+    # ASHRAE IECC Climate Zone 2004
+    return true if step_value.name == 'site_iecc_zone'
+
+    # Vintage
+    return true if step_value.name == 'year_built' && args.key?(:year_built)
+
+    return false
   end
 end
 

@@ -25,45 +25,54 @@ def find_resstock_building_id(buildstock_csv_path, feature, building_type, logge
   mapped_properties = {}
 
   # Required properties to do the search
-  begin
-    mapped_properties['Geometry Building Type RECS'] = map_to_resstock_building_type(building_type, number_of_residential_units)
-  rescue StandardError
-  end
+  mapped_properties['Geometry Building Type RECS'] = map_to_resstock_building_type(building_type, number_of_residential_units)
 
-  # Conditionally add properties if they exist
   # number_of_stories_above_ground
-  begin
-    mapped_properties['Geometry Stories'] = feature.number_of_stories_above_ground
-  rescue StandardError
-    logger.info("\nFeature #{feature.id}: number_of_stories_above_ground was not used to filter buildstok csv since it does not exist for this feature")
-  end
+  mapped_properties['Geometry Stories'] = feature.number_of_stories_above_ground
 
   # number_of_residential_units SFA/MF
-  begin
-    mapped_properties['Geometry Building Number Units SFA'], mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(building_type, number_of_residential_units)
-  rescue StandardError
-    logger.info("\nFeature #{feature.id}: number_of_residential_units was not used to filter buildstock csv since it does not exist for this feature")
-  end
+  mapped_properties['Geometry Building Number Units SFA'], mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(building_type, number_of_residential_units)
+
+  # floor_area
+  mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(feature.floor_area, number_of_residential_units)
+
+  # number_of_bedrooms
+  mapped_properties['Bedrooms'] = feature.number_of_bedrooms / number_of_residential_units # Assuming direct mapping or apply conversion if needed
+
+  # foundation_type
+  mapped_properties['Geometry Foundation Type'] = map_to_resstock_foundation_type(feature.foundation_type)
+
+  # attic_type
+  mapped_properties['Geometry Attic Type'] = map_to_resstock_attic_type(feature.attic_type)
 
   # year_built
   begin
-   mapped_properties['Vintage ACS'] = map_to_resstock_vintage(feature.year_built) # Assuming direct mapping or apply conversion if needed
+   mapped_properties['Vintage ACS'] = map_to_resstock_vintage(feature.year_built)
   rescue StandardError
    logger.info("\nFeature #{feature.id}: year_built was not used to filter buildstock csv since it does not exist for this feature")
   end
 
-  # floor_area
+  # TODO: write these methods
+
+  # system_type
   begin
-    mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(feature.floor_area, number_of_residential_units)
+    mapped_properties['HVAC Heating Efficiency'], mapped_properties['HVAC Cooling Efficiency'] = map_to_resstock_heating_fuel(feature.system_type)
   rescue StandardError
-    logger.info("\nFeature #{feature.id}: floor_area was not used to filter buildstock csv since it does not exist for this feature")
+    logger.info("\nFeature #{feature.id}: system_type was not used to filter buildstock csv since it does not exist for this feature")
   end
 
-  # number_of_bedrooms
+  # heating_system_fuel_type
   begin
-    mapped_properties['Bedrooms'] = feature.number_of_bedrooms / number_of_residential_units # Assuming direct mapping or apply conversion if needed
+    mapped_properties['Heating Fuel'] = map_to_resstock_heating_fuel(feature.heating_system_fuel_type)
   rescue StandardError
-    logger.info("\nFeature #{feature.id}: number_of_bedrooms was not used to filter buildstock csv since it does not exist for this feature")
+    logger.info("\nFeature #{feature.id}: heating_system_fuel_type was not used to filter buildstock csv since it does not exist for this feature")
+  end
+
+  # number_of_occupants
+  begin
+    mapped_properties['Occupants'] = map_to_resstock_occupants(feature.number_of_occupants)
+  rescue StandardError
+    logger.info("\nFeature #{feature.id}: number_of_occupants was not used to filter buildstock csv since it does not exist for this feature")
   end
 
   selected_id, infos = get_selected_id(mapped_properties, buildstock_csv_path, feature.id)
@@ -233,6 +242,40 @@ def map_to_resstock_num_units(res_type, number_of_residential_units)
     return number_of_residential_units, 'None'
   elsif res_type == 'Multifamily'
     return 'None', number_of_residential_units
-  end          
+  end
+end
+
+def map_to_resstock_foundation_type(foundation_type)
+  '''Mapping to resstock Geometry Foundation Type.'''
+
+  if foundation_type == 'slab'
+    return 'SlabOnGrade'
+  elsif foundation_type == 'crawlspace - vented'
+    return 'Vented Crawlspace'
+  elsif foundation_type == 'crawlspace - unvented'
+    return 'Unvented Crawlspace'
+  elsif foundation_type == 'crawlspace - conditioned'
+    return 'Conditioned Crawlspace'
+  elsif foundation_type == 'basement - unconditioned'
+    return 'Unheated Basement'
+  elsif foundation_type == 'basement - conditioned'
+    return 'Heated Basement'
+  elsif foundation_type == 'ambient'
+    return 'Ambient'
+  end
+end
+
+def map_to_resstock_attic_type(attic_type)
+  '''Mapping to resstock Geometry Attic Type.'''
+
+  if attic_type == 'attic - vented'
+    return 'Vented Attic'
+  elsif attic_type == 'attic - unvented'
+    return 'Unvented Attic'
+  elsif attic_type == 'attic - conditioned'
+    return 'Finished Attic or Cathedral Ceilings'
+  elsif attic_type == 'flat roof'
+    return 'None'
+  end
 end
   
