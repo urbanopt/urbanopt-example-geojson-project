@@ -639,10 +639,10 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   end
 
   # Run Aggregate Scenario
-  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization', run_resilience: true, community_photovoltaic: community_photovoltaic)
+  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization', run_resilience: false, community_photovoltaic: community_photovoltaic)
 
   # Run features individually - this is an alternative approach to the previous step, in your analysis depending on project ojectives you maye only need to run one
-  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt'] * scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: true,
+  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt'] * scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: false,
                                                                                keep_existing_output: false, groundmount_photovoltaic: groundmount_photovoltaic)
 end
 
