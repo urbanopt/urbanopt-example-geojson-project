@@ -501,11 +501,15 @@ class BuildResidentialModelTest < Minitest::Test
     mapped_properties['Geometry Building Type RECS'] = map_to_resstock_building_type(@building_type, @args[:geometry_building_num_units])
     mapped_properties['Geometry Stories'] = @number_of_stories_above_ground if !@number_of_stories_above_ground.nil?
     mapped_properties['Geometry Building Number Units SFA'], mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(@building_type, @args[:geometry_building_num_units])
-    mapped_properties['Vintage ACS'] = map_to_resstock_vintage(@year_built) if !@year_built.nil?
     mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(@floor_area, @args[:geometry_building_num_units]) if !@floor_area.nil?
     mapped_properties['Bedrooms'] = @number_of_bedrooms / @args[:geometry_building_num_units] if !@number_of_bedrooms.nil?
-    # mapped_properties['Geometry Foundation Type'] = map_to_resstock_foundation_type(@foundation_type) if !@foundation_type.nil?
-    # mapped_properties['Geometry Attic Type'] = map_to_resstock_attic_type(@attic_type) if !@attic_type.nil?
+    mapped_properties['Geometry Foundation Type'] = map_to_resstock_foundation_type(@foundation_type) if !@foundation_type.nil?
+    mapped_properties['Geometry Attic Type'] = map_to_resstock_attic_type(@attic_type) if !@attic_type.nil?
+    mapped_properties['Vintage ACS'] = map_to_resstock_vintage(@year_built) if !@year_built.nil?
+    mapped_properties['HVAC Heating Efficiency'], mapped_properties['HVAC Cooling Efficiency'] = map_to_resstock_system(type, @system_type, @heating_system_fuel_type)
+    mapped_properties['Heating Fuel'] = map_to_resstock_heating_fuel(@heating_system_fuel_type)
+    mapped_properties['Occupants'] = map_to_resstock_num_occupants(@number_of_occupants)
+
     resstock_building_id, infos = get_selected_id(mapped_properties, @buildstock_csv_path, @args[:urbanopt_feature_id])
     residential_samples(@args, resstock_building_id, @buildstock_csv_path)
     return resstock_building_id
