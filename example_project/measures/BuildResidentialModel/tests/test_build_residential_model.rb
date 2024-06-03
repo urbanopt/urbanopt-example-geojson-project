@@ -60,6 +60,7 @@ class BuildResidentialModelTest < Minitest::Test
     @onsite_parking_fraction = false
     @system_type = 'Residential - furnace and central air conditioner'
     @heating_system_fuel_type = 'natural gas'
+    @number_of_occupants = nil
   end
 
   def test_hpxml_dir
@@ -499,16 +500,16 @@ class BuildResidentialModelTest < Minitest::Test
   def _apply_residential_samples()
     mapped_properties = {}
     mapped_properties['Geometry Building Type RECS'] = map_to_resstock_building_type(@building_type, @args[:geometry_building_num_units])
-    mapped_properties['Geometry Stories'] = @number_of_stories_above_ground if !@number_of_stories_above_ground.nil?
+    mapped_properties['Geometry Stories'] = [@number_of_stories_above_ground] if !@number_of_stories_above_ground.nil?
     mapped_properties['Geometry Building Number Units SFA'], mapped_properties['Geometry Building Number Units MF'] = map_to_resstock_num_units(@building_type, @args[:geometry_building_num_units])
     mapped_properties['Geometry Floor Area'] = map_to_resstock_floor_area(@floor_area, @args[:geometry_building_num_units]) if !@floor_area.nil?
-    mapped_properties['Bedrooms'] = @number_of_bedrooms / @args[:geometry_building_num_units] if !@number_of_bedrooms.nil?
-    mapped_properties['Geometry Foundation Type'] = map_to_resstock_foundation_type(@foundation_type) if !@foundation_type.nil?
-    mapped_properties['Geometry Attic Type'] = map_to_resstock_attic_type(@attic_type) if !@attic_type.nil?
+    mapped_properties['Bedrooms'] = [@number_of_bedrooms / @args[:geometry_building_num_units]] if !@number_of_bedrooms.nil?
+    # mapped_properties['Geometry Foundation Type'] = map_to_resstock_foundation_type(@foundation_type) if !@foundation_type.nil?
+    # mapped_properties['Geometry Attic Type'] = map_to_resstock_attic_type(@attic_type) if !@attic_type.nil?
     mapped_properties['Vintage ACS'] = map_to_resstock_vintage(@year_built) if !@year_built.nil?
-    mapped_properties['HVAC Heating Efficiency'], mapped_properties['HVAC Cooling Efficiency'] = map_to_resstock_system(type, @system_type, @heating_system_fuel_type)
-    mapped_properties['Heating Fuel'] = map_to_resstock_heating_fuel(@heating_system_fuel_type)
-    mapped_properties['Occupants'] = map_to_resstock_num_occupants(@number_of_occupants)
+    mapped_properties['HVAC Heating Efficiency'], mapped_properties['HVAC Cooling Efficiency'] = map_to_resstock_system_type(@system_type, @heating_system_fuel_type) if !@system_type.nil?
+    mapped_properties['Heating Fuel'] = map_to_resstock_heating_fuel(@heating_system_fuel_type) if !@heating_system_fuel_type.nil?
+    # mapped_properties['Occupants'] = map_to_resstock_num_occupants(@number_of_occupants, @args[:geometry_building_num_units]) if !@number_of_occupants.nil?
 
     resstock_building_id, infos = get_selected_id(mapped_properties, @buildstock_csv_path, @args[:urbanopt_feature_id])
     residential_samples(@args, resstock_building_id, @buildstock_csv_path)
@@ -660,19 +661,37 @@ class BuildResidentialModelTest < Minitest::Test
     assert(res_bldg.partition_wall_mass.to_s == uo_bldg.partition_wall_mass.to_s)
     assert(res_bldg.furniture_mass.to_s == uo_bldg.furniture_mass.to_s)
     res_bldg.heating_systems.zip(uo_bldg.heating_systems).each do |res, uo|
-      # assert(res.to_s == uo.to_s) # FIXME: should we be overriding this?
+      res.heating_capacity = nil
+      uo.heating_capacity = nil
+      res.heating_airflow_cfm = nil
+      uo.heating_airflow_cfm = nil
+      assert(res.to_s == uo.to_s)
     end
     res_bldg.cooling_systems.zip(uo_bldg.cooling_systems).each do |res, uo|
-      # assert(res.to_s == uo.to_s) # FIXME: should we be overriding this?
+      res.cooling_capacity = nil
+      uo.cooling_capacity = nil
+      res.cooling_airflow_cfm = nil
+      uo.cooling_airflow_cfm = nil
+      assert(res.to_s == uo.to_s)
     end
     res_bldg.heat_pumps.zip(uo_bldg.heat_pumps).each do |res, uo|
-      # assert(res.to_s == uo.to_s) # FIXME: should we be overriding this?
+      assert(res.to_s == uo.to_s)
     end
     res_bldg.hvac_controls.zip(uo_bldg.hvac_controls).each do |res, uo|
       assert(res.to_s == uo.to_s)
     end
     res_bldg.hvac_distributions.zip(uo_bldg.hvac_distributions).each do |res, uo|
-      # assert(res.to_s != uo.to_s) # FIXME: should we be overriding this?
+      res.conditioned_floor_area_served = nil
+      uo.conditioned_floor_area_served = nil
+      assert(res.to_s == uo.to_s)
+      res.duct_leakage_measurements.zip(uo.duct_leakage_measurements).each do |res2, uo2|
+        assert(res2.to_s == uo2.to_s)
+      end
+      res.ducts.zip(uo.ducts).each do |res2, uo2|
+        res2.duct_surface_area = nil
+        uo2.duct_surface_area = nil
+        assert(res2.to_s == uo2.to_s)
+      end
     end
     res_bldg.ventilation_fans.zip(uo_bldg.ventilation_fans).each do |res, uo|
       assert(res.to_s == uo.to_s)

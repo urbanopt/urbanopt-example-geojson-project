@@ -52,8 +52,6 @@ def find_resstock_building_id(buildstock_csv_path, feature, building_type, logge
    logger.info("\nFeature #{feature.id}: year_built was not used to filter buildstock csv since it does not exist for this feature")
   end
 
-  # TODO: write these methods
-
   # system_type
   begin
     mapped_properties['HVAC Heating Efficiency'], mapped_properties['HVAC Cooling Efficiency'] = map_to_resstock_system_type(feature.system_type, feature.heating_system_fuel_type)
@@ -95,7 +93,6 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
     # find if it's a match using reduce
     is_match = mapped_properties.reduce(true) do |acc, (key, values)|
 
-      # current_match = row[key].to_s.strip.downcase == value.to_s.strip.downcase
       current_match = values.map { |v| v.to_s.strip.downcase }.include?(row[key].to_s.strip.downcase)
       acc && current_match
     end

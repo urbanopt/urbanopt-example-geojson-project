@@ -537,8 +537,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
   def skip_step_value(step_value, args)
     # Avoid overwriting the following arguments with values from the lookup -- they are either:
-    # - geometry related arguments that won't conflict with other lookup options
-    # - weather related arguments that area already specified in the GeoJSON file
+    # - geometry related arguments that won't conflict with other lookup options (e.g., geometry_unit_cfa)
+    # - weather related arguments that area already specified in the GeoJSON file (e.g., weather_station_epw_filepath)
 
     # Geometry Floor Area
     return true if step_value.name == 'geometry_unit_cfa'
