@@ -127,7 +127,7 @@ def get_selected_id(mapped_properties, buildstock_csv_path, feature_id)
   # Initialize CSV file with headers if it doesn't exist
   unless File.exist?(log_csv_path)
     CSV.open(log_csv_path, 'wb') do |csv|
-      csv << ['uo_id', 'matches', 'selected_match']
+      csv << ['Feature ID', 'Possible Matches', 'Selected Match']
     end
   end
 
@@ -169,6 +169,8 @@ def map_to_resstock_building_type(res_type, number_of_residential_units)
       return ['Multi-Family with 5+ Units']
     elsif number_of_residential_units.between?(2, 4)
       return ['Multi-Family with 2 - 4 Units']
+    else
+      return []
     end              
   elsif res_type == 'Single-Family Attached'
     return ['Single-Family Attached']
