@@ -1,11 +1,3 @@
-<<<<<<< HEAD:example_project/resources/residential-measures/resources/hpxml-measures/workflow/tests/util.rb
-=======
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
->>>>>>> develop:example_project/resources/hpxml-measures/workflow/tests/util.rb
 # frozen_string_literal: true
 
 def run_simulation_tests(xmls)
