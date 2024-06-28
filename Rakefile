@@ -249,7 +249,7 @@ rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONPro
 
 desc 'Clear Baseline Scenario'
 task :clear_baseline, [:json, :csv] do |t, args|
-  puts 'Clearing Baseline Scenario...'
+  puts "\nClearing Baseline Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -261,7 +261,7 @@ end
 
 desc 'Run Baseline Scenario'
 task :run_baseline, [:json, :csv] do |t, args|
-  puts 'Running Baseline Scenario...'
+  puts "\nRunning Baseline Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -276,7 +276,7 @@ end
 
 desc 'Post Process Baseline Scenario'
 task :post_process_baseline, [:json, :csv] do |t, args|
-  puts 'Post Processing Baseline Scenario...'
+  puts "\nPost Processing Baseline Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -296,7 +296,7 @@ end
 
 desc 'Clear High Efficiency Scenario'
 task :clear_high_efficiency, [:json, :csv] do |t, args|
-  puts 'Clearing High Efficiency Scenario...'
+  puts "\nClearing High Efficiency Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -308,7 +308,7 @@ end
 
 desc 'Run High Efficiency Scenario'
 task :run_high_efficiency, [:json, :csv] do |t, args|
-  puts 'Running High Efficiency Scenario...'
+  puts "\nRunning High Efficiency Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -323,7 +323,7 @@ end
 
 desc 'Post Process High Efficiency Scenario'
 task :post_process_high_efficiency, [:json, :csv] do |t, args|
-  puts 'Post Processing High Efficiency Scenario...'
+  puts "\nPost Processing High Efficiency Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -343,7 +343,7 @@ end
 
 desc 'Clear Chilled Water Storage Scenario'
 task :clear_chilled_water_storage, [:json, :csv] do |t, args|
-  puts 'Clearing Chilled Water Storage Scenario...'
+  puts "\nClearing Chilled Water Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -355,7 +355,7 @@ end
 
 desc 'Run Chilled Water Storage Scenario'
 task :run_chilled_water_storage, [:json, :csv] do |t, args|
-  puts 'Running Chilled Water Storage Scenario...'
+  puts "\nRunning Chilled Water Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -370,7 +370,7 @@ end
 
 desc 'Post Process Chilled Water Storage Scenario'
 task :post_process_chilled_water_storage, [:json, :csv] do |t, args|
-  puts 'Post Processing Chilled Water Storage Scenario...'
+  puts "\nPost Processing Chilled Water Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -390,7 +390,7 @@ end
 
 desc 'Clear Peak Hours MELs Shedding Scenario'
 task :clear_peak_hours_mels_shedding, [:json, :csv] do |t, args|
-  puts 'Clearing Peak Hours MELs Shedding Scenario...'
+  puts "\nClearing Peak Hours MELs Shedding Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -402,7 +402,7 @@ end
 
 desc 'Run Peak Hours MELs Shedding Scenario'
 task :run_peak_hours_mels_shedding, [:json, :csv] do |t, args|
-  puts 'Running Peak Hours MELs Shedding Scenario...'
+  puts "\nRunning Peak Hours MELs Shedding Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -417,7 +417,7 @@ end
 
 desc 'Post Process Peak Hours MELs Shedding Scenario'
 task :post_process_peak_hours_mels_shedding, [:json, :csv] do |t, args|
-  puts 'Post Processing Peak Hours MELs Shedding Scenario...'
+  puts "\nPost Processing Peak Hours MELs Shedding Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -437,7 +437,7 @@ end
 
 desc 'Clear Peak Hours Thermostat Adjust Scenario'
 task :clear_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
-  puts 'Clearing Peak Hours Thermostat Adjust Scenario...'
+  puts "\nClearing Peak Hours Thermostat Adjust Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -449,7 +449,7 @@ end
 
 desc 'Run Peak Hours Thermostat Adjust Scenario'
 task :run_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
-  puts 'Running Peak Hours Thermostat Adjust Scenario...'
+  puts "\nRunning Peak Hours Thermostat Adjust Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -464,7 +464,7 @@ end
 
 desc 'Post Process Peak Hours Thermostat Adjust Scenario'
 task :post_process_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
-  puts 'Post Processing Peak Hours Thermostat Adjust Scenario...'
+  puts "\nPost Processing Peak Hours Thermostat Adjust Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -484,7 +484,7 @@ end
 
 desc 'Clear Thermal Storage Scenario'
 task :clear_thermal_storage, [:json, :csv] do |t, args|
-  puts 'Clearing Thermal Storage Scenario...'
+  puts "\nClearing Thermal Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -496,7 +496,7 @@ end
 
 desc 'Run Thermal Storage Scenario'
 task :run_thermal_storage, [:json, :csv] do |t, args|
-  puts 'Running Thermal Storage Scenario...'
+  puts "\nRunning Thermal Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -511,7 +511,7 @@ end
 
 desc 'Post Process Thermal Storage Scenario'
 task :post_process_thermal_storage, [:json, :csv] do |t, args|
-  puts 'Post Processing Thermal Storage Scenario...'
+  puts "\nPost Processing Thermal Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -531,7 +531,7 @@ end
 
 desc 'Clear Flexible Hot Water Scenario'
 task :clear_flexible_hot_water, [:json, :csv] do |t, args|
-  puts 'Clearing Flexible Hot Water Scenario...'
+  puts "\nClearing Flexible Hot Water Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -543,7 +543,7 @@ end
 
 desc 'Run Flexible Hot Water Scenario'
 task :run_flexible_hot_water, [:json, :csv] do |t, args|
-  puts 'Running Flexible Hot Water Scenario...'
+  puts "\nRunning Flexible Hot Water Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -558,7 +558,7 @@ end
 
 desc 'Post Process Flexible Hot Water Scenario'
 task :post_process_flexible_hot_water, [:json, :csv] do |t, args|
-  puts 'Post Processing Flexible Hot Water Scenario...'
+  puts "\nPost Processing Flexible Hot Water Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -578,7 +578,7 @@ end
 
 desc 'Clear REopt Scenario'
 task :clear_reopt, [:json, :csv] do |t, args|
-  puts 'Clearing REopt Scenario...'
+  puts "\nClearing REopt Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -590,7 +590,7 @@ end
 
 desc 'Run REopt Scenario'
 task :run_reopt, [:json, :csv] do |t, args|
-  puts 'Running REopt Scenario...'
+  puts "\nRunning REopt Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -605,7 +605,7 @@ end
 
 desc 'Post Process REopt Scenario'
 task :post_process_reopt, [:json, :csv] do |t, args|
-  puts 'Post Processing REopt Scenario...'
+  puts "\nPost Processing REopt Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -650,7 +650,7 @@ end
 
 desc 'Clear Mixed Scenario'
 task :clear_mixed, [:json, :csv] do |t, args|
-  puts 'Clearing Mixed Scenario...'
+  puts "\nClearing Mixed Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -662,7 +662,7 @@ end
 
 desc 'Run Mixed Scenario'
 task :run_mixed, [:json, :csv] do |t, args|
-  puts 'Running Mixed Scenario...'
+  puts "\nRunning Mixed Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -677,7 +677,7 @@ end
 
 desc 'Post Process Mixed Scenario'
 task :post_process_mixed, [:json, :csv] do |t, args|
-  puts 'Post Processing Mixed Scenario...'
+  puts "\nPost Processing Mixed Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -697,7 +697,7 @@ end
 
 desc 'Visualize and compare results for all Scenarios'
 task :visualize_scenarios do
-  puts 'Visualizing results for all Scenarios...'
+  puts "\nVisualizing results for all Scenarios..."
   visualize_scenarios
 end
 
@@ -705,7 +705,7 @@ end
 
 desc 'Visualize and compare results for all Features in a Scenario'
 task :visualize_features, [:csv] do |t, args|
-  puts 'Visualizing results for all Features in the Scenario...'
+  puts "\nVisualizing results for all Features in the Scenario..."
 
   csv = args[:csv]
   csv = 'baseline_scenario.csv' if args[:csv].nil?
@@ -759,12 +759,31 @@ desc 'Run residential tasks'
 namespace :residential do
   desc 'Update residential resources'
   task :update_resources do
-    prefix = 'example_project/resources/hpxml-measures'
-    repository = 'https://github.com/NREL/OpenStudio-HPXML.git'
-    branch_or_tag = 'v1.7.0' # update this when pulling in updated OS-HPXML
+    prefix = 'example_project/resources/residential-measures'
+    repository = 'https://github.com/NREL/resstock.git'
+    branch_or_tag = 'v3.2.0' # update this when pulling in updated ResStock
 
     FileUtils.rm_rf(prefix)
     system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+
+    folders_to_remove = [
+      '.git',
+      '.github',
+      '.gitignore',
+      'docs',
+      'project_testing',
+      'resources/data',
+      'test/base_results/baseline/timeseries',
+      'test/base_results/upgrades',
+      'test/SetSpaceInfiltrationPerExteriorArea',
+      'test/tests_buildstock_csvs',
+      'test/tests_housing_characteristics',
+      'test/tests_yml_files'
+    ]
+
+    folders_to_remove.each do |f|
+      FileUtils.rm_rf(File.join(prefix, f))
+    end
   end
 
   desc 'Run residential measure tests'

@@ -8,6 +8,7 @@ on:
     - cron: '* 5 * * 0'
   pull_request:
     types: [review_requested]
+  workflow_dispatch:
 
 env:
   # This env var should enforce develop branch of all dependencies
