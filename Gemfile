@@ -20,7 +20,8 @@ gem 'parser', '3.2.2.2'
 #   Windows: set FAVOR_LOCAL_GEMS=1
 # Note that if allow_local is true, but the gem is not found locally, then it will
 # checkout the latest version (develop) from github.
-allow_local = ENV['FAVOR_LOCAL_GEMS']
+# allow_local = ENV['FAVOR_LOCAL_GEMS']
+allow_local = false
 
 # Uncomment the extension, core gems if you need to test local development versions. Otherwise
 # these are included in the model articulation and urbanopt gems
@@ -106,7 +107,7 @@ end
 if allow_local && File.exist?('../urbanopt-geojson-gem')
  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 elsif allow_local
-  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'uo-resstock_connection'
+  gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'develop'
 else
  gem 'urbanopt-geojson', '~> 0.11.2'
 end
