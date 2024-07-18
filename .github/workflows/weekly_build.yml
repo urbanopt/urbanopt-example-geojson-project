@@ -23,7 +23,7 @@ jobs:
           peak_hours_mels_shedding, peak_hours_thermostat_adjust, reopt, thermal_storage]
     runs-on: ubuntu-latest
     container:
-      image: docker://nrel/openstudio:3.7.0
+      image: docker://nrel/openstudio:3.8.0
     steps:
       - uses: actions/checkout@v4
       - name: Update gems
