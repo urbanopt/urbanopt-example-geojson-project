@@ -761,7 +761,7 @@ namespace :residential do
   task :update_resources do
     prefix = 'example_project/resources/residential-measures'
     repository = 'https://github.com/NREL/resstock.git'
-    branch_or_tag = 'v3.2.0' # update this when pulling in updated ResStock
+    branch_or_tag = 'v3.3.0' # update this when pulling in updated ResStock
 
     FileUtils.rm_rf(prefix)
     system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
