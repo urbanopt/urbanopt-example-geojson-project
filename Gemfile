@@ -74,7 +74,7 @@ end
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #  gem 'urbanopt-core', path: '../urbanopt-core-gem'
 # elsif allow_local
-# TODO: Temporary! Remove this once core-gem is merged/released
+# TODO: Temporary! No need to require this once core-gem is merged/released
   gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'os38'
 # else
 #   gem 'urbanopt-core', '~> 0.11.0'
