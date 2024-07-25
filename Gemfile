@@ -2,12 +2,8 @@ source 'http://rubygems.org'
 
 ruby '3.2.2'
 gem 'rspec', '~> 3.13', require: false, group: :test
-gem 'rubocop', '~> 1.65.0', require: false
-gem 'rubocop-checkstyle_formatter', '~> 0.6.0', require: false
-gem 'rubocop-performance', '~> 1.20.0', require: false
 gem 'simplecov', '~> 0.22.0', require: false, group: :test
 gem 'simplecov-lcov', '~> 0.8.0', require: false, group: :test
-gem 'oga', '~> 3.4.0'
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
