@@ -20,7 +20,7 @@ allow_local = false
 # if allow_local && File.exist?('../OpenStudio-extension-gem')
 #   gem 'openstudio-extension', path: '../OpenStudio-extension-gem'
 # elsif allow_local
-#   gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
+  gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'dont_raise_when_mistmatch'
 # end
 
 # if allow_local && File.exist?('../openstudio-geb-gem')
