@@ -266,7 +266,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       hpxml_path = hpxml_paths[0]
       units << { 'hpxml_path' => hpxml_path }
 
-      hpxml = HPXML.new(hpxml_path: hpxml_path, building_id: 'ALL')
+      hpxml = HPXML.new(hpxml_path: hpxml_path)
       standards_number_of_living_units = 0
       hpxml.buildings.each do |hpxml_bldg|
         number_of_units = 1
@@ -301,7 +301,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         end
 
         # Set whole SFA/MF building simulation items
-        measures['BuildResidentialHPXML'][0]['whole_sfa_or_mf_building_sim'] = whole_sfa_or_mf_building_sim
+        measure_args['whole_sfa_or_mf_building_sim'] = whole_sfa_or_mf_building_sim
 
         measure_args['software_info_program_used'] = 'URBANopt'
         begin
@@ -309,7 +309,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
           require version_rb
           measure_args['software_info_program_version'] = URBANopt::CLI::VERSION
         rescue StandardError
-          measure_args['software_info_program_version'] = '0.10.0' # FIXME: is there a way to get the version of urbanopt-example-geojson-project?
+          measure_args['software_info_program_version'] = '0.11.0' # FIXME: is there a way to get the version of urbanopt-example-geojson-project?
         end
         measure_args['apply_defaults'] = true
 
@@ -368,7 +368,6 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     measure_args['hpxml_path'] = hpxml_path
     measure_args['output_dir'] = File.expand_path(args[:output_dir])
     measure_args['debug'] = true
-    measure_args['building_id'] = 'ALL'
 
     measures[measure_subdir] = [measure_args]
 
