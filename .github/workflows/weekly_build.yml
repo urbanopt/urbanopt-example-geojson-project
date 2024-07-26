@@ -28,8 +28,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Update gems
         run: |
-          bundle update
-          bundle exec certified-update
+          bundle install
       - name: Test residential measure variations
         # We only need to run the residential measure_tests once, not for every iteration
         if: matrix.scenario == 'baseline'
