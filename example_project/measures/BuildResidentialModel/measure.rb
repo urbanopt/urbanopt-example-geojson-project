@@ -110,17 +110,17 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
     end
 
     # assign the user inputs to variables
-    args = get_argument_values(runner, arguments(model), user_arguments)
+    args = runner.getArgumentValues(arguments(model), user_arguments)
 
     # optionals: get or remove
-    args.each_key do |arg|
-      if args[arg].is_initialized
-        args[arg] = args[arg].get
-      else
-        args.delete(arg)
-      end
-    rescue StandardError # this is needed for when args[arg] is actually a value
-    end
+    # args.each_key do |arg|
+    #   if args[arg].is_initialized
+    #     args[arg] = args[arg].get
+    #   else
+    #     args.delete(arg)
+    #   end
+    # rescue StandardError # this is needed for when args[arg] is actually a value
+    # end
 
     # Get file/dir paths
     resources_dir = File.absolute_path(File.join(File.dirname(__FILE__), '../../resources'))
@@ -198,7 +198,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
         options_measure_args[option_name].each do |measure_subdir, args_hash|
           update_args_hash(measures, measure_subdir, args_hash, false)
         end
-      end      
+      end
 
       # Fill in defaults where any missing parameters from the buildstock csv haven't assigned arguments
       args.each_key do |arg_name|
@@ -286,6 +286,8 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
       measures = {}
       if !unit.key?('hpxml_path') # create a single new HPXML file describing all dwelling units of the feature
 
+        whole_sfa_or_mf_building_sim = true
+
         # BuildResidentialHPXML
         measure_subdir = 'BuildResidentialHPXML'
         full_measure_path = File.join(hpxml_measures_dir, measure_subdir, 'measure.rb')
@@ -297,6 +299,9 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
           measure_args['existing_hpxml_path'] = hpxml_path
           measure_args['battery_present'] = 'false' # limitation of OS-HPXML
         end
+
+        # Set whole SFA/MF building simulation items
+        measures['BuildResidentialHPXML'][0]['whole_sfa_or_mf_building_sim'] = whole_sfa_or_mf_building_sim
 
         measure_args['software_info_program_used'] = 'URBANopt'
         begin
