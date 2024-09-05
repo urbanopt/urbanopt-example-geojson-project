@@ -22,6 +22,11 @@ allow_local = false
 gem 'openstudio-extension', '0.8.1'
 # end
 
+gem 'regexp_parser', '2.9.0'
+# 2.9.1 breaks test_with_openstudio, for more information: https://github.com/NREL/OpenStudio/issues/5203
+# pin this dependency to avoid unicode_normalize error
+gem 'addressable', '2.8.1' # openstudio:test_with_openstudio
+
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #  gem 'urbanopt-core', path: '../../urbanopt-core-gem'
 # elsif allow_local
@@ -71,9 +76,9 @@ end
 # if allow_local && File.exist?('../openstudio-geb-gem')
 #   gem 'openstudio-geb', path: '../openstudio-geb-gem'
 # elsif allow_local
-gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'version0.5.0'
+# gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'version0.5.0'
 # else
-#   gem 'openstudio-geb', '~> 0.4.0'
+gem 'openstudio-geb', '~> 0.5.0'
 # end
 
 # if allow_local && File.exists?('../urbanopt-geojson-gem')
