@@ -22,67 +22,65 @@ allow_local = false
 # elsif allow_local
 # gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
 # else
-gem 'openstudio-extension', '~> 0.8.1'
+gem 'openstudio-extension', '~> 0.8.2'
 # end
 
-gem 'regexp_parser', '2.9.0'
-# 2.9.1 breaks test_with_openstudio, for more information: https://github.com/NREL/OpenStudio/issues/5203
 # pin this dependency to avoid unicode_normalize error
 gem 'addressable', '2.8.1' # openstudio:test_with_openstudios
 
 # if allow_local && File.exist?('../openstudio-geb-gem')
 #   gem 'openstudio-geb', path: '../openstudio-geb-gem'
 # elsif allow_local
-# gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'version0.5.0'
+gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'version0.5.0'
 # else
-gem 'openstudio-geb', '~> 0.5.0'
+# gem 'openstudio-geb', '~> 0.5.0'
 # end
 
-if allow_local && File.exist?('../openstudio-common-measures-gem')
-  gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
-elsif allow_local
-  gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'develop'
-else
-  gem 'openstudio-common-measures', '~> 0.10.0'
-end
+# if allow_local && File.exist?('../openstudio-common-measures-gem')
+#   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
+# elsif allow_local
+  gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: '0.11.0-prep'
+# else
+#   gem 'openstudio-common-measures', '~> 0.10.0'
+# end
 
-if allow_local && File.exist?('../openstudio-model-articulation-gem')
-  gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
-elsif allow_local
-  gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'develop'
-else
-  gem 'openstudio-model-articulation', '~> 0.10.0'
-end
+# if allow_local && File.exist?('../openstudio-model-articulation-gem')
+#   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
+# elsif allow_local
+  gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: '0.11.0-prep'
+# else
+#   gem 'openstudio-model-articulation', '~> 0.10.0'
+# end
 
-if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
-  gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
-elsif allow_local
-  gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'develop'
-else
-  gem 'openstudio-load-flexibility-measures', '~> 0.9.0'
-end
+# if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
+#   gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
+# elsif allow_local
+  gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: '0.10.0-prep'
+# else
+#   gem 'openstudio-load-flexibility-measures', '~> 0.9.0'
+# end
 
-if allow_local && File.exist?('../openstudio-ee-gem')
-  gem 'openstudio-ee', path: '../opesntudio-ee-gem'
-elsif allow_local
-  gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'develop'
-else
-  gem 'openstudio-ee', '~> 0.10.0'
-end
+# if allow_local && File.exist?('../openstudio-ee-gem')
+#   gem 'openstudio-ee', path: '../opesntudio-ee-gem'
+# elsif allow_local
+  gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: '0.11.0-prep'
+# else
+#   gem 'openstudio-ee', '~> 0.10.0'
+# end
 
-if allow_local && File.exist?('../openstudio-calibration-gem')
-  gem 'openstudio-calibration', path: '../openstudio-calibration-gem'
-elsif allow_local
-  gem 'openstudio-calibration', github: 'NREL/openstudio-calibration-gem', branch: 'develop'
-else
-  gem 'openstudio-calibration', '~> 0.10.0'
-end
+# if allow_local && File.exist?('../openstudio-calibration-gem')
+#   gem 'openstudio-calibration', path: '../openstudio-calibration-gem'
+# elsif allow_local
+  gem 'openstudio-calibration', github: 'NREL/openstudio-calibration-gem', branch: '0.11.0-prep'
+# else
+#   gem 'openstudio-calibration', '~> 0.10.0'
+# end
 
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #  gem 'urbanopt-core', path: '../urbanopt-core-gem'
 # elsif allow_local
 # TODO: Temporary! No need to require this once core-gem is merged/released
-gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'os38'
+gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'os39'
 # else
 #   gem 'urbanopt-core', '~> 0.11.0'
 # end
@@ -90,23 +88,17 @@ gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'os38'
 # if allow_local && File.exist?('../urbanopt-scenario-gem')
 #   gem 'urbanopt-scenario', path: '../urbanopt-scenario-gem'
 # elsif allow_local
-gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'os38'
+gem 'urbanopt-scenario', github: 'URBANopt/urbanopt-scenario-gem', branch: 'os39'
 # else
 #   gem 'urbanopt-scenario', '~> 0.12.0'
 # end
 
-# if allow_local && File.exist?('../urbanopt-reporting-gem')
-#   gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
-# elsif allow_local
-gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'os38'
-# else
-#   gem 'urbanopt-reporting', '~> 0.10.1'
-# end
+
 
 # if allow_local && File.exist?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 # elsif allow_local
-gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'os38'
+gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'os39'
 # else
 #  gem 'urbanopt-geojson', '~> 0.11.2'
 # end
@@ -114,15 +106,23 @@ gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'os38'
 # if allow_local && File.exist?('../urbanopt-reopt-gem')
 #   gem 'urbanopt-reopt', path: '../urbanopt-reopt-gem'
 # elsif allow_local
-gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'os38'
+gem 'urbanopt-reopt', github: 'URBANopt/urbanopt-reopt-gem', branch: 'os39'
 # else
 #   gem 'urbanopt-reopt', '0.12.0'
+# end
+
+# if allow_local && File.exist?('../urbanopt-reporting-gem')
+#   gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
+# elsif allow_local
+gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'os39'
+# else
+#   gem 'urbanopt-reporting', '~> 0.10.1'
 # end
 
 # if allow_local && File.exist?('../urbanopt-rnm-us')
 #   gem 'urbanopt-rnm-us', path: '../urbanopt/urbanopt-rnm-us-gem'
 # elsif allow_local
-gem 'urbanopt-rnm-us', github: 'URBANopt/urbanopt-rnm-us-gem', branch: 'os38'
+gem 'urbanopt-rnm-us', github: 'URBANopt/urbanopt-rnm-us-gem', branch: 'os39'
 # else
 #   gem 'urbanopt-rnm-us', '~> 0.7.0'
 # end
