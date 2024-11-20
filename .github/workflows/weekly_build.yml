@@ -33,7 +33,7 @@ jobs:
           ]
     runs-on: ubuntu-latest
     container:
-      image: docker://nrel/openstudio:dev-3.9.0-rc3
+      image: docker://nrel/openstudio:3.9.0
     steps:
       - uses: actions/checkout@v4
       - name: Update gems
