@@ -54,7 +54,9 @@ def residential(scenario, feature, args, building_type)
   rescue StandardError
   end
 
-  year_built = nil
+  year_built = 2000
+  # OS-HPXML requires a year_built to set air leakage as of 1.9.0
+  # https://openstudio-hpxml.readthedocs.io/en/latest/workflow_inputs.html#id117 (footnote 56sd)
   begin
     year_built = feature.year_built
   rescue StandardError

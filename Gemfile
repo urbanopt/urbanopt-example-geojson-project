@@ -4,6 +4,7 @@ ruby '3.2.2'
 gem 'rspec', '~> 3.13', require: false, group: :test
 gem 'simplecov', '~> 0.22.0', require: false, group: :test
 gem 'simplecov-lcov', '~> 0.8.0', require: false, group: :test
+gem 'oga' # Required to be unversioned to match OpenStudio so residential will work :(
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:

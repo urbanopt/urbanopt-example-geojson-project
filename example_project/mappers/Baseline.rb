@@ -574,7 +574,7 @@ module URBANopt
               uo_resstock_connection = feature.characterize_residential_buildings_from_buildstock_csv
             rescue StandardError
             end
-            
+
             # Run workflows if UO-ResStock connection is established
             if uo_resstock_connection
 
