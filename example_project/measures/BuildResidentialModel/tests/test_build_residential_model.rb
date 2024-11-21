@@ -336,7 +336,7 @@ class BuildResidentialModelTest < Minitest::Test
 
     feature_building_types = ['Single-Family Detached', 'Multifamily']
     feature_number_of_residential_unitss = [1, 5]
-    feature_floor_areas = [5000]
+    feature_floor_areas = [4000]
 
     test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
@@ -653,8 +653,8 @@ class BuildResidentialModelTest < Minitest::Test
       uo.overhangs_distance_to_top_of_window = nil
       res.overhangs_distance_to_bottom_of_window = nil
       uo.overhangs_distance_to_bottom_of_window = nil
-      res.wall_idref = nil
-      uo.wall_idref = nil
+      res.attached_to_wall_idref = nil
+      uo.attached_to_wall_idref = nil
       assert(res.to_s == uo.to_s)
     end
     res_bldg.doors.zip(uo_bldg.doors).each do |res, uo|
@@ -690,6 +690,19 @@ class BuildResidentialModelTest < Minitest::Test
       assert(res.to_s == uo.to_s)
     end
     res_bldg.hvac_controls.zip(uo_bldg.hvac_controls).each do |res, uo|
+      # Different weather files have different heat/cool seasons
+      res.seasons_heating_begin_month = nil
+      uo.seasons_heating_begin_month = nil
+      res.seasons_heating_end_month = nil
+      uo.seasons_heating_end_month = nil
+      res.seasons_heating_end_day = nil
+      uo.seasons_heating_end_day = nil
+      res.seasons_cooling_begin_month = nil
+      uo.seasons_cooling_begin_month = nil
+      res.seasons_cooling_end_month = nil
+      uo.seasons_cooling_end_month = nil
+      res.seasons_cooling_end_day = nil
+      uo.seasons_cooling_end_day = nil
       assert(res.to_s == uo.to_s)
     end
     res_bldg.hvac_distributions.zip(uo_bldg.hvac_distributions).each do |res, uo|
