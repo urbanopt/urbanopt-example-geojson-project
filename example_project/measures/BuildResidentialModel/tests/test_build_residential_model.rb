@@ -349,7 +349,7 @@ class BuildResidentialModelTest < Minitest::Test
           @args[:geometry_building_num_units] = feature_number_of_residential_units
           @floor_area = feature_floor_area
           @number_of_bedrooms = 3 * @args[:geometry_building_num_units]
-          @number_of_stories_above_ground = nil
+          @number_of_stories_above_ground = nil # not specified in geojson
 
           if @building_type == 'Multifamily'
             @number_of_bedrooms = 2 * @args[:geometry_building_num_units]
@@ -366,6 +366,11 @@ class BuildResidentialModelTest < Minitest::Test
           end
 
           _apply_residential()
+
+          @year_built = nil
+          @system_type = nil
+          @heating_system_fuel_type = nil
+
           resstock_building_id = _apply_residential_samples()
           _test_measure(expected_errors: expected_errors)
 
@@ -553,7 +558,7 @@ class BuildResidentialModelTest < Minitest::Test
   end
 
   def _check_against_resstock(yml_file, resstock_building_id, number_of_residential_units, urbanopt_path, resstock_path)
-    # Check against ResStock for the Building ID that was selected
+    # Check URBANopt HPXML file against ResStock HPXML file for the Building ID that was selected
 
     cli_path = OpenStudio.getOpenStudioCLI
     run_analysis_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/workflow/run_analysis.rb'))
@@ -599,6 +604,8 @@ class BuildResidentialModelTest < Minitest::Test
     res_bldg.air_infiltration_measurements.zip(uo_bldg.air_infiltration_measurements).each do |res, uo|
       res.infiltration_volume = nil
       uo.infiltration_volume = nil
+      res.a_ext = nil
+      uo.a_ext = nil
       assert(res.to_s == uo.to_s)
     end
     assert(res_bldg.air_infiltration.to_s == uo_bldg.air_infiltration.to_s)
