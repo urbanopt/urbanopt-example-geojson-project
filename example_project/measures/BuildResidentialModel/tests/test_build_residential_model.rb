@@ -458,6 +458,9 @@ class BuildResidentialModelTest < Minitest::Test
 
       _test_measure(expected_errors: [])
 
+      @heating_system_fuel_type = nil
+      @year_built = nil
+
       urbanopt_path = @hpxml_path
       resstock_path = File.absolute_path(File.join(File.dirname(__FILE__), 'samples/precomputed/run1/run/home.xml'))
       _check_against_resstock('uo_buildstock_mapping_csv_path.yml', resstock_building_id, @args[:geometry_building_num_units], urbanopt_path, resstock_path)
