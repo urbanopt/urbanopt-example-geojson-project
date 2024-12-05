@@ -1,5 +1,7 @@
 # How to adapt to a new ResStock version
 
+1. Update branch_or_tag for ResStock in Rakefile
+    - May need to create a new branch on ResStock for a stable source
 1. Update residential resources with the Rake task
 1. Open the appropriate geojson file to read the inputs by hand
     - Residential tests use [this file](https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/example_project/example_project_combined.json)
@@ -12,9 +14,10 @@
     - Copy all the header columns from buildstock.csv
 1. Open [this mapping file](https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/example_project/resources/uo_buildstock_mapping.csv) to set our connection to the new version of ResStock
     - Replace the header copied from buildstock.csv with the header from the updated version of ResStock that you just copied
-    - Replace the data row for building 14
-    - Repeat steps 4 & 5 for buildings 15 & 16
+    - Replace the data row for building 14, keeping the Feature ID column
+1. Repeat the previous 2 steps for buildings 15 & 16
     - Save the new mapping file
-1. Copy the new mapping file and remove the Feature ID column; place in the example_project/measures/BuildResidentialModel/tests/samples folder
+1. Copy the new mapping file and remove the Feature ID column
+    - Place the one without the Feature ID column in the example_project/measures/BuildResidentialModel/tests/samples folder
 1. Test the residential measure with the Rake task
 1. Run the rspec tests
