@@ -132,7 +132,7 @@ def residential_simulation(args, timestep, run_period, calendar_year, weather_fi
   args[:simulation_control_run_period] = run_period
   args[:simulation_control_run_period_calendar_year] = calendar_year
   args[:weather_station_epw_filepath] = "../../../../../weather/#{weather_filename}"
-  args[:year_built] = year_built if !year_built.nil?
+  args[:year_built] = year_built
 end
 
 def residential_geometry_unit(args, building_type, floor_area, number_of_bedrooms, geometry_unit_orientation, geometry_unit_aspect_ratio, occupancy_calculation_type, number_of_occupants, maximum_roof_height)
