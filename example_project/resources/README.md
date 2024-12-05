@@ -14,5 +14,7 @@
     - Replace the header copied from buildstock.csv with the header from the updated version of ResStock that you just copied
     - Replace the data row for building 14
     - Repeat steps 4 & 5 for buildings 15 & 16
+    - Save the new mapping file
+1. Copy the new mapping file and remove the Feature ID column; place in the example_project/measures/BuildResidentialModel/tests/samples folder
 1. Test the residential measure with the Rake task
 1. Run the rspec tests
