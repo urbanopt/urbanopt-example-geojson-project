@@ -146,10 +146,10 @@ def residential_geometry_unit(args, building_type, floor_area, number_of_bedroom
   when 'Single-Family Attached'
     args[:geometry_unit_type] = 'single-family attached'
     args[:geometry_unit_num_floors_above_grade] = number_of_stories_above_ground
-    args[:air_leakage_type] = 'unit exterior only'
+    args[:air_leakage_type] = 'unit total' # consistent with ResStock
   when 'Multifamily'
     args[:geometry_unit_type] = 'apartment unit'
-    args[:air_leakage_type] = 'unit exterior only'
+    args[:air_leakage_type] = 'unit total' # consistent with ResStock
   end
 
   args[:geometry_unit_cfa] = floor_area / args[:geometry_building_num_units]

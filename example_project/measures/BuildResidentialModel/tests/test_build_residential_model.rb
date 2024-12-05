@@ -399,8 +399,8 @@ class BuildResidentialModelTest < Minitest::Test
     @buildstock_csv_path = File.absolute_path(File.join(File.dirname(__FILE__), '../../../resources/residential-measures/test/base_results/baseline/annual/buildstock.csv'))
 
     feature_number_of_stories_above_grounds = [2]
-    feature_year_builts = [1953]
-    feature_number_of_bedroomss = [16]
+    feature_year_builts = [1963]
+    feature_number_of_bedroomss = [32]
 
     test_folder = @run_path / __method__.to_s
     feature_number_of_stories_above_grounds.each do |feature_number_of_stories_above_ground|
@@ -411,7 +411,7 @@ class BuildResidentialModelTest < Minitest::Test
 
           @building_type = 'Multifamily'
           @args[:geometry_building_num_units] = 16
-          @floor_area = 505 * @args[:geometry_building_num_units]
+          @floor_area = 800 * @args[:geometry_building_num_units]
           @number_of_stories_above_ground = feature_number_of_stories_above_ground
           @year_built = feature_year_built
           @number_of_bedrooms = feature_number_of_bedrooms
@@ -419,6 +419,10 @@ class BuildResidentialModelTest < Minitest::Test
           @attic_type = 'flat roof'
 
           _apply_residential()
+
+          @system_type = nil
+          @heating_system_fuel_type = nil
+
           resstock_building_id = _apply_residential_samples()
           _test_measure(expected_errors: [])
 
@@ -448,7 +452,9 @@ class BuildResidentialModelTest < Minitest::Test
 
       _apply_residential()
       resstock_building_id = find_building_for_uo_id(@uo_buildstock_mapping_csv_path, feature_id)
+
       residential_samples(@args, resstock_building_id, @uo_buildstock_mapping_csv_path)
+
       _test_measure(expected_errors: [])
 
       urbanopt_path = @hpxml_path
