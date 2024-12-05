@@ -336,7 +336,7 @@ class BuildResidentialModelTest < Minitest::Test
 
     feature_building_types = ['Single-Family Detached', 'Multifamily']
     feature_number_of_residential_unitss = [1, 5]
-    feature_floor_areas = [4000]
+    feature_floor_areas = [5000]
 
     test_folder = @run_path / __method__.to_s
     feature_building_types.each do |feature_building_type|
@@ -367,6 +367,7 @@ class BuildResidentialModelTest < Minitest::Test
 
           _apply_residential()
 
+          # Don't try to match these because the sample buildstock.csv is too small to be that precise
           @year_built = nil
           @system_type = nil
           @heating_system_fuel_type = nil
