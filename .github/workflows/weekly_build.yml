@@ -18,6 +18,7 @@ env:
 jobs:
   simulate-and-post-process:
     strategy:
+      fail-fast: false # Keep running other tests even if one fails
       matrix:
         scenario:
           [
