@@ -207,6 +207,7 @@ class BuildResidentialModel < OpenStudio::Measure::ModelMeasure
 
       # ResStockArguments
       measure_subdir = 'ResStockArguments'
+      measures['ResStockArguments'][0]['building_id'] = building_id
       full_measure_path = File.join(measures_dir, measure_subdir, 'measure.rb')
       check_file_exists(full_measure_path, runner)
 
