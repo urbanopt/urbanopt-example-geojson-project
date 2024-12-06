@@ -32,7 +32,7 @@ gem 'addressable', '2.8.1' # openstudio:test_with_openstudios
 # if allow_local && File.exist?('../openstudio-geb-gem')
 #   gem 'openstudio-geb', path: '../openstudio-geb-gem'
 # elsif allow_local
-gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'os39'
+gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'master'
 # else
 # gem 'openstudio-geb', '~> 0.5.0'
 # end
