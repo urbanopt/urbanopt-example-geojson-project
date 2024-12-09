@@ -749,9 +749,9 @@ task :visualize_all do
   Rake::Task['visualize_features'].reenable
   Rake::Task['visualize_features'].invoke('chilled_water_storage_scenario.csv')
   Rake::Task['visualize_features'].reenable
-  Rake::Task['visualize_features'].invoke('peak_hours_mels_shedding.csv')
+  Rake::Task['visualize_features'].invoke('peak_hours_mels_shedding_scenario.csv')
   Rake::Task['visualize_features'].reenable
-  Rake::Task['visualize_features'].invoke('peak_hours_thermostat_adjust.csv')
+  Rake::Task['visualize_features'].invoke('peak_hours_thermostat_adjust_scenario.csv')
   Rake::Task['visualize_scenarios'].invoke
 end
 
