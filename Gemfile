@@ -21,13 +21,10 @@ allow_local = false
 # if allow_local && File.exist?('../OpenStudio-extension-gem')
 #   gem 'openstudio-extension', path: '../OpenStudio-extension-gem'
 # elsif allow_local
-# gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'develop'
+gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'bundler-hack'
 # else
-gem 'openstudio-extension', '~> 0.8.2'
+# gem 'openstudio-extension', '~> 0.8.2'
 # end
-
-# pin this dependency to avoid unicode_normalize error
-gem 'addressable', '2.8.1' # openstudio:test_with_openstudios
 
 # if allow_local && File.exist?('../openstudio-geb-gem')
 #   gem 'openstudio-geb', path: '../openstudio-geb-gem'
