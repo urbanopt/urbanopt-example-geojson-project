@@ -29,7 +29,7 @@ gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'bu
 # if allow_local && File.exist?('../openstudio-geb-gem')
 #   gem 'openstudio-geb', path: '../openstudio-geb-gem'
 # elsif allow_local
-gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'master'
+gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'ext-gem-patch'
 # else
 # gem 'openstudio-geb', '~> 0.5.0'
 # end
