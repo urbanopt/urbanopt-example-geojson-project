@@ -197,7 +197,8 @@ def visualize_scenarios
     elsif File.exist?(File.join(scenario_folder, 'default_scenario_report.csv'))
       scenario_folders << File.join(scenario_folder, 'default_scenario_report.csv')
       scenario_report_exists = true
-    else puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
+    else
+      puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
     end
   end
   if scenario_report_exists == true
@@ -228,7 +229,8 @@ def visualize_features(scenario_file)
     elsif File.exist?(File.join(run_dir, feature, 'feature_reports/default_feature_report.csv'))
       feature_report_exists = true
       feature_folders << File.join(run_dir, feature, 'feature_reports/default_feature_report.csv')
-    else puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+    else
+      puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
     end
   end
   if feature_report_exists == true
@@ -639,11 +641,11 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   end
 
   # Run Aggregate Scenario
-  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization', run_resilience: false, community_photovoltaic: community_photovoltaic)
+  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report:, save_name: 'scenario_report_reopt_global_optimization', run_resilience: false, community_photovoltaic:)
 
   # Run features individually - this is an alternative approach to the previous step, in your analysis depending on project ojectives you maye only need to run one
-  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt'] * scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: false,
-                                                                               keep_existing_output: false, groundmount_photovoltaic: groundmount_photovoltaic)
+  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report:, save_names_feature_reports: ['feature_report_reopt'] * scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: false,
+                                                                               keep_existing_output: false, groundmount_photovoltaic:)
 end
 
 ### Mixed
@@ -716,17 +718,17 @@ end
 ### All
 
 desc 'Clear all scenarios'
-task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_chilled_water_storage, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed] do
+task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_chilled_water_storage, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed, :clear_peak_hours_mels_shedding, :clear_peak_hours_thermostat_adjust] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task run_all: [:run_baseline, :run_high_efficiency, :run_chilled_water_storage, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed] do
+task run_all: [:run_baseline, :run_high_efficiency, :run_chilled_water_storage, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed, :run_peak_hours_mels_shedding, :run_peak_hours_thermostat_adjust] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_chilled_water_storage, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed] do
+task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_chilled_water_storage, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed, :post_process_peak_hours_mels_shedding, :post_process_peak_hours_thermostat_adjust] do
   # post_process all the scenarios
 end
 
@@ -746,8 +748,11 @@ task :visualize_all do
   Rake::Task['visualize_features'].invoke('mixed_scenario.csv')
   Rake::Task['visualize_features'].reenable
   Rake::Task['visualize_features'].invoke('chilled_water_storage_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('peak_hours_mels_shedding_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('peak_hours_thermostat_adjust_scenario.csv')
   Rake::Task['visualize_scenarios'].invoke
-
 end
 
 desc 'Run and post process all scenarios'
@@ -761,7 +766,7 @@ namespace :residential do
   task :update_resources do
     prefix = 'example_project/resources/residential-measures'
     repository = 'https://github.com/NREL/resstock.git'
-    branch_or_tag = 'v3.2.0' # update this when pulling in updated ResStock
+    branch_or_tag = 'v3.4.0' # update this when pulling in updated ResStock
 
     FileUtils.rm_rf(prefix)
     system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")

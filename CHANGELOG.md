@@ -1,5 +1,28 @@
 # URBANopt Example GeoJSON Project
 
+## Version 0.11.0
+
+## What's Changed
+* Upgrade to OpenStudio 3.8 & Ruby 3.2 by @vtnate in https://github.com/urbanopt/urbanopt-example-geojson-project/pull/197
+* Ci tweaks by @vtnate in https://github.com/urbanopt/urbanopt-example-geojson-project/pull/186
+* Use feature 17 from UOv0.8.0 which uses hpxml workflow by @vtnate in https://github.com/urbanopt/urbanopt-example-geojson-project/pull/187
+* Support OpenStudio 3.7 by @vtnate in https://github.com/urbanopt/urbanopt-example-geojson-project/pull/188
+* Residential: allow one unit per floor by @joseph-robertson in https://github.com/urbanopt/urbanopt-example-geojson-project/pull/194
+* Upgrade to use Reopt v3 by @vtnate in https://github.com/urbanopt/urbanopt-example-geojson-project/pull/195
+* Residential: connect to ResStock by @joseph-robertson in https://github.com/urbanopt/urbanopt-example-geojson-project/pull/190
+
+
+**Full Changelog**: https://github.com/urbanopt/urbanopt-example-geojson-project/compare/v0.10.0...v0.11.0
+
+## Version 0.10.0
+
+* Updated for OS 3.6.1
+
+## Version 0.9.0
+
+* OpenStudio 3.5.0
+* HPXML v1.5.0
+
 ## Version 0.8.0
 
 Date Range: 05/01/21 - 05/09/22:
@@ -39,8 +62,8 @@ Date Range: 05/01/21 - 05/09/22:
 * Updated mappers to process detailed model workflow and regular urbanopt workflow
 * Updated mappers to handle DEER template and vintage
 * Updated default project to run a full year
-* Added comfort measure to base workflow 
+* Added comfort measure to base workflow
 
-## Version 0.1.0 
+## Version 0.1.0
 
-* Initial release of example project. 
+* Initial release of example project.

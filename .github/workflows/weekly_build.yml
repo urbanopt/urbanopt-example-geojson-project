@@ -5,7 +5,7 @@ on:
   schedule:
     # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
-    - cron: '* 5 * * 0'
+    - cron: "* 5 * * 0"
   pull_request:
     types: [review_requested]
   workflow_dispatch:
@@ -18,24 +18,37 @@ env:
 jobs:
   simulate-and-post-process:
     strategy:
+      fail-fast: false # Keep running other tests even if one fails
       matrix:
-        scenario: [baseline, chilled_water_storage, flexible_hot_water, high_efficiency, mixed,
-          peak_hours_mels_shedding, peak_hours_thermostat_adjust, reopt, thermal_storage]
+        scenario:
+          [
+            baseline,
+            chilled_water_storage,
+            flexible_hot_water,
+            high_efficiency,
+            mixed,
+            peak_hours_mels_shedding,
+            peak_hours_thermostat_adjust,
+            reopt,
+            thermal_storage,
+          ]
     runs-on: ubuntu-latest
     container:
-      image: docker://nrel/openstudio:3.7.0
+      image: docker://nrel/openstudio:3.9.0
     steps:
       - uses: actions/checkout@v4
       - name: Update gems
         run: |
+          bundle install
           bundle update
-          bundle exec certified-update
       - name: Test residential measure variations
         # We only need to run the residential measure_tests once, not for every iteration
         if: matrix.scenario == 'baseline'
         run: bundle exec rake residential:measure_tests
       - name: Simulate
-        run: bundle exec rake run_${{ matrix.scenario }}
+        run: |
+          bundle install
+          bundle exec rake run_${{ matrix.scenario }}
       - name: Post process
         run: bundle exec rake post_process_${{ matrix.scenario }}
       - name: Upload artifacts
