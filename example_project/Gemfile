@@ -11,6 +11,8 @@ ruby '3.2.2'
 # allow_local = ENV['FAVOR_LOCAL_GEMS']
 allow_local = false
 
+gem 'rubocop', '~> 1.50', require: false, group: :test
+
 # Uncomment the extension, core gems if you need to test local development versions. Otherwise
 # these are included in the model articulation and urbanopt gems
 #
