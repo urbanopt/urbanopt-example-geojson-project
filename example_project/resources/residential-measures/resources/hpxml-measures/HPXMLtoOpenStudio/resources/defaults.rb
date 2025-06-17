@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-$zip_csv_data = nil
+$weather_lookup_cache = {}
 
 # Collection of methods related to defaulting optional inputs in the HPXML
 # that were not provided.
@@ -24,12 +24,13 @@ module Defaults
   # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
   # @param weather [WeatherFile] Weather object containing EPW information
   # @param schedules_file [SchedulesFile] SchedulesFile wrapper class instance of detailed schedule files
-  # @param convert_shared_systems [Boolean] Whether to convert shared systems to equivalent in-unit systems per ANSI 301
+  # @param convert_shared_systems [Boolean] Whether to convert shared systems to equivalent in-unit systems per ANSI/RESNET/ICC 301
   # @return [Array<Hash, Hash>] Maps of HPXML::Zones => DesignLoadValues object, HPXML::Spaces => DesignLoadValues object
   def self.apply(runner, hpxml, hpxml_bldg, weather, schedules_file: nil, convert_shared_systems: true)
-    eri_version = hpxml.header.eri_calculation_version
-    if eri_version.nil?
+    if hpxml.header.eri_calculation_versions.nil? || hpxml.header.eri_calculation_versions.empty?
       eri_version = 'latest'
+    else
+      eri_version = hpxml.header.eri_calculation_versions[0]
     end
     if eri_version == 'latest'
       eri_version = Constants::ERIVersions[-1]
@@ -41,7 +42,7 @@ module Defaults
     end
 
     # Check for presence of fuels once
-    has_fuel = hpxml_bldg.has_fuels(hpxml.to_doc)
+    has_fuel = hpxml_bldg.has_fuels()
 
     add_zones_spaces_if_needed(hpxml_bldg, unit_num)
 
@@ -72,7 +73,7 @@ module Defaults
     apply_doors(hpxml_bldg)
     apply_partition_wall_mass(hpxml_bldg)
     apply_furniture_mass(hpxml_bldg)
-    apply_hvac(runner, hpxml_bldg, weather, convert_shared_systems, unit_num)
+    apply_hvac(runner, hpxml_bldg, weather, convert_shared_systems, unit_num, hpxml.header)
     apply_hvac_control(hpxml_bldg, schedules_file, eri_version)
     apply_hvac_distribution(hpxml_bldg)
     apply_infiltration(hpxml_bldg)
@@ -92,13 +93,17 @@ module Defaults
     apply_pv_systems(hpxml_bldg)
     apply_generators(hpxml_bldg)
     apply_batteries(hpxml_bldg)
+    apply_vehicles(hpxml_bldg, schedules_file)
 
     # Do HVAC sizing after all other defaults have been applied
-    all_zone_loads, all_space_loads = apply_hvac_sizing(runner, hpxml_bldg, weather)
+    all_zone_loads, all_space_loads = apply_hvac_sizing(runner, hpxml_bldg, weather, hpxml.header)
 
     # These need to be applied after sizing HVAC capacities/airflows
     apply_detailed_performance_data_for_var_speed_systems(hpxml_bldg)
     apply_cfis_fan_power(hpxml_bldg)
+
+    # Default electric panels has to be after sizing to have autosized capacity information
+    apply_electric_panels(runner, hpxml.header, hpxml_bldg, unit_num)
 
     cleanup_zones_spaces(hpxml_bldg)
 
@@ -221,6 +226,11 @@ module Defaults
     if hpxml_header.defrost_model_type.nil? && (hpxml_bldg.heat_pumps.any? { |hp| [HPXML::HVACTypeHeatPumpAirToAir, HPXML::HVACTypeHeatPumpMiniSplit, HPXML::HVACTypeHeatPumpRoom, HPXML::HVACTypeHeatPumpPTHP].include? hp.heat_pump_type })
       hpxml_header.defrost_model_type = HPXML::AdvancedResearchDefrostModelTypeStandard
       hpxml_header.defrost_model_type_isdefaulted = true
+    end
+
+    if hpxml_header.ground_to_air_heat_pump_model_type.nil? && (hpxml_bldg.heat_pumps.any? { |hp| hp.heat_pump_type == HPXML::HVACTypeHeatPumpGroundToAir })
+      hpxml_header.ground_to_air_heat_pump_model_type = HPXML::AdvancedResearchGroundToAirHeatPumpModelTypeStandard
+      hpxml_header.ground_to_air_heat_pump_model_type_isdefaulted = true
     end
 
     hpxml_header.unavailable_periods.each do |unavailable_period|
@@ -652,7 +662,8 @@ module Defaults
 
     # Conductivity/diffusivity values come from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4813881 (with the exception of "unknown")
     if hpxml_bldg.site.ground_conductivity.nil? && hpxml_bldg.site.ground_diffusivity.nil?
-      if hpxml_bldg.site.soil_type == HPXML::SiteSoilTypeSand
+      case hpxml_bldg.site.soil_type
+      when HPXML::SiteSoilTypeSand
         if hpxml_bldg.site.moisture_type == HPXML::SiteSoilMoistureTypeDry
           hpxml_bldg.site.ground_conductivity = 0.2311 # Btu/hr-ft-F
           hpxml_bldg.site.ground_diffusivity = 0.0097 # ft^2/hr
@@ -665,39 +676,40 @@ module Defaults
         end
         hpxml_bldg.site.ground_conductivity_isdefaulted = true
         hpxml_bldg.site.ground_diffusivity_isdefaulted = true
-      elsif hpxml_bldg.site.soil_type == HPXML::SiteSoilTypeSilt || hpxml_bldg.site.soil_type == HPXML::SiteSoilTypeClay
-        if hpxml_bldg.site.moisture_type == HPXML::SiteSoilMoistureTypeDry
+      when HPXML::SiteSoilTypeSilt, HPXML::SiteSoilTypeClay
+        case hpxml_bldg.site.moisture_type
+        when HPXML::SiteSoilMoistureTypeDry
           hpxml_bldg.site.ground_conductivity = 0.2889 # Btu/hr-ft-F
           hpxml_bldg.site.ground_diffusivity = 0.0120 # ft^2/hr
-        elsif hpxml_bldg.site.moisture_type == HPXML::SiteSoilMoistureTypeWet
+        when HPXML::SiteSoilMoistureTypeWet
           hpxml_bldg.site.ground_conductivity = 0.9821 # Btu/hr-ft-F
           hpxml_bldg.site.ground_diffusivity = 0.0194 # ft^2/hr
-        elsif hpxml_bldg.site.moisture_type == HPXML::SiteSoilMoistureTypeMixed
+        when HPXML::SiteSoilMoistureTypeMixed
           hpxml_bldg.site.ground_conductivity = ((0.2889 + 0.9821) / 2.0).round(4) # Btu/hr-ft-F
           hpxml_bldg.site.ground_diffusivity = ((0.0120 + 0.0194) / 2.0).round(4) # ft^2/hr
         end
         hpxml_bldg.site.ground_conductivity_isdefaulted = true
         hpxml_bldg.site.ground_diffusivity_isdefaulted = true
-      elsif hpxml_bldg.site.soil_type == HPXML::SiteSoilTypeLoam
+      when HPXML::SiteSoilTypeLoam
         hpxml_bldg.site.ground_conductivity = 1.2132 # Btu/hr-ft-F
         hpxml_bldg.site.ground_diffusivity = 0.0353 # ft^2/hr
-
         hpxml_bldg.site.ground_conductivity_isdefaulted = true
         hpxml_bldg.site.ground_diffusivity_isdefaulted = true
-      elsif hpxml_bldg.site.soil_type == HPXML::SiteSoilTypeGravel
-        if hpxml_bldg.site.moisture_type == HPXML::SiteSoilMoistureTypeDry
+      when HPXML::SiteSoilTypeGravel
+        case hpxml_bldg.site.moisture_type
+        when HPXML::SiteSoilMoistureTypeDry
           hpxml_bldg.site.ground_conductivity = 0.2311 # Btu/hr-ft-F
           hpxml_bldg.site.ground_diffusivity = 0.0097 # ft^2/hr
-        elsif hpxml_bldg.site.moisture_type == HPXML::SiteSoilMoistureTypeWet
+        when HPXML::SiteSoilMoistureTypeWet
           hpxml_bldg.site.ground_conductivity = 1.0399 # Btu/hr-ft-F
           hpxml_bldg.site.ground_diffusivity = 0.0291 # ft^2/hr
-        elsif hpxml_bldg.site.moisture_type == HPXML::SiteSoilMoistureTypeMixed
+        when HPXML::SiteSoilMoistureTypeMixed
           hpxml_bldg.site.ground_conductivity = ((0.2311 + 1.0399) / 2.0).round(4) # Btu/hr-ft-F
           hpxml_bldg.site.ground_diffusivity = ((0.0097 + 0.0291) / 2.0).round(4) # ft^2/hr
         end
         hpxml_bldg.site.ground_conductivity_isdefaulted = true
         hpxml_bldg.site.ground_diffusivity_isdefaulted = true
-      elsif hpxml_bldg.site.soil_type == HPXML::SiteSoilTypeUnknown
+      when HPXML::SiteSoilTypeUnknown
         hpxml_bldg.site.ground_conductivity = 1.0 # ANSI/RESNET/ICC 301-2022 Addendum C
         hpxml_bldg.site.ground_diffusivity = 0.0208
         hpxml_bldg.site.ground_conductivity_isdefaulted = true
@@ -827,13 +839,6 @@ module Defaults
   # @param schedules_file [SchedulesFile] SchedulesFile wrapper class instance of detailed schedule files
   # @return [nil]
   def self.apply_building_occupancy(hpxml_bldg, schedules_file)
-    if not hpxml_bldg.building_occupancy.number_of_residents.nil?
-      # Set equivalent number of bedrooms for operational calculation; this is an adjustment on
-      # ANSI 301 or Building America equations, which are based on number of bedrooms.
-      hpxml_bldg.building_construction.additional_properties.equivalent_number_of_bedrooms = get_equivalent_nbeds_for_operational_calculation(hpxml_bldg)
-    else
-      hpxml_bldg.building_construction.additional_properties.equivalent_number_of_bedrooms = hpxml_bldg.building_construction.number_of_bedrooms
-    end
     schedules_file_includes_occupants = (schedules_file.nil? ? false : schedules_file.includes_col_name(SchedulesFile::Columns[:Occupants].name))
     if hpxml_bldg.building_occupancy.weekday_fractions.nil? && !schedules_file_includes_occupants
       hpxml_bldg.building_occupancy.weekday_fractions = @default_schedules_csv_data[SchedulesFile::Columns[:Occupants].name]['WeekdayScheduleFractions']
@@ -875,8 +880,9 @@ module Defaults
     cond_crawl_volume = hpxml_bldg.inferred_conditioned_crawlspace_volume()
     nbeds = hpxml_bldg.building_construction.number_of_bedrooms
     if hpxml_bldg.building_construction.average_ceiling_height.nil?
-      # ASHRAE 62.2 default for average floor to ceiling height
-      hpxml_bldg.building_construction.average_ceiling_height = 8.2
+      # Note: We do not try to calculate it from CFA & ConditionedBuildingVolume since
+      # that is not a reliable assumption if there is a, e.g., conditioned crawlspace.
+      hpxml_bldg.building_construction.average_ceiling_height = 8.2 # ASHRAE 62.2 default
       hpxml_bldg.building_construction.average_ceiling_height_isdefaulted = true
     end
     if hpxml_bldg.building_construction.conditioned_building_volume.nil?
@@ -937,7 +943,7 @@ module Defaults
   def self.apply_climate_and_risk_zones(hpxml_bldg, weather, unit_num)
     if (not weather.nil?) && hpxml_bldg.climate_and_risk_zones.climate_zone_ieccs.empty?
       weather_data = lookup_weather_data_from_wmo(weather.header.WMONumber)
-      if not weather_data.nil?
+      if not weather_data.empty?
         hpxml_bldg.climate_and_risk_zones.climate_zone_ieccs.add(zone: weather_data[:zipcode_iecc_zone],
                                                                  year: 2006,
                                                                  zone_isdefaulted: true,
@@ -1515,34 +1521,36 @@ module Defaults
 
     hpxml_bldg.windows.each do |window|
       if window.ufactor.nil? || window.shgc.nil?
-        # Frame/Glass provided instead, fill in more defaults as needed
-        if window.glass_type.nil?
-          window.glass_type = HPXML::WindowGlassTypeClear
-          window.glass_type_isdefaulted = true
-        end
-        if window.thermal_break.nil? && [HPXML::WindowFrameTypeAluminum, HPXML::WindowFrameTypeMetal].include?(window.frame_type)
-          if window.glass_layers == HPXML::WindowLayersSinglePane
-            window.thermal_break = false
-            window.thermal_break_isdefaulted = true
-          elsif window.glass_layers == HPXML::WindowLayersDoublePane
-            window.thermal_break = true
-            window.thermal_break_isdefaulted = true
+        if window.glass_layers != HPXML::WindowLayersGlassBlock
+          # Frame/Glass provided instead, fill in more defaults as needed
+          if window.glass_type.nil?
+            window.glass_type = HPXML::WindowGlassTypeClear
+            window.glass_type_isdefaulted = true
           end
-        end
-        if window.gas_fill.nil?
-          if window.glass_layers == HPXML::WindowLayersDoublePane
-            if [HPXML::WindowGlassTypeLowE,
-                HPXML::WindowGlassTypeLowEHighSolarGain,
-                HPXML::WindowGlassTypeLowELowSolarGain].include? window.glass_type
+          if window.thermal_break.nil? && [HPXML::WindowFrameTypeAluminum, HPXML::WindowFrameTypeMetal].include?(window.frame_type)
+            if window.glass_layers == HPXML::WindowLayersSinglePane
+              window.thermal_break = false
+              window.thermal_break_isdefaulted = true
+            elsif window.glass_layers == HPXML::WindowLayersDoublePane
+              window.thermal_break = true
+              window.thermal_break_isdefaulted = true
+            end
+          end
+          if window.gas_fill.nil?
+            if window.glass_layers == HPXML::WindowLayersDoublePane
+              if [HPXML::WindowGlassTypeLowE,
+                  HPXML::WindowGlassTypeLowEHighSolarGain,
+                  HPXML::WindowGlassTypeLowELowSolarGain].include? window.glass_type
+                window.gas_fill = HPXML::WindowGasArgon
+                window.gas_fill_isdefaulted = true
+              else
+                window.gas_fill = HPXML::WindowGasAir
+                window.gas_fill_isdefaulted = true
+              end
+            elsif window.glass_layers == HPXML::WindowLayersTriplePane
               window.gas_fill = HPXML::WindowGasArgon
               window.gas_fill_isdefaulted = true
-            else
-              window.gas_fill = HPXML::WindowGasAir
-              window.gas_fill_isdefaulted = true
             end
-          elsif window.glass_layers == HPXML::WindowLayersTriplePane
-            window.gas_fill = HPXML::WindowGasArgon
-            window.gas_fill_isdefaulted = true
           end
         end
         # Now lookup U/SHGC based on properties
@@ -1566,7 +1574,11 @@ module Defaults
       end
       if window.interior_shading_factor_winter.nil? || window.interior_shading_factor_summer.nil?
         if window.interior_shading_type.nil?
-          window.interior_shading_type = HPXML::InteriorShadingTypeLightCurtains # ANSI/RESNET/ICC 301-2022
+          if window.glass_layers == HPXML::WindowLayersGlassBlock
+            window.interior_shading_type = HPXML::InteriorShadingTypeNone
+          else
+            window.interior_shading_type = HPXML::InteriorShadingTypeLightCurtains # ANSI/RESNET/ICC 301-2022
+          end
           window.interior_shading_type_isdefaulted = true
         end
         if window.interior_shading_coverage_summer.nil? && window.interior_shading_type != HPXML::InteriorShadingTypeNone
@@ -1716,34 +1728,36 @@ module Defaults
       end
       next unless skylight.ufactor.nil? || skylight.shgc.nil?
 
-      # Frame/Glass provided instead, fill in more defaults as needed
-      if skylight.glass_type.nil?
-        skylight.glass_type = HPXML::WindowGlassTypeClear
-        skylight.glass_type_isdefaulted = true
-      end
-      if skylight.thermal_break.nil? && [HPXML::WindowFrameTypeAluminum, HPXML::WindowFrameTypeMetal].include?(skylight.frame_type)
-        if skylight.glass_layers == HPXML::WindowLayersSinglePane
-          skylight.thermal_break = false
-          skylight.thermal_break_isdefaulted = true
-        elsif skylight.glass_layers == HPXML::WindowLayersDoublePane
-          skylight.thermal_break = true
-          skylight.thermal_break_isdefaulted = true
+      if skylight.glass_layers != HPXML::WindowLayersGlassBlock
+        # Frame/Glass provided instead, fill in more defaults as needed
+        if skylight.glass_type.nil?
+          skylight.glass_type = HPXML::WindowGlassTypeClear
+          skylight.glass_type_isdefaulted = true
         end
-      end
-      if skylight.gas_fill.nil?
-        if skylight.glass_layers == HPXML::WindowLayersDoublePane
-          if [HPXML::WindowGlassTypeLowE,
-              HPXML::WindowGlassTypeLowEHighSolarGain,
-              HPXML::WindowGlassTypeLowELowSolarGain].include? skylight.glass_type
+        if skylight.thermal_break.nil? && [HPXML::WindowFrameTypeAluminum, HPXML::WindowFrameTypeMetal].include?(skylight.frame_type)
+          if skylight.glass_layers == HPXML::WindowLayersSinglePane
+            skylight.thermal_break = false
+            skylight.thermal_break_isdefaulted = true
+          elsif skylight.glass_layers == HPXML::WindowLayersDoublePane
+            skylight.thermal_break = true
+            skylight.thermal_break_isdefaulted = true
+          end
+        end
+        if skylight.gas_fill.nil?
+          if skylight.glass_layers == HPXML::WindowLayersDoublePane
+            if [HPXML::WindowGlassTypeLowE,
+                HPXML::WindowGlassTypeLowEHighSolarGain,
+                HPXML::WindowGlassTypeLowELowSolarGain].include? skylight.glass_type
+              skylight.gas_fill = HPXML::WindowGasArgon
+              skylight.gas_fill_isdefaulted = true
+            else
+              skylight.gas_fill = HPXML::WindowGasAir
+              skylight.gas_fill_isdefaulted = true
+            end
+          elsif skylight.glass_layers == HPXML::WindowLayersTriplePane
             skylight.gas_fill = HPXML::WindowGasArgon
             skylight.gas_fill_isdefaulted = true
-          else
-            skylight.gas_fill = HPXML::WindowGasAir
-            skylight.gas_fill_isdefaulted = true
           end
-        elsif skylight.glass_layers == HPXML::WindowLayersTriplePane
-          skylight.gas_fill = HPXML::WindowGasArgon
-          skylight.gas_fill_isdefaulted = true
         end
       end
       # Now lookup U/SHGC based on properties
@@ -1826,10 +1840,11 @@ module Defaults
   # @param runner [OpenStudio::Measure::OSRunner] Object typically used to display warnings
   # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
   # @param weather [WeatherFile] Weather object containing EPW information
-  # @param convert_shared_systems [Boolean] Whether to convert shared systems to equivalent in-unit systems per ANSI 301
+  # @param convert_shared_systems [Boolean] Whether to convert shared systems to equivalent in-unit systems per ANSI/RESNET/ICC 301
   # @param unit_num [Integer] Dwelling unit number
+  # @param hpxml_header [HPXML::Header] HPXML Header object
   # @return [nil]
-  def self.apply_hvac(runner, hpxml_bldg, weather, convert_shared_systems, unit_num)
+  def self.apply_hvac(runner, hpxml_bldg, weather, convert_shared_systems, unit_num, hpxml_header)
     if convert_shared_systems
       HVAC.apply_shared_systems(hpxml_bldg)
     end
@@ -1915,13 +1930,13 @@ module Defaults
     hpxml_bldg.cooling_systems.each do |cooling_system|
       next unless cooling_system.compressor_type.nil?
 
-      cooling_system.compressor_type = get_hvac_compressor_type(cooling_system.cooling_system_type, cooling_system.cooling_efficiency_seer)
+      cooling_system.compressor_type = get_hvac_compressor_type(cooling_system.cooling_system_type)
       cooling_system.compressor_type_isdefaulted = true
     end
     hpxml_bldg.heat_pumps.each do |heat_pump|
       next unless heat_pump.compressor_type.nil?
 
-      heat_pump.compressor_type = get_hvac_compressor_type(heat_pump.heat_pump_type, heat_pump.cooling_efficiency_seer)
+      heat_pump.compressor_type = get_hvac_compressor_type(heat_pump.heat_pump_type)
       heat_pump.compressor_type_isdefaulted = true
     end
 
@@ -2008,20 +2023,21 @@ module Defaults
     hpxml_bldg.cooling_systems.each do |cooling_system|
       next unless cooling_system.cooling_shr.nil?
 
-      if cooling_system.cooling_system_type == HPXML::HVACTypeCentralAirConditioner
-        if cooling_system.compressor_type == HPXML::HVACCompressorTypeSingleStage
+      case cooling_system.cooling_system_type
+      when HPXML::HVACTypeCentralAirConditioner
+        case cooling_system.compressor_type
+        when HPXML::HVACCompressorTypeSingleStage
           cooling_system.cooling_shr = 0.73
-        elsif cooling_system.compressor_type == HPXML::HVACCompressorTypeTwoStage
+        when HPXML::HVACCompressorTypeTwoStage
           cooling_system.cooling_shr = 0.73
-        elsif cooling_system.compressor_type == HPXML::HVACCompressorTypeVariableSpeed
+        when HPXML::HVACCompressorTypeVariableSpeed
           cooling_system.cooling_shr = 0.78
         end
         cooling_system.cooling_shr_isdefaulted = true
-      elsif cooling_system.cooling_system_type == HPXML::HVACTypeRoomAirConditioner ||
-            cooling_system.cooling_system_type == HPXML::HVACTypePTAC
+      when HPXML::HVACTypeRoomAirConditioner, HPXML::HVACTypePTAC
         cooling_system.cooling_shr = 0.65
         cooling_system.cooling_shr_isdefaulted = true
-      elsif cooling_system.cooling_system_type == HPXML::HVACTypeMiniSplitAirConditioner
+      when HPXML::HVACTypeMiniSplitAirConditioner
         cooling_system.cooling_shr = 0.73
         cooling_system.cooling_shr_isdefaulted = true
       end
@@ -2029,23 +2045,24 @@ module Defaults
     hpxml_bldg.heat_pumps.each do |heat_pump|
       next unless heat_pump.cooling_shr.nil?
 
-      if heat_pump.heat_pump_type == HPXML::HVACTypeHeatPumpAirToAir
-        if heat_pump.compressor_type == HPXML::HVACCompressorTypeSingleStage
+      case heat_pump.heat_pump_type
+      when HPXML::HVACTypeHeatPumpAirToAir
+        case heat_pump.compressor_type
+        when HPXML::HVACCompressorTypeSingleStage
           heat_pump.cooling_shr = 0.73
-        elsif heat_pump.compressor_type == HPXML::HVACCompressorTypeTwoStage
+        when HPXML::HVACCompressorTypeTwoStage
           heat_pump.cooling_shr = 0.73
-        elsif heat_pump.compressor_type == HPXML::HVACCompressorTypeVariableSpeed
+        when HPXML::HVACCompressorTypeVariableSpeed
           heat_pump.cooling_shr = 0.78
         end
         heat_pump.cooling_shr_isdefaulted = true
-      elsif heat_pump.heat_pump_type == HPXML::HVACTypeHeatPumpMiniSplit
+      when HPXML::HVACTypeHeatPumpMiniSplit
         heat_pump.cooling_shr = 0.73
         heat_pump.cooling_shr_isdefaulted = true
-      elsif heat_pump.heat_pump_type == HPXML::HVACTypeHeatPumpGroundToAir
+      when HPXML::HVACTypeHeatPumpGroundToAir
         heat_pump.cooling_shr = 0.73
         heat_pump.cooling_shr_isdefaulted = true
-      elsif heat_pump.heat_pump_type == HPXML::HVACTypeHeatPumpPTHP ||
-            heat_pump.heat_pump_type == HPXML::HVACTypeHeatPumpRoom
+      when HPXML::HVACTypeHeatPumpPTHP, HPXML::HVACTypeHeatPumpRoom
         heat_pump.cooling_shr = 0.65
         heat_pump.cooling_shr_isdefaulted = true
       end
@@ -2111,7 +2128,8 @@ module Defaults
     mini_split_ductless_watts_per_cfm = 0.07 # W/cfm
     mini_split_ducted_watts_per_cfm = 0.18 # W/cfm
     hpxml_bldg.heating_systems.each do |heating_system|
-      if [HPXML::HVACTypeFurnace].include? heating_system.heating_system_type
+      case heating_system.heating_system_type
+      when HPXML::HVACTypeFurnace
         if heating_system.fan_watts_per_cfm.nil?
           if (not heating_system.distribution_system.nil?) && (heating_system.distribution_system.air_type == HPXML::AirTypeGravity)
             heating_system.fan_watts_per_cfm = 0.0
@@ -2122,15 +2140,13 @@ module Defaults
           end
           heating_system.fan_watts_per_cfm_isdefaulted = true
         end
-      elsif [HPXML::HVACTypeStove].include? heating_system.heating_system_type
+      when HPXML::HVACTypeStove
         if heating_system.fan_watts.nil?
           heating_system.fan_watts = 40.0 # W
           heating_system.fan_watts_isdefaulted = true
         end
-      elsif [HPXML::HVACTypeWallFurnace,
-             HPXML::HVACTypeFloorFurnace,
-             HPXML::HVACTypeSpaceHeater,
-             HPXML::HVACTypeFireplace].include? heating_system.heating_system_type
+      when HPXML::HVACTypeWallFurnace, HPXML::HVACTypeFloorFurnace,
+           HPXML::HVACTypeSpaceHeater, HPXML::HVACTypeFireplace
         if heating_system.fan_watts.nil?
           heating_system.fan_watts = 0.0 # W/cfm, assume no fan power
           heating_system.fan_watts_isdefaulted = true
@@ -2143,42 +2159,46 @@ module Defaults
       if (not cooling_system.attached_heating_system.nil?) && (not cooling_system.attached_heating_system.fan_watts_per_cfm.nil?)
         cooling_system.fan_watts_per_cfm = cooling_system.attached_heating_system.fan_watts_per_cfm
         cooling_system.fan_watts_per_cfm_isdefaulted = true
-      elsif [HPXML::HVACTypeCentralAirConditioner].include? cooling_system.cooling_system_type
-        if cooling_system.cooling_efficiency_seer > 13.5 # HEScore assumption
-          cooling_system.fan_watts_per_cfm = ecm_watts_per_cfm
-        else
-          cooling_system.fan_watts_per_cfm = psc_watts_per_cfm
+      else
+        case cooling_system.cooling_system_type
+        when HPXML::HVACTypeCentralAirConditioner
+          if cooling_system.cooling_efficiency_seer > 13.5 # HEScore assumption
+            cooling_system.fan_watts_per_cfm = ecm_watts_per_cfm
+          else
+            cooling_system.fan_watts_per_cfm = psc_watts_per_cfm
+          end
+          cooling_system.fan_watts_per_cfm_isdefaulted = true
+        when HPXML::HVACTypeMiniSplitAirConditioner
+          if not cooling_system.distribution_system.nil?
+            cooling_system.fan_watts_per_cfm = mini_split_ducted_watts_per_cfm
+          else
+            cooling_system.fan_watts_per_cfm = mini_split_ductless_watts_per_cfm
+          end
+          cooling_system.fan_watts_per_cfm_isdefaulted = true
+        when HPXML::HVACTypeEvaporativeCooler
+          # Depends on airflow rate, so defaulted in hvac_sizing.rb
         end
-        cooling_system.fan_watts_per_cfm_isdefaulted = true
-      elsif [HPXML::HVACTypeMiniSplitAirConditioner].include? cooling_system.cooling_system_type
-        if not cooling_system.distribution_system.nil?
-          cooling_system.fan_watts_per_cfm = mini_split_ducted_watts_per_cfm
-        else
-          cooling_system.fan_watts_per_cfm = mini_split_ductless_watts_per_cfm
-        end
-        cooling_system.fan_watts_per_cfm_isdefaulted = true
-      elsif [HPXML::HVACTypeEvaporativeCooler].include? cooling_system.cooling_system_type
-        # Depends on airflow rate, so defaulted in hvac_sizing.rb
       end
     end
     hpxml_bldg.heat_pumps.each do |heat_pump|
       next unless heat_pump.fan_watts_per_cfm.nil?
 
-      if [HPXML::HVACTypeHeatPumpAirToAir].include? heat_pump.heat_pump_type
+      case heat_pump.heat_pump_type
+      when HPXML::HVACTypeHeatPumpAirToAir
         if heat_pump.heating_efficiency_hspf > 8.75 # HEScore assumption
           heat_pump.fan_watts_per_cfm = ecm_watts_per_cfm
         else
           heat_pump.fan_watts_per_cfm = psc_watts_per_cfm
         end
         heat_pump.fan_watts_per_cfm_isdefaulted = true
-      elsif [HPXML::HVACTypeHeatPumpGroundToAir].include? heat_pump.heat_pump_type
+      when HPXML::HVACTypeHeatPumpGroundToAir
         if heat_pump.heating_efficiency_cop > 8.75 / 3.2 # HEScore assumption
           heat_pump.fan_watts_per_cfm = ecm_watts_per_cfm
         else
           heat_pump.fan_watts_per_cfm = psc_watts_per_cfm
         end
         heat_pump.fan_watts_per_cfm_isdefaulted = true
-      elsif [HPXML::HVACTypeHeatPumpMiniSplit].include? heat_pump.heat_pump_type
+      when HPXML::HVACTypeHeatPumpMiniSplit
         if not heat_pump.distribution_system.nil?
           heat_pump.fan_watts_per_cfm = mini_split_ducted_watts_per_cfm
         else
@@ -2234,10 +2254,9 @@ module Defaults
     # Detailed HVAC performance
     hpxml_bldg.cooling_systems.each do |cooling_system|
       clg_ap = cooling_system.additional_properties
-      if [HPXML::HVACTypeCentralAirConditioner,
-          HPXML::HVACTypeMiniSplitAirConditioner,
-          HPXML::HVACTypeRoomAirConditioner,
-          HPXML::HVACTypePTAC].include? cooling_system.cooling_system_type
+      case cooling_system.cooling_system_type
+      when HPXML::HVACTypeCentralAirConditioner, HPXML::HVACTypeMiniSplitAirConditioner,
+           HPXML::HVACTypeRoomAirConditioner, HPXML::HVACTypePTAC
         if [HPXML::HVACTypeRoomAirConditioner,
             HPXML::HVACTypePTAC].include? cooling_system.cooling_system_type
           use_eer = true
@@ -2248,7 +2267,7 @@ module Defaults
         HVAC.set_fan_power_rated(cooling_system, use_eer)
         HVAC.set_cool_curves_central_air_source(cooling_system, use_eer)
 
-      elsif [HPXML::HVACTypeEvaporativeCooler].include? cooling_system.cooling_system_type
+      when HPXML::HVACTypeEvaporativeCooler
         clg_ap.effectiveness = 0.72 # Assumption from HEScore
 
       end
@@ -2263,10 +2282,9 @@ module Defaults
       heating_system.additional_properties.heat_rated_cfm_per_ton = HVAC.get_heat_cfm_per_ton(HPXML::HVACCompressorTypeSingleStage, true)
     end
     hpxml_bldg.heat_pumps.each do |heat_pump|
-      if [HPXML::HVACTypeHeatPumpAirToAir,
-          HPXML::HVACTypeHeatPumpMiniSplit,
-          HPXML::HVACTypeHeatPumpPTHP,
-          HPXML::HVACTypeHeatPumpRoom].include? heat_pump.heat_pump_type
+      case heat_pump.heat_pump_type
+      when HPXML::HVACTypeHeatPumpAirToAir, HPXML::HVACTypeHeatPumpMiniSplit,
+           HPXML::HVACTypeHeatPumpPTHP, HPXML::HVACTypeHeatPumpRoom
         if [HPXML::HVACTypeHeatPumpPTHP, HPXML::HVACTypeHeatPumpRoom].include? heat_pump.heat_pump_type
           use_eer_cop = true
         else
@@ -2277,16 +2295,11 @@ module Defaults
         HVAC.set_cool_curves_central_air_source(heat_pump, use_eer_cop)
         HVAC.set_heat_curves_central_air_source(heat_pump, use_eer_cop)
 
-      elsif [HPXML::HVACTypeHeatPumpGroundToAir].include? heat_pump.heat_pump_type
+      when HPXML::HVACTypeHeatPumpGroundToAir
         HVAC.set_heat_pump_temperatures(heat_pump, runner)
 
         if heat_pump.geothermal_loop.nil?
-          if not unit_num.nil?
-            loop_id = "GeothermalLoop#{hpxml_bldg.geothermal_loops.size + 1}_#{unit_num}"
-          else
-            loop_id = "GeothermalLoop#{hpxml_bldg.geothermal_loops.size + 1}"
-          end
-          hpxml_bldg.geothermal_loops.add(id: loop_id,
+          hpxml_bldg.geothermal_loops.add(id: get_id('GeothermalLoop', hpxml_bldg.geothermal_loops, unit_num),
                                           loop_configuration: HPXML::GeothermalLoopLoopConfigurationVertical)
           heat_pump.geothermal_loop_idref = hpxml_bldg.geothermal_loops[-1].id
         end
@@ -2297,7 +2310,7 @@ module Defaults
         end
 
         HVAC.set_gshp_assumptions(heat_pump, weather)
-        HVAC.set_curves_gshp(heat_pump)
+        HVAC.set_curves_gshp(heat_pump, hpxml_header)
 
         if heat_pump.geothermal_loop.bore_spacing.nil?
           heat_pump.geothermal_loop.bore_spacing = 16.4 # ft, distance between bores
@@ -2342,7 +2355,7 @@ module Defaults
           heat_pump.geothermal_loop.shank_spacing = (hp_ap.u_tube_spacing + hp_ap.pipe_od).round(2) # Distance from center of pipe to center of pipe
           heat_pump.geothermal_loop.shank_spacing_isdefaulted = true
         end
-      elsif [HPXML::HVACTypeHeatPumpWaterLoopToAir].include? heat_pump.heat_pump_type
+      when HPXML::HVACTypeHeatPumpWaterLoopToAir
         HVAC.set_heat_pump_temperatures(heat_pump, runner)
 
       end
@@ -2493,8 +2506,8 @@ module Defaults
   # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
   # @return [nil]
   def self.apply_hvac_distribution(hpxml_bldg)
-    ncfl_ag = hpxml_bldg.building_construction.number_of_conditioned_floors_above_grade
     ncfl = hpxml_bldg.building_construction.number_of_conditioned_floors
+    ncfl_ag = hpxml_bldg.building_construction.number_of_conditioned_floors_above_grade
 
     hpxml_bldg.hvac_distributions.each do |hvac_distribution|
       next unless hvac_distribution.distribution_system_type == HPXML::HVACDistributionTypeAir
@@ -2516,8 +2529,8 @@ module Defaults
         # Default both duct location(s) and duct surface area(s)
         [supply_ducts, return_ducts].each do |ducts|
           ducts.each do |duct|
-            primary_duct_area, secondary_duct_area = get_duct_surface_area(duct.duct_type, ncfl_ag, cfa_served, n_returns).map { |area| area / ducts.size }
             primary_duct_location, secondary_duct_location = get_duct_locations(hpxml_bldg)
+            primary_duct_area, secondary_duct_area = get_duct_surface_area(duct.duct_type, primary_duct_location, ncfl, ncfl_ag, cfa_served, n_returns).map { |area| area / ducts.size }
             if primary_duct_location.nil? # If a home doesn't have any unconditioned spaces, place all ducts in conditioned space.
               duct.duct_surface_area = primary_duct_area + secondary_duct_area
               duct.duct_surface_area_isdefaulted = true
@@ -2530,9 +2543,10 @@ module Defaults
               duct.duct_location_isdefaulted = true
 
               if secondary_duct_area > 0
+                ins_r = (secondary_duct_location == HPXML::LocationConditionedSpace ? 0.0 : duct.duct_insulation_r_value)
                 hvac_distribution.ducts.add(id: "#{duct.id}_secondary",
                                             duct_type: duct.duct_type,
-                                            duct_insulation_r_value: duct.duct_insulation_r_value,
+                                            duct_insulation_r_value: ins_r,
                                             duct_location: secondary_duct_location,
                                             duct_location_isdefaulted: true,
                                             duct_surface_area: secondary_duct_area,
@@ -2545,7 +2559,7 @@ module Defaults
         # Default duct surface area(s)
         [supply_ducts, return_ducts].each do |ducts|
           ducts.each do |duct|
-            total_duct_area = get_duct_surface_area(duct.duct_type, ncfl_ag, cfa_served, n_returns).sum()
+            total_duct_area = get_duct_surface_area(duct.duct_type, duct.duct_location, ncfl, ncfl_ag, cfa_served, n_returns).sum()
             duct.duct_surface_area = total_duct_area * duct.duct_fraction_area
             duct.duct_surface_area_isdefaulted = true
           end
@@ -2993,12 +3007,13 @@ module Defaults
       hot_water_distribution.pipe_r_value_isdefaulted = true
     end
 
-    if hot_water_distribution.system_type == HPXML::DHWDistTypeStandard
+    case hot_water_distribution.system_type
+    when HPXML::DHWDistTypeStandard
       if hot_water_distribution.standard_piping_length.nil?
         hot_water_distribution.standard_piping_length = get_std_pipe_length(has_uncond_bsmnt, has_cond_bsmnt, cfa, ncfl)
         hot_water_distribution.standard_piping_length_isdefaulted = true
       end
-    elsif hot_water_distribution.system_type == HPXML::DHWDistTypeRecirc
+    when HPXML::DHWDistTypeRecirc
       if hot_water_distribution.recirculation_piping_loop_length.nil?
         hot_water_distribution.recirculation_piping_loop_length = get_recirc_loop_length(has_uncond_bsmnt, has_cond_bsmnt, cfa, ncfl)
         hot_water_distribution.recirculation_piping_loop_length_isdefaulted = true
@@ -3023,7 +3038,8 @@ module Defaults
     if hot_water_distribution.system_type == HPXML::DHWDistTypeRecirc || hot_water_distribution.has_shared_recirculation
       schedules_file_includes_recirculation_pump = (schedules_file.nil? ? false : schedules_file.includes_col_name(SchedulesFile::Columns[:HotWaterRecirculationPump].name))
       recirc_control_type = hot_water_distribution.has_shared_recirculation ? hot_water_distribution.shared_recirculation_control_type : hot_water_distribution.recirculation_control_type
-      if [HPXML::DHWRecircControlTypeNone, HPXML::DHWRecircControlTypeTimer].include?(recirc_control_type)
+      case recirc_control_type
+      when HPXML::DHWRecircControlTypeNone, HPXML::DHWRecircControlTypeTimer
         if hot_water_distribution.recirculation_pump_weekday_fractions.nil? && !schedules_file_includes_recirculation_pump
           hot_water_distribution.recirculation_pump_weekday_fractions = @default_schedules_csv_data["#{SchedulesFile::Columns[:HotWaterRecirculationPump].name}_no_control"]['RecirculationPumpWeekdayScheduleFractions']
           hot_water_distribution.recirculation_pump_weekday_fractions_isdefaulted = true
@@ -3032,7 +3048,7 @@ module Defaults
           hot_water_distribution.recirculation_pump_weekend_fractions = @default_schedules_csv_data["#{SchedulesFile::Columns[:HotWaterRecirculationPump].name}_no_control"]['RecirculationPumpWeekendScheduleFractions']
           hot_water_distribution.recirculation_pump_weekend_fractions_isdefaulted = true
         end
-      elsif [HPXML::DHWRecircControlTypeSensor, HPXML::DHWRecircControlTypeManual].include?(recirc_control_type)
+      when HPXML::DHWRecircControlTypeSensor, HPXML::DHWRecircControlTypeManual
         if hot_water_distribution.recirculation_pump_weekday_fractions.nil? && !schedules_file_includes_recirculation_pump
           hot_water_distribution.recirculation_pump_weekday_fractions = @default_schedules_csv_data["#{SchedulesFile::Columns[:HotWaterRecirculationPump].name}_demand_control"]['RecirculationPumpWeekdayScheduleFractions']
           hot_water_distribution.recirculation_pump_weekday_fractions_isdefaulted = true
@@ -3041,7 +3057,7 @@ module Defaults
           hot_water_distribution.recirculation_pump_weekend_fractions = @default_schedules_csv_data["#{SchedulesFile::Columns[:HotWaterRecirculationPump].name}_demand_control"]['RecirculationPumpWeekendScheduleFractions']
           hot_water_distribution.recirculation_pump_weekend_fractions_isdefaulted = true
         end
-      elsif [HPXML::DHWRecircControlTypeTemperature].include?(recirc_control_type)
+      when HPXML::DHWRecircControlTypeTemperature
         if hot_water_distribution.recirculation_pump_weekday_fractions.nil? && !schedules_file_includes_recirculation_pump
           hot_water_distribution.recirculation_pump_weekday_fractions = @default_schedules_csv_data["#{SchedulesFile::Columns[:HotWaterRecirculationPump].name}_temperature_control"]['RecirculationPumpWeekdayScheduleFractions']
           hot_water_distribution.recirculation_pump_weekday_fractions_isdefaulted = true
@@ -3158,6 +3174,408 @@ module Defaults
     end
   end
 
+  # Get the id based on provided prefix, number of like HPXML objects, and dwelling unit number.
+  # This is useful for HPXML objects that get added by defaults.rb.
+  # Pass the dwelling unit number when adding HPXML objects across multiple HPXML buildings.
+  #
+  # @param prefix [String] Identifier prefix
+  # @param objects [Array<HPXML::XXX>] List of HPXML objects
+  # @param unit_num [Integer] Dwelling unit number
+  # @return [String]
+  def self.get_id(prefix, objects, unit_num)
+    if not unit_num.nil?
+      id = "#{prefix}#{objects.size + 1}_#{unit_num}"
+    else
+      id = "#{prefix}#{objects.size + 1}"
+    end
+    return id
+  end
+
+  # Assigns default values for omitted optional inputs in the HPXML::ElectricPanel objects.
+  #
+  # @param runner [OpenStudio::Measure::OSRunner] Object typically used to display warnings
+  # @param hpxml_header [HPXML::Header] HPXML Header object (one per HPXML file)
+  # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
+  # @param unit_num [Integer] Dwelling unit number
+  # @return [nil]
+  def self.apply_electric_panels(runner, hpxml_header, hpxml_bldg, unit_num)
+    # Currently, we leave the electric panel object unchanged if no load calculation types are specified
+    return if hpxml_header.service_feeders_load_calculation_types.nil? || hpxml_header.service_feeders_load_calculation_types.empty?
+
+    default_panels_csv_data = get_panels_csv_data()
+
+    hpxml_bldg.electric_panels.each do |electric_panel|
+      branch_circuits = electric_panel.branch_circuits
+      service_feeders = electric_panel.service_feeders
+
+      hpxml_bldg.heating_systems.each do |heating_system|
+        next if heating_system.is_shared_system
+        next if heating_system.fraction_heat_load_served == 0
+        next unless heating_system.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeHeating,
+                            type_isdefaulted: true,
+                            component_idrefs: [heating_system.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.cooling_systems.each do |cooling_system|
+        next if cooling_system.is_shared_system
+        next if cooling_system.fraction_cool_load_served == 0
+        next unless cooling_system.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeCooling,
+                            type_isdefaulted: true,
+                            component_idrefs: [cooling_system.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.heat_pumps.each do |heat_pump|
+        next unless heat_pump.service_feeders.empty?
+
+        if heat_pump.fraction_heat_load_served != 0
+          service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                              type: HPXML::ElectricPanelLoadTypeHeating,
+                              type_isdefaulted: true,
+                              component_idrefs: [heat_pump.id],
+                              component_idrefs_isdefaulted: true)
+        end
+        next unless heat_pump.fraction_cool_load_served != 0
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeCooling,
+                            type_isdefaulted: true,
+                            component_idrefs: [heat_pump.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.water_heating_systems.each do |water_heating_system|
+        next if water_heating_system.fuel_type != HPXML::FuelTypeElectricity
+        next unless water_heating_system.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeWaterHeater,
+                            type_isdefaulted: true,
+                            component_idrefs: [water_heating_system.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.clothes_dryers.each do |clothes_dryer|
+        next if clothes_dryer.fuel_type != HPXML::FuelTypeElectricity
+        next unless clothes_dryer.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeClothesDryer,
+                            type_isdefaulted: true,
+                            component_idrefs: [clothes_dryer.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.dishwashers.each do |dishwasher|
+        next unless dishwasher.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeDishwasher,
+                            type_isdefaulted: true,
+                            component_idrefs: [dishwasher.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.cooking_ranges.each do |cooking_range|
+        next if cooking_range.fuel_type != HPXML::FuelTypeElectricity
+        next unless cooking_range.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeRangeOven,
+                            type_isdefaulted: true,
+                            component_idrefs: [cooking_range.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.ventilation_fans.each do |ventilation_fan|
+        next unless ventilation_fan.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeMechVent,
+                            type_isdefaulted: true,
+                            component_idrefs: [ventilation_fan.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.permanent_spas.each do |permanent_spa|
+        next if permanent_spa.type == HPXML::TypeNone
+
+        if permanent_spa.pump_service_feeders.empty?
+          service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                              type: HPXML::ElectricPanelLoadTypePermanentSpaPump,
+                              type_isdefaulted: true,
+                              component_idrefs: [permanent_spa.pump_id],
+                              component_idrefs_isdefaulted: true)
+        end
+
+        next unless [HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(permanent_spa.heater_type)
+        next unless permanent_spa.heater_service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypePermanentSpaHeater,
+                            type_isdefaulted: true,
+                            component_idrefs: [permanent_spa.heater_id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.pools.each do |pool|
+        next if pool.type == HPXML::TypeNone
+
+        if pool.pump_service_feeders.empty?
+          service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                              type: HPXML::ElectricPanelLoadTypePoolPump,
+                              type_isdefaulted: true,
+                              component_idrefs: [pool.pump_id],
+                              component_idrefs_isdefaulted: true)
+        end
+
+        next unless [HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(pool.heater_type)
+        next unless pool.heater_service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypePoolHeater,
+                            type_isdefaulted: true,
+                            component_idrefs: [pool.heater_id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.plug_loads.each do |plug_load|
+        next if plug_load.plug_load_type != HPXML::PlugLoadTypeWellPump
+        next unless plug_load.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeWellPump,
+                            type_isdefaulted: true,
+                            component_idrefs: [plug_load.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.plug_loads.each do |plug_load|
+        next if plug_load.plug_load_type != HPXML::PlugLoadTypeElectricVehicleCharging
+        next unless plug_load.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeElectricVehicleCharging,
+                            type_isdefaulted: true,
+                            component_idrefs: [plug_load.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      hpxml_bldg.ev_chargers.each do |ev_charger|
+        next unless ev_charger.service_feeders.empty?
+
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeElectricVehicleCharging,
+                            type_isdefaulted: true,
+                            component_idrefs: [ev_charger.id],
+                            component_idrefs_isdefaulted: true)
+      end
+
+      service_feeders.each do |service_feeder|
+        next if service_feeder.power == 0
+
+        service_feeder.components.each do |component|
+          if component.is_a?(HPXML::Pool) || component.is_a?(HPXML::PermanentSpa)
+            if component.pump_branch_circuits.empty?
+              branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                                  component_idrefs: [component.pump_id])
+            end
+            if component.heater_branch_circuits.empty?
+              branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                                  component_idrefs: [component.heater_id])
+            end
+          elsif component.branch_circuits.empty?
+            # Skip HVAC system branch circuits; these will be added on the fly down below when we loop thru service feeders
+            if !component.is_a?(HPXML::HeatingSystem) && !component.is_a?(HPXML::CoolingSystem) && !component.is_a?(HPXML::HeatPump)
+              branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                                  component_idrefs: [component.id])
+            end
+          end
+        end
+      end
+
+      if service_feeders.count { |pl| pl.type == HPXML::ElectricPanelLoadTypeOther } == 0
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeOther,
+                            type_isdefaulted: true,
+                            component_idrefs: [])
+        (1..get_default_panels_value(runner, default_panels_csv_data, 'other', 'BreakerSpaces', HPXML::ElectricPanelVoltage120)).each do |_i|
+          branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                              occupied_spaces: 1,
+                              occupied_spaces_isdefaulted: true)
+        end
+      end
+
+      if service_feeders.count { |pl| pl.type == HPXML::ElectricPanelLoadTypeLighting } == 0
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeLighting,
+                            type_isdefaulted: true,
+                            component_idrefs: [])
+        (1..get_default_panels_value(runner, default_panels_csv_data, 'lighting', 'BreakerSpaces', HPXML::ElectricPanelVoltage120)).each do |_i|
+          branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                              occupied_spaces: 1,
+                              occupied_spaces_isdefaulted: true)
+        end
+      end
+
+      if service_feeders.count { |pl| pl.type == HPXML::ElectricPanelLoadTypeKitchen } == 0
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeKitchen,
+                            type_isdefaulted: true,
+                            component_idrefs: [])
+        (1..get_default_panels_value(runner, default_panels_csv_data, 'kitchen', 'BreakerSpaces', HPXML::ElectricPanelVoltage120)).each do |_i|
+          branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                              occupied_spaces: 1,
+                              occupied_spaces_isdefaulted: true)
+        end
+      end
+
+      if service_feeders.count { |pl| pl.type == HPXML::ElectricPanelLoadTypeLaundry } == 0
+        service_feeders.add(id: get_id('ServiceFeeder', service_feeders, unit_num),
+                            type: HPXML::ElectricPanelLoadTypeLaundry,
+                            type_isdefaulted: true,
+                            component_idrefs: [])
+        (1..get_default_panels_value(runner, default_panels_csv_data, 'laundry', 'BreakerSpaces', HPXML::ElectricPanelVoltage120)).each do |_i|
+          branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                              occupied_spaces: 1,
+                              occupied_spaces_isdefaulted: true)
+        end
+      end
+
+      branch_circuits.each do |branch_circuit|
+        if branch_circuit.voltage.nil?
+          branch_circuit.voltage = get_branch_circuit_voltage_default_values(branch_circuit)
+          branch_circuit.voltage_isdefaulted = true
+        end
+        if branch_circuit.max_current_rating.nil?
+          branch_circuit.max_current_rating = get_branch_circuit_amps_default_values(branch_circuit)
+          branch_circuit.max_current_rating_isdefaulted = true
+        end
+      end
+
+      service_feeders.each do |service_feeder|
+        if service_feeder.power.nil?
+          service_feeder.power = get_service_feeder_power_default_values(runner, hpxml_bldg, service_feeder, default_panels_csv_data, electric_panel, unit_num)
+          service_feeder.power_isdefaulted = true
+        else
+          if service_feeder.type == HPXML::ElectricPanelLoadTypeHeating
+            hpxml_bldg.heating_systems.each do |heating_system|
+              next if !service_feeder.component_idrefs.include?(heating_system.id)
+              next if heating_system.is_shared_system
+              next if heating_system.fraction_heat_load_served == 0
+
+              branch_circuit = get_or_add_branch_circuit(electric_panel, heating_system, unit_num)
+              if branch_circuit.occupied_spaces.nil?
+                branch_circuit.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(service_feeder.power, branch_circuit.voltage, branch_circuit.max_current_rating)
+                branch_circuit.occupied_spaces_isdefaulted = true
+              end
+            end
+
+            hpxml_bldg.heat_pumps.each do |heat_pump|
+              next if !service_feeder.component_idrefs.include?(heat_pump.id)
+              next if heat_pump.fraction_heat_load_served == 0
+
+              branch_circuit = get_or_add_branch_circuit(electric_panel, heat_pump, unit_num)
+              if branch_circuit.occupied_spaces.nil?
+                branch_circuit.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(service_feeder.power, branch_circuit.voltage, branch_circuit.max_current_rating)
+                branch_circuit.occupied_spaces_isdefaulted = true
+              end
+            end
+          elsif service_feeder.type == HPXML::ElectricPanelLoadTypeCooling
+            hpxml_bldg.cooling_systems.each do |cooling_system|
+              next if !service_feeder.component_idrefs.include?(cooling_system.id)
+              next if cooling_system.is_shared_system
+              next if cooling_system.fraction_cool_load_served == 0
+
+              branch_circuit = get_or_add_branch_circuit(electric_panel, cooling_system, unit_num)
+              if branch_circuit.occupied_spaces.nil?
+                branch_circuit.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(service_feeder.power, branch_circuit.voltage, branch_circuit.max_current_rating)
+                branch_circuit.occupied_spaces_isdefaulted = true
+              end
+            end
+
+            hpxml_bldg.heat_pumps.each do |heat_pump|
+              next if !service_feeder.component_idrefs.include?(heat_pump.id)
+              next if heat_pump.fraction_cool_load_served == 0
+
+              branch_circuit = get_or_add_branch_circuit(electric_panel, heat_pump, unit_num)
+              if branch_circuit.occupied_spaces.nil?
+                branch_circuit.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(service_feeder.power, branch_circuit.voltage, branch_circuit.max_current_rating)
+                branch_circuit.occupied_spaces_isdefaulted = true
+              end
+            end
+          end
+        end
+        if service_feeder.is_new_load.nil?
+          service_feeder.is_new_load = false
+          service_feeder.is_new_load_isdefaulted = true
+        end
+      end
+
+      branch_circuits.each do |branch_circuit|
+        if branch_circuit.occupied_spaces.nil?
+          branch_circuit.occupied_spaces = get_branch_circuit_occupied_spaces_default_values(runner, hpxml_bldg, branch_circuit, default_panels_csv_data)
+          branch_circuit.occupied_spaces_isdefaulted = true
+        end
+
+        occupied_spaces = branch_circuit.occupied_spaces
+        max_breakers_per_branch_circuit = Integer(Float(branch_circuit.voltage)) / 120
+
+        next unless occupied_spaces > max_breakers_per_branch_circuit
+
+        branch_circuit.occupied_spaces = max_breakers_per_branch_circuit
+        extra_occupied_spaces = occupied_spaces - max_breakers_per_branch_circuit
+        n_branch_circuits = extra_occupied_spaces / max_breakers_per_branch_circuit
+
+        (1..n_branch_circuits).each do |i|
+          branch_circuits.add(id: "#{branch_circuit.id}_#{i + 1}",
+                              voltage: branch_circuit.voltage,
+                              voltage_isdefaulted: true,
+                              max_current_rating: branch_circuit.max_current_rating,
+                              max_current_rating_isdefaulted: true,
+                              occupied_spaces: max_breakers_per_branch_circuit,
+                              occupied_spaces_isdefaulted: true,
+                              component_idrefs: branch_circuit.component_idrefs,
+                              component_idrefs_isdefaulted: true)
+        end
+
+        next unless extra_occupied_spaces % max_breakers_per_branch_circuit != 0
+
+        branch_circuits.add(id: "#{branch_circuit.id}_#{n_branch_circuits.ceil + 1}",
+                            voltage: HPXML::ElectricPanelVoltage120,
+                            voltage_isdefaulted: true,
+                            max_current_rating: 20.0,
+                            max_current_rating_isdefaulted: true,
+                            occupied_spaces: 1,
+                            occupied_spaces_isdefaulted: true,
+                            component_idrefs: branch_circuit.component_idrefs,
+                            component_idrefs_isdefaulted: true)
+      end
+
+      if electric_panel.voltage.nil?
+        electric_panel.voltage = HPXML::ElectricPanelVoltage240
+        electric_panel.voltage_isdefaulted = true
+      end
+      if electric_panel.max_current_rating.nil?
+        electric_panel.max_current_rating = 200.0 # A
+        electric_panel.max_current_rating_isdefaulted = true
+      end
+      if electric_panel.headroom_spaces.nil? && electric_panel.rated_total_spaces.nil?
+        electric_panel.headroom_spaces = 3
+        electric_panel.headroom_spaces_isdefaulted = true
+      end
+
+      ElectricPanel.calculate(hpxml_header, hpxml_bldg, electric_panel)
+    end
+  end
+
   # Assigns default values for omitted optional inputs in the HPXML::Generator objects
   #
   # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
@@ -3171,7 +3589,86 @@ module Defaults
     end
   end
 
+  # Assigns default values for omitted optional inputs in the HPXML::Vehicle objects
+  # If an EV charger is found, apply_ev_charger is run to set its default values
+  # Default values for the battery are first applied with the apply_battery method, then electric vehicle-specific fields are populated such as miles/year, hours/week, and fraction charged at home.
+  #
+  # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
+  # @return [nil]
+  def self.apply_vehicles(hpxml_bldg, schedules_file)
+    default_values = get_electric_vehicle_values
+    hpxml_bldg.vehicles.each do |vehicle|
+      next unless vehicle.vehicle_type == HPXML::VehicleTypeBEV
+
+      apply_battery(vehicle, default_values)
+      if vehicle.battery_type.nil?
+        vehicle.battery_type = default_values[:battery_type]
+        vehicle.battery_type_isdefaulted = true
+      end
+      if vehicle.fuel_economy_combined.nil? || vehicle.fuel_economy_units.nil?
+        vehicle.fuel_economy_combined = default_values[:fuel_economy_combined]
+        vehicle.fuel_economy_combined_isdefaulted = true
+        vehicle.fuel_economy_units = default_values[:fuel_economy_units]
+        vehicle.fuel_economy_units_isdefaulted = true
+      end
+      miles_to_hrs_per_week = default_values[:miles_per_year] / default_values[:hours_per_week]
+      if vehicle.miles_per_year.nil? && vehicle.hours_per_week.nil?
+        vehicle.miles_per_year = default_values[:miles_per_year]
+        vehicle.miles_per_year_isdefaulted = true
+        vehicle.hours_per_week = default_values[:hours_per_week]
+        vehicle.hours_per_week_isdefaulted = true
+      elsif (not vehicle.hours_per_week.nil?) && vehicle.miles_per_year.nil?
+        vehicle.miles_per_year = vehicle.hours_per_week * miles_to_hrs_per_week
+        vehicle.miles_per_year_isdefaulted = true
+      elsif (not vehicle.miles_per_year.nil?) && vehicle.hours_per_week.nil?
+        vehicle.hours_per_week = vehicle.miles_per_year / miles_to_hrs_per_week
+        vehicle.hours_per_week_isdefaulted = true
+      end
+      if vehicle.fraction_charged_home.nil?
+        vehicle.fraction_charged_home = default_values[:fraction_charged_home]
+        vehicle.fraction_charged_home_isdefaulted = true
+      end
+      schedules_file_includes_ev = (schedules_file.nil? ? false : schedules_file.includes_col_name(SchedulesFile::Columns[:ElectricVehicleCharging].name) && schedules_file.includes_col_name(SchedulesFile::Columns[:ElectricVehicleDischarging].name))
+      if vehicle.ev_weekday_fractions.nil? && !schedules_file_includes_ev
+        vehicle.ev_weekday_fractions = @default_schedules_csv_data[SchedulesFile::Columns[:ElectricVehicle].name]['WeekdayScheduleFractions']
+        vehicle.ev_weekday_fractions_isdefaulted = true
+      end
+      if vehicle.ev_weekend_fractions.nil? && !schedules_file_includes_ev
+        vehicle.ev_weekend_fractions = @default_schedules_csv_data[SchedulesFile::Columns[:ElectricVehicle].name]['WeekendScheduleFractions']
+        vehicle.ev_weekend_fractions_isdefaulted = true
+      end
+      if vehicle.ev_monthly_multipliers.nil? && !schedules_file_includes_ev
+        vehicle.ev_monthly_multipliers = @default_schedules_csv_data[SchedulesFile::Columns[:ElectricVehicle].name]['MonthlyScheduleMultipliers']
+        vehicle.ev_monthly_multipliers_isdefaulted = true
+      end
+
+      next if vehicle.ev_charger.nil?
+
+      apply_ev_charger(vehicle.ev_charger)
+    end
+  end
+
+  # Assigns default values for omitted optional inputs in the HPXML::ElectricVehicleCharger objects
+  #
+  # @param ev_charger [HPXML::ElectricVehicleCharger] Object that defines a single electric vehicle charger
+  # @return [nil]
+  def self.apply_ev_charger(ev_charger)
+    if ev_charger.charging_level.nil? && ev_charger.charging_power.nil?
+      ev_charger.charging_level = 2
+      ev_charger.charging_level_isdefaulted = true
+    end
+    if ev_charger.charging_power.nil?
+      if ev_charger.charging_level == 1
+        ev_charger.charging_power = 1600.0
+      elsif ev_charger.charging_level >= 2
+        ev_charger.charging_power = 5690.0
+      end
+      ev_charger.charging_power_isdefaulted = true
+    end
+  end
+
   # Assigns default values for omitted optional inputs in the HPXML::Battery objects
+  # This method assigns fields specific to home battery systems, and calls a general method (apply_battery) that defaults values for any battery system.
   #
   # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
   # @return [nil]
@@ -3186,54 +3683,64 @@ module Defaults
         battery.is_shared_system = false
         battery.is_shared_system_isdefaulted = true
       end
-      # if battery.lifetime_model.nil?
-      # battery.lifetime_model = default_values[:lifetime_model]
-      # battery.lifetime_model_isdefaulted = true
-      # end
-      if battery.nominal_voltage.nil?
-        battery.nominal_voltage = default_values[:nominal_voltage] # V
-        battery.nominal_voltage_isdefaulted = true
-      end
       if battery.round_trip_efficiency.nil?
         battery.round_trip_efficiency = default_values[:round_trip_efficiency]
         battery.round_trip_efficiency_isdefaulted = true
       end
-      if battery.nominal_capacity_kwh.nil? && battery.nominal_capacity_ah.nil?
-        # Calculate nominal capacity from usable capacity or rated power output if available
-        if not battery.usable_capacity_kwh.nil?
-          battery.nominal_capacity_kwh = (battery.usable_capacity_kwh / default_values[:usable_fraction]).round(2)
-          battery.nominal_capacity_kwh_isdefaulted = true
-        elsif not battery.usable_capacity_ah.nil?
-          battery.nominal_capacity_ah = (battery.usable_capacity_ah / default_values[:usable_fraction]).round(2)
-          battery.nominal_capacity_ah_isdefaulted = true
-        elsif not battery.rated_power_output.nil?
-          battery.nominal_capacity_kwh = (UnitConversions.convert(battery.rated_power_output, 'W', 'kW') / 0.5).round(2)
-          battery.nominal_capacity_kwh_isdefaulted = true
-        else
-          battery.nominal_capacity_kwh = default_values[:nominal_capacity_kwh] # kWh
-          battery.nominal_capacity_kwh_isdefaulted = true
-        end
-      end
-      if battery.usable_capacity_kwh.nil? && battery.usable_capacity_ah.nil?
-        # Calculate usable capacity from nominal capacity
-        if not battery.nominal_capacity_kwh.nil?
-          battery.usable_capacity_kwh = (battery.nominal_capacity_kwh * default_values[:usable_fraction]).round(2)
-          battery.usable_capacity_kwh_isdefaulted = true
-        elsif not battery.nominal_capacity_ah.nil?
-          battery.usable_capacity_ah = (battery.nominal_capacity_ah * default_values[:usable_fraction]).round(2)
-          battery.usable_capacity_ah_isdefaulted = true
-        end
-      end
-      next unless battery.rated_power_output.nil?
 
-      # Calculate rated power from nominal capacity
-      if not battery.nominal_capacity_kwh.nil?
-        battery.rated_power_output = (UnitConversions.convert(battery.nominal_capacity_kwh, 'kWh', 'Wh') * 0.5).round(0)
-      elsif not battery.nominal_capacity_ah.nil?
-        battery.rated_power_output = (UnitConversions.convert(Battery.get_kWh_from_Ah(battery.nominal_capacity_ah, battery.nominal_voltage), 'kWh', 'Wh') * 0.5).round(0)
-      end
-      battery.rated_power_output_isdefaulted = true
+      apply_battery(battery, default_values)
     end
+  end
+
+  # Assigns default values for omitted optional inputs in the HPXML::Battery or HPXML::Vehicle objects
+  #
+  # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
+  # @param default_values [Hash] map of home battery or vehicle battery properties to default values
+  # @return [nil]
+  def self.apply_battery(battery, default_values)
+    # if battery.lifetime_model.nil?
+    #   battery.lifetime_model = default_values[:lifetime_model]
+    #   battery.lifetime_model_isdefaulted = true
+    # end
+    if battery.nominal_voltage.nil?
+      battery.nominal_voltage = default_values[:nominal_voltage] # V
+      battery.nominal_voltage_isdefaulted = true
+    end
+    if battery.nominal_capacity_kwh.nil? && battery.nominal_capacity_ah.nil?
+      # Calculate nominal capacity from usable capacity or rated power output if available
+      if not battery.usable_capacity_kwh.nil?
+        battery.nominal_capacity_kwh = (battery.usable_capacity_kwh / default_values[:usable_fraction]).round(2)
+        battery.nominal_capacity_kwh_isdefaulted = true
+      elsif not battery.usable_capacity_ah.nil?
+        battery.nominal_capacity_ah = (battery.usable_capacity_ah / default_values[:usable_fraction]).round(2)
+        battery.nominal_capacity_ah_isdefaulted = true
+      elsif battery.respond_to?(:rated_power_output) && (not battery.rated_power_output.nil?)
+        battery.nominal_capacity_kwh = (UnitConversions.convert(battery.rated_power_output, 'W', 'kW') / 0.5).round(2)
+        battery.nominal_capacity_kwh_isdefaulted = true
+      else
+        battery.nominal_capacity_kwh = default_values[:nominal_capacity_kwh] # kWh
+        battery.nominal_capacity_kwh_isdefaulted = true
+      end
+    end
+    if battery.usable_capacity_kwh.nil? && battery.usable_capacity_ah.nil?
+      # Calculate usable capacity from nominal capacity
+      if not battery.nominal_capacity_kwh.nil?
+        battery.usable_capacity_kwh = (battery.nominal_capacity_kwh * default_values[:usable_fraction]).round(2)
+        battery.usable_capacity_kwh_isdefaulted = true
+      elsif not battery.nominal_capacity_ah.nil?
+        battery.usable_capacity_ah = (battery.nominal_capacity_ah * default_values[:usable_fraction]).round(2)
+        battery.usable_capacity_ah_isdefaulted = true
+      end
+    end
+    return unless battery.respond_to?(:rated_power_output) && battery.rated_power_output.nil?
+
+    # Calculate rated power from nominal capacity
+    if not battery.nominal_capacity_kwh.nil?
+      battery.rated_power_output = (UnitConversions.convert(battery.nominal_capacity_kwh, 'kWh', 'Wh') * 0.5).round(0)
+    elsif not battery.nominal_capacity_ah.nil?
+      battery.rated_power_output = (UnitConversions.convert(Battery.get_kWh_from_Ah(battery.nominal_capacity_ah, battery.nominal_voltage), 'kWh', 'Wh') * 0.5).round(0)
+    end
+    battery.rated_power_output_isdefaulted = true
   end
 
   # Assigns default values for omitted optional inputs in the HPXML::ClothesWasher, HPXML::ClothesDryer,
@@ -3682,7 +4189,9 @@ module Defaults
   # @param schedules_file [SchedulesFile] SchedulesFile wrapper class instance of detailed schedule files
   # @return [nil]
   def self.apply_pools_and_permanent_spas(hpxml_bldg, schedules_file)
-    nbeds_eq = hpxml_bldg.building_construction.additional_properties.equivalent_number_of_bedrooms
+    nbeds = hpxml_bldg.building_construction.number_of_bedrooms
+    n_occ = hpxml_bldg.building_occupancy.number_of_residents
+    unit_type = hpxml_bldg.building_construction.residential_facility_type
     cfa = hpxml_bldg.building_construction.conditioned_floor_area
     hpxml_bldg.pools.each do |pool|
       next if pool.type == HPXML::TypeNone
@@ -3690,7 +4199,7 @@ module Defaults
       if pool.pump_type != HPXML::TypeNone
         # Pump
         if pool.pump_kwh_per_year.nil?
-          pool.pump_kwh_per_year = get_pool_pump_annual_energy(cfa, nbeds_eq)
+          pool.pump_kwh_per_year = get_pool_pump_annual_energy(cfa, nbeds, n_occ, unit_type)
           pool.pump_kwh_per_year_isdefaulted = true
         end
         if pool.pump_usage_multiplier.nil?
@@ -3716,7 +4225,7 @@ module Defaults
 
       # Heater
       if pool.heater_load_value.nil?
-        default_heater_load_units, default_heater_load_value = get_pool_heater_annual_energy(cfa, nbeds_eq, pool.heater_type)
+        default_heater_load_units, default_heater_load_value = get_pool_heater_annual_energy(cfa, nbeds, n_occ, unit_type, pool.heater_type)
         pool.heater_load_units = default_heater_load_units
         pool.heater_load_value = default_heater_load_value
         pool.heater_load_value_isdefaulted = true
@@ -3746,7 +4255,7 @@ module Defaults
       if spa.pump_type != HPXML::TypeNone
         # Pump
         if spa.pump_kwh_per_year.nil?
-          spa.pump_kwh_per_year = get_permanent_spa_pump_annual_energy(cfa, nbeds_eq)
+          spa.pump_kwh_per_year = get_permanent_spa_pump_annual_energy(cfa, nbeds, n_occ, unit_type)
           spa.pump_kwh_per_year_isdefaulted = true
         end
         if spa.pump_usage_multiplier.nil?
@@ -3772,7 +4281,7 @@ module Defaults
 
       # Heater
       if spa.heater_load_value.nil?
-        default_heater_load_units, default_heater_load_value = get_permanent_spa_heater_annual_energy(cfa, nbeds_eq, spa.heater_type)
+        default_heater_load_units, default_heater_load_value = get_permanent_spa_heater_annual_energy(cfa, nbeds, n_occ, unit_type, spa.heater_type)
         spa.heater_load_units = default_heater_load_units
         spa.heater_load_value = default_heater_load_value
         spa.heater_load_value_isdefaulted = true
@@ -3805,12 +4314,12 @@ module Defaults
   def self.apply_plug_loads(hpxml_bldg, schedules_file)
     cfa = hpxml_bldg.building_construction.conditioned_floor_area
     nbeds = hpxml_bldg.building_construction.number_of_bedrooms
-    nbeds_eq = hpxml_bldg.building_construction.additional_properties.equivalent_number_of_bedrooms
-    num_occ = hpxml_bldg.building_occupancy.number_of_residents
+    n_occ = hpxml_bldg.building_occupancy.number_of_residents
     unit_type = hpxml_bldg.building_construction.residential_facility_type
     hpxml_bldg.plug_loads.each do |plug_load|
-      if plug_load.plug_load_type == HPXML::PlugLoadTypeOther
-        default_annual_kwh, default_sens_frac, default_lat_frac = get_residual_mels_values(cfa, num_occ, unit_type)
+      case plug_load.plug_load_type
+      when HPXML::PlugLoadTypeOther
+        default_annual_kwh, default_sens_frac, default_lat_frac = get_residual_mels_values(cfa, n_occ, unit_type)
         if plug_load.kwh_per_year.nil?
           plug_load.kwh_per_year = default_annual_kwh
           plug_load.kwh_per_year_isdefaulted = true
@@ -3836,8 +4345,8 @@ module Defaults
           plug_load.monthly_multipliers = @default_schedules_csv_data[SchedulesFile::Columns[:PlugLoadsOther].name]['MonthlyScheduleMultipliers']
           plug_load.monthly_multipliers_isdefaulted = true
         end
-      elsif plug_load.plug_load_type == HPXML::PlugLoadTypeTelevision
-        default_annual_kwh, default_sens_frac, default_lat_frac = get_televisions_values(cfa, nbeds, num_occ, unit_type)
+      when HPXML::PlugLoadTypeTelevision
+        default_annual_kwh, default_sens_frac, default_lat_frac = get_televisions_values(cfa, nbeds, n_occ, unit_type)
         if plug_load.kwh_per_year.nil?
           plug_load.kwh_per_year = default_annual_kwh
           plug_load.kwh_per_year_isdefaulted = true
@@ -3863,7 +4372,7 @@ module Defaults
           plug_load.monthly_multipliers = @default_schedules_csv_data[SchedulesFile::Columns[:PlugLoadsTV].name]['MonthlyScheduleMultipliers']
           plug_load.monthly_multipliers_isdefaulted = true
         end
-      elsif plug_load.plug_load_type == HPXML::PlugLoadTypeElectricVehicleCharging
+      when HPXML::PlugLoadTypeElectricVehicleCharging
         default_annual_kwh = get_electric_vehicle_charging_annual_energy
         if plug_load.kwh_per_year.nil?
           plug_load.kwh_per_year = default_annual_kwh
@@ -3883,15 +4392,15 @@ module Defaults
           plug_load.weekday_fractions_isdefaulted = true
         end
         if plug_load.weekend_fractions.nil? && !schedules_file_includes_plug_loads_vehicle
-          plug_load.weekend_fractions = @default_schedules_csv_data[SchedulesFile::Columns[:PlugLoadsVehicle].name]['WeekdayScheduleFractions']
+          plug_load.weekend_fractions = @default_schedules_csv_data[SchedulesFile::Columns[:PlugLoadsVehicle].name]['WeekendScheduleFractions']
           plug_load.weekend_fractions_isdefaulted = true
         end
         if plug_load.monthly_multipliers.nil? && !schedules_file_includes_plug_loads_vehicle
           plug_load.monthly_multipliers = @default_schedules_csv_data[SchedulesFile::Columns[:PlugLoadsVehicle].name]['MonthlyScheduleMultipliers']
           plug_load.monthly_multipliers_isdefaulted = true
         end
-      elsif plug_load.plug_load_type == HPXML::PlugLoadTypeWellPump
-        default_annual_kwh = get_detault_well_pump_annual_energy(cfa, nbeds_eq)
+      when HPXML::PlugLoadTypeWellPump
+        default_annual_kwh = get_detault_well_pump_annual_energy(cfa, nbeds, n_occ, unit_type)
         if plug_load.kwh_per_year.nil?
           plug_load.kwh_per_year = default_annual_kwh
           plug_load.kwh_per_year_isdefaulted = true
@@ -3910,7 +4419,7 @@ module Defaults
           plug_load.weekday_fractions_isdefaulted = true
         end
         if plug_load.weekend_fractions.nil? && !schedules_file_includes_plug_loads_well_pump
-          plug_load.weekend_fractions = @default_schedules_csv_data[SchedulesFile::Columns[:PlugLoadsWellPump].name]['WeekdayScheduleFractions']
+          plug_load.weekend_fractions = @default_schedules_csv_data[SchedulesFile::Columns[:PlugLoadsWellPump].name]['WeekendScheduleFractions']
           plug_load.weekend_fractions_isdefaulted = true
         end
         if plug_load.monthly_multipliers.nil? && !schedules_file_includes_plug_loads_well_pump
@@ -3932,11 +4441,14 @@ module Defaults
   # @return [nil]
   def self.apply_fuel_loads(hpxml_bldg, schedules_file)
     cfa = hpxml_bldg.building_construction.conditioned_floor_area
-    nbeds_eq = hpxml_bldg.building_construction.additional_properties.equivalent_number_of_bedrooms
+    nbeds = hpxml_bldg.building_construction.number_of_bedrooms
+    n_occ = hpxml_bldg.building_occupancy.number_of_residents
+    unit_type = hpxml_bldg.building_construction.residential_facility_type
     hpxml_bldg.fuel_loads.each do |fuel_load|
-      if fuel_load.fuel_load_type == HPXML::FuelLoadTypeGrill
+      case fuel_load.fuel_load_type
+      when HPXML::FuelLoadTypeGrill
         if fuel_load.therm_per_year.nil?
-          fuel_load.therm_per_year = get_gas_grill_annual_energy(cfa, nbeds_eq)
+          fuel_load.therm_per_year = get_gas_grill_annual_energy(cfa, nbeds, n_occ, unit_type)
           fuel_load.therm_per_year_isdefaulted = true
         end
         if fuel_load.frac_sensible.nil?
@@ -3960,9 +4472,9 @@ module Defaults
           fuel_load.monthly_multipliers = @default_schedules_csv_data[SchedulesFile::Columns[:FuelLoadsGrill].name]['MonthlyScheduleMultipliers']
           fuel_load.monthly_multipliers_isdefaulted = true
         end
-      elsif fuel_load.fuel_load_type == HPXML::FuelLoadTypeLighting
+      when HPXML::FuelLoadTypeLighting
         if fuel_load.therm_per_year.nil?
-          fuel_load.therm_per_year = get_detault_gas_lighting_annual_energy(cfa, nbeds_eq)
+          fuel_load.therm_per_year = get_detault_gas_lighting_annual_energy(cfa, nbeds, n_occ, unit_type)
           fuel_load.therm_per_year_isdefaulted = true
         end
         if fuel_load.frac_sensible.nil?
@@ -3986,9 +4498,9 @@ module Defaults
           fuel_load.monthly_multipliers = @default_schedules_csv_data[SchedulesFile::Columns[:FuelLoadsLighting].name]['MonthlyScheduleMultipliers']
           fuel_load.monthly_multipliers_isdefaulted = true
         end
-      elsif fuel_load.fuel_load_type == HPXML::FuelLoadTypeFireplace
+      when HPXML::FuelLoadTypeFireplace
         if fuel_load.therm_per_year.nil?
-          fuel_load.therm_per_year = get_gas_fireplace_annual_energy(cfa, nbeds_eq)
+          fuel_load.therm_per_year = get_gas_fireplace_annual_energy(cfa, nbeds, n_occ, unit_type)
           fuel_load.therm_per_year_isdefaulted = true
         end
         if fuel_load.frac_sensible.nil?
@@ -4025,10 +4537,11 @@ module Defaults
   # @param runner [OpenStudio::Measure::OSRunner] Object typically used to display warnings
   # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
   # @param weather [WeatherFile] Weather object containing EPW information
+  # @param hpxml_header [HPXML::Header] HPXML Header object
   # @return [Array<Hash, Hash>] Maps of HPXML::Zones => DesignLoadValues object, HPXML::Spaces => DesignLoadValues object
-  def self.apply_hvac_sizing(runner, hpxml_bldg, weather)
+  def self.apply_hvac_sizing(runner, hpxml_bldg, weather, hpxml_header)
     hvac_systems = HVAC.get_hpxml_hvac_systems(hpxml_bldg)
-    _, all_zone_loads, all_space_loads = HVACSizing.calculate(runner, weather, hpxml_bldg, hvac_systems)
+    _, all_zone_loads, all_space_loads = HVACSizing.calculate(runner, weather, hpxml_bldg, hvac_systems, hpxml_header)
     return all_zone_loads, all_space_loads
   end
 
@@ -4050,21 +4563,22 @@ module Defaults
   def self.get_azimuth_from_orientation(orientation)
     return if orientation.nil?
 
-    if orientation == HPXML::OrientationNorth
+    case orientation
+    when HPXML::OrientationNorth
       return 0
-    elsif orientation == HPXML::OrientationNortheast
+    when HPXML::OrientationNortheast
       return 45
-    elsif orientation == HPXML::OrientationEast
+    when HPXML::OrientationEast
       return 90
-    elsif orientation == HPXML::OrientationSoutheast
+    when HPXML::OrientationSoutheast
       return 135
-    elsif orientation == HPXML::OrientationSouth
+    when HPXML::OrientationSouth
       return 180
-    elsif orientation == HPXML::OrientationSouthwest
+    when HPXML::OrientationSouthwest
       return 225
-    elsif orientation == HPXML::OrientationWest
+    when HPXML::OrientationWest
       return 270
-    elsif orientation == HPXML::OrientationNorthwest
+    when HPXML::OrientationNorthwest
       return 315
     end
 
@@ -4098,26 +4612,34 @@ module Defaults
   end
 
   # Gets the equivalent number of bedrooms for an operational calculation (i.e., when number
-  # of occupants are provided in the HPXML); this is an adjustment to the ANSI 301 or Building
-  # America equations, which are based on number of bedrooms.
+  # of occupants are provided in the HPXML); this is an adjustment to the ANSI/RESNET/ICC 301 or Building
+  # America equations, which are based on number of bedrooms. If an asset calculation (number
+  # of occupants provided), the number of bedrooms is simply returned.
   #
   # This is used to adjust occupancy-driven end uses from asset calculations (based on number
   # of bedrooms) to operational calculations (based on number of occupants).
   #
-  # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
+  # Source: 2020 RECS weighted regressions between NBEDS and NHSHLDMEM (sample weights = NWEIGHT)
+  #
+  # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Double] Equivalent number of bedrooms
-  def self.get_equivalent_nbeds_for_operational_calculation(hpxml_bldg)
-    n_occs = hpxml_bldg.building_occupancy.number_of_residents
-    unit_type = hpxml_bldg.building_construction.residential_facility_type
-    # Relations below come from 2020 RECS weighted regressions between NBEDS and NHSHLDMEM (sample weights = NWEIGHT)
-    if [HPXML::ResidentialTypeApartment].include? unit_type
-      return -1.36 + 1.49 * n_occs
-    elsif [HPXML::ResidentialTypeSFA].include? unit_type
-      return -1.98 + 1.89 * n_occs
-    elsif [HPXML::ResidentialTypeSFD].include? unit_type
-      return -2.19 + 2.08 * n_occs
-    elsif [HPXML::ResidentialTypeManufactured].include? unit_type
-      return -1.26 + 1.61 * n_occs
+  def self.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+    if n_occ.nil?
+      # No occupants specified, asset rating
+      return nbeds
+    end
+
+    case unit_type
+    when HPXML::ResidentialTypeApartment
+      return -1.36 + 1.49 * n_occ
+    when HPXML::ResidentialTypeSFA
+      return -1.98 + 1.89 * n_occ
+    when HPXML::ResidentialTypeSFD
+      return -2.19 + 2.08 * n_occ
+    when HPXML::ResidentialTypeManufactured
+      return -1.26 + 1.61 * n_occ
     else
       fail "Unexpected residential facility type: #{unit_type}."
     end
@@ -4134,20 +4656,16 @@ module Defaults
       next if heating_system.heating_system_fuel == HPXML::FuelTypeElectricity
       next unless HPXML::conditioned_locations_this_unit.include? heating_system.location
 
-      if [HPXML::HVACTypeFurnace,
-          HPXML::HVACTypeBoiler,
-          HPXML::HVACTypeWallFurnace,
-          HPXML::HVACTypeFloorFurnace,
-          HPXML::HVACTypeStove,
-          HPXML::HVACTypeSpaceHeater].include? heating_system.heating_system_type
+      case heating_system.heating_system_type
+      when HPXML::HVACTypeFurnace, HPXML::HVACTypeBoiler, HPXML::HVACTypeWallFurnace,
+          HPXML::HVACTypeFloorFurnace, HPXML::HVACTypeStove, HPXML::HVACTypeSpaceHeater
         if not heating_system.heating_efficiency_afue.nil?
           next if heating_system.heating_efficiency_afue >= 0.89
         elsif not heating_system.heating_efficiency_percent.nil?
           next if heating_system.heating_efficiency_percent >= 0.89
         end
-
         return true
-      elsif [HPXML::HVACTypeFireplace].include? heating_system.heating_system_type
+      when HPXML::HVACTypeFireplace
         return true
       end
     end
@@ -4257,8 +4775,8 @@ module Defaults
       HPXML::ExteriorShadingTypeDeciduousTree => 0.0, # Assume fully opaque
       HPXML::ExteriorShadingTypeEvergreenTree => 0.0, # Assume fully opaque
       HPXML::ExteriorShadingTypeOther => 0.5, # Assume half opaque
-      HPXML::ExteriorShadingTypeSolarFilm => 0.3, # Based on MulTEA engineering manual
-      HPXML::ExteriorShadingTypeSolarScreens => 0.7, # Based on MulTEA engineering manual
+      HPXML::ExteriorShadingTypeSolarFilm => 0.7, # Based on MulTEA engineering manual
+      HPXML::ExteriorShadingTypeSolarScreens => 0.3, # Based on MulTEA engineering manual
     }
 
     ext_sf_summer = c_map[window.exterior_shading_type]
@@ -4378,12 +4896,12 @@ module Defaults
   def self.get_weather_station_csv_data
     zipcode_csv_filepath = File.join(File.dirname(__FILE__), 'data', 'zipcode_weather_stations.csv')
 
-    if $zip_csv_data.nil?
+    if $weather_lookup_cache[:csv_data].nil?
       # Note: We don't use the CSV library here because it's slow for large files
-      $zip_csv_data = File.readlines(zipcode_csv_filepath).map(&:strip)
+      $weather_lookup_cache[:csv_data] = File.readlines(zipcode_csv_filepath).map { |r| r.strip.split(',') }
     end
 
-    return $zip_csv_data
+    return $weather_lookup_cache[:csv_data]
   end
 
   # Gets the default TMY3 EPW weather station for the specified zipcode. If the exact
@@ -4392,6 +4910,11 @@ module Defaults
   # @param zipcode [String] Zipcode of interest
   # @return [Hash] Mapping with keys for every column name in zipcode_weather_stations.csv
   def self.lookup_weather_data_from_zipcode(zipcode)
+    if not $weather_lookup_cache["zipcode_#{zipcode}"].nil?
+      # Use cache
+      return $weather_lookup_cache["zipcode_#{zipcode}"]
+    end
+
     begin
       zipcode3 = zipcode[0, 3]
       zipcode_int = Integer(Float(zipcode[0, 5])) # Convert to 5-digit integer
@@ -4406,13 +4929,11 @@ module Defaults
     col_names = nil
     zip_csv_data.each_with_index do |row, i|
       if i == 0 # header
-        col_names = row.split(',').map { |x| x.to_sym }
+        col_names = row.map { |x| x.to_sym }
         next
       end
-      next if row.nil?
-      next unless row.start_with?(zipcode3) # Only allow match if first 3 digits are the same
-
-      row = row.split(',')
+      next if row.nil? || row.empty?
+      next unless row[0].start_with?(zipcode3) # Only allow match if first 3 digits are the same
 
       if row[0].size != 5
         fail "Zip code '#{row[0]}' in zipcode_weather_stations.csv does not have 5 digits."
@@ -4426,15 +4947,17 @@ module Defaults
           weather_station[col_name] = row[j]
         end
       end
-      if distance == 0
-        return weather_station # Exact match
-      end
+      next unless distance == 0
+
+      $weather_lookup_cache["zipcode_#{zipcode}"] = weather_station
+      return weather_station # Exact match
     end
 
     if weather_station.empty?
       fail "Zip code '#{zipcode}' could not be found in zipcode_weather_stations.csv"
     end
 
+    $weather_lookup_cache["zipcode_#{zipcode}"] = weather_station
     return weather_station
   end
 
@@ -4443,30 +4966,34 @@ module Defaults
   # @param wmo [String] Weather station World Meteorological Organization (WMO) number
   # @return [Hash or nil] Mapping with keys for every column name in zipcode_weather_stations.csv if WMO is found, otherwise nil
   def self.lookup_weather_data_from_wmo(wmo)
+    if not $weather_lookup_cache["wmo_#{wmo}"].nil?
+      # Use cache
+      return $weather_lookup_cache["wmo_#{wmo}"]
+    end
+
     zip_csv_data = get_weather_station_csv_data()
 
+    weather_station = {}
     col_names = nil
     wmo_idx = nil
     zip_csv_data.each_with_index do |row, i|
       if i == 0 # header
-        col_names = row.split(',').map { |x| x.to_sym }
+        col_names = row.map { |x| x.to_sym }
         wmo_idx = col_names.index(:station_wmo)
         next
       end
-      next if row.nil?
-
-      row = row.split(',')
+      next if row.nil? || row.empty?
 
       next unless row[wmo_idx] == wmo
 
-      weather_station = {}
       col_names.each_with_index do |col_name, j|
         weather_station[col_name] = row[j]
       end
-      return weather_station
+      break
     end
 
-    return
+    $weather_lookup_cache["wmo_#{wmo}"] = weather_station
+    return weather_station
   end
 
   # Gets the default number of bathrooms in the dwelling unit.
@@ -4575,10 +5102,12 @@ module Defaults
 
   # Gets the default piping length for a standard hot water distribution system.
   #
-  # Per ANSI 301-2022, the length of hot water piping from the hot water heater to the farthest
+  # The length of hot water piping from the hot water heater to the farthest
   # hot water fixture, measured longitudinally from plans, assuming the hot water piping does
   # not run diagonally, plus 10 feet of piping for each floor level, plus 5 feet of piping for
   # unconditioned basements (if any).
+  #
+  # Source: ANSI/RESNET/ICC 301-2022
   #
   # @param has_uncond_bsmnt [Boolean] Whether the dwelling unit has an unconditioned basement
   # @param has_cond_bsmnt [Boolean] Whether the dwelling unit has a conditioned basement
@@ -4591,15 +5120,17 @@ module Defaults
       bsmnt = 1
     end
 
-    return 2.0 * (cfa / ncfl)**0.5 + 10.0 * ncfl + 5.0 * bsmnt # PipeL in ANSI 301
+    return 2.0 * (cfa / ncfl)**0.5 + 10.0 * ncfl + 5.0 * bsmnt # PipeL in ANSI/RESNET/ICC 301
   end
 
   # Gets the default loop piping length for a recirculation hot water distribution system.
   #
-  # Per ANSI 301-2022, the recirculation loop length including both supply and return sides,
+  # The recirculation loop length including both supply and return sides,
   # measured longitudinally from plans, assuming the hot water piping does not run diagonally,
   # plus 20 feet of piping for each floor level greater than one plus 10 feet of piping for
   # unconditioned basements.
+  #
+  # Source: ANSI/RESNET/ICC 301-2022
   #
   # @param has_uncond_bsmnt [Boolean] Whether the dwelling unit has an unconditioned basement
   # @param has_cond_bsmnt [Boolean] Whether the dwelling unit has a conditioned basement
@@ -4608,32 +5139,34 @@ module Defaults
   # @return [Double] Piping length (ft)
   def self.get_recirc_loop_length(has_uncond_bsmnt, has_cond_bsmnt, cfa, ncfl)
     std_pipe_length = get_std_pipe_length(has_uncond_bsmnt, has_cond_bsmnt, cfa, ncfl)
-    return 2.0 * std_pipe_length - 20.0 # refLoopL in ANSI 301
+    return 2.0 * std_pipe_length - 20.0 # refLoopL in ANSI/RESNET/ICC 301
   end
 
   # Gets the default branch piping length for a recirculation hot water distribution system.
   #
-  # Per ANSI 301-2022, the length of the branch hot water piping from the recirculation loop
+  # The length of the branch hot water piping from the recirculation loop
   # to the farthest hot water fixture from the recirculation loop, measured longitudinally
   # from plans, assuming the branch hot water piping does not run diagonally.
   #
+  # Source: ANSI/RESNET/ICC 301-2022
+  #
   # @return [Double] Piping length (ft)
   def self.get_recirc_branch_length()
-    return 10.0 # See pRatio in ANSI 301
+    return 10.0 # See pRatio in ANSI/RESNET/ICC 301
   end
 
   # Gets the default pump power for a recirculation system.
   #
   # @return [Double] Pump power (W)
   def self.get_recirc_pump_power()
-    return 50.0 # See pumpW in ANSI 301
+    return 50.0 # See pumpW in ANSI/RESNET/ICC 301
   end
 
   # Gets the default pump power for a shared recirculation system.
   #
   # @return [Double] Pump power (W)
   def self.get_shared_recirc_pump_power()
-    # From ANSI/RESNET/ICC 301-2019 Equation 4.2-15b
+    # From ANSI/RESNET/ICC 301-2022 Eq. 4.2-43b
     pump_horsepower = 0.25
     motor_efficiency = 0.85
     pump_kw = pump_horsepower * 0.746 / motor_efficiency
@@ -4667,9 +5200,11 @@ module Defaults
   # Window represents multiple windows, the value is calculated as the total window area
   # for any operable windows divided by the total window area.
   #
+  # Source: ANSI/RESNET/ICC 301-2025
+  #
   # @return [Double] Operable fraction (frac)
   def self.get_fraction_of_windows_operable()
-    return 0.67 # 67% per ANSI 301-2025
+    return 0.67 # 67%
   end
 
   # Gets the default specific leakage area (SLA) for a vented attic.
@@ -4677,7 +5212,7 @@ module Defaults
   #
   # @return [Double] Specific leakage area (frac)
   def self.get_vented_attic_sla()
-    return (1.0 / 300.0).round(6) # ANSI 301, Table 4.2.2(1) - Attics
+    return (1.0 / 300.0).round(6) # ANSI/RESNET/ICC 301, Table 4.2.2(1) - Attics
   end
 
   # Gets the default specific leakage area (SLA) for a vented crawlspace.
@@ -4685,7 +5220,7 @@ module Defaults
   #
   # @return [Double] Specific leakage area (frac)
   def self.get_vented_crawl_sla()
-    return (1.0 / 150.0).round(6) # ANSI 301, Table 4.2.2(1) - Crawlspaces
+    return (1.0 / 150.0).round(6) # ANSI/RESNET/ICC 301, Table 4.2.2(1) - Crawlspaces
   end
 
   # Gets the default whole-home mechanical ventilation fan flow rate required to
@@ -4700,40 +5235,44 @@ module Defaults
   # @param eri_version [String] Version of the ANSI/RESNET/ICC 301 Standard to use for equations/assumptions
   # @return [Double] Fan flow rate (cfm)
   def self.get_mech_vent_flow_rate_for_vent_fan(hpxml_bldg, vent_fan, weather, eri_version)
-    # Calculates Qfan cfm requirement per ASHRAE 62.2 / ANSI 301
+    # Calculates Qfan cfm requirement per ASHRAE 62.2 / ANSI/RESNET/ICC 301
     cfa = hpxml_bldg.building_construction.conditioned_floor_area
     nbeds = hpxml_bldg.building_construction.number_of_bedrooms
     infil_values = Airflow.get_values_from_air_infiltration_measurements(hpxml_bldg, weather)
-    bldg_type = hpxml_bldg.building_construction.residential_facility_type
+    unit_type = hpxml_bldg.building_construction.residential_facility_type
 
     nl = Airflow.get_infiltration_NL_from_SLA(infil_values[:sla], infil_values[:height])
-    q_inf = Airflow.get_infiltration_Qinf_from_NL(nl, weather, cfa)
+    q_inf = Airflow.get_mech_vent_qinf_cfm(nl, weather, cfa)
     q_tot = Airflow.get_mech_vent_qtot_cfm(nbeds, cfa)
     if vent_fan.is_balanced
       is_balanced, frac_imbal = true, 0.0
     else
       is_balanced, frac_imbal = false, 1.0
     end
-    q_fan = Airflow.get_mech_vent_qfan_cfm(q_tot, q_inf, is_balanced, frac_imbal, infil_values[:a_ext], bldg_type, eri_version, vent_fan.hours_in_operation)
+    q_fan = Airflow.get_mech_vent_qfan_cfm(q_tot, q_inf, is_balanced, frac_imbal, infil_values[:a_ext], unit_type, eri_version, vent_fan.hours_in_operation)
     return q_fan
   end
 
   # Gets the default whole-home mechanical ventilation fan efficiency.
   #
+  # Source: ANSI/RESNET/ICC 301
+  #
   # @param vent_fan [HPXML::VentilationFan] The HPXML ventilation fan of interest
   # @return [Double] Fan efficiency (W/cfm)
   def self.get_mech_vent_fan_efficiency(vent_fan)
-    # Returns fan power in W/cfm, based on ANSI 301
     if vent_fan.is_shared_system
       return 1.00 # Table 4.2.2(1) Note (n)
-    elsif [HPXML::MechVentTypeSupply, HPXML::MechVentTypeExhaust].include? vent_fan.fan_type
+    end
+
+    case vent_fan.fan_type
+    when HPXML::MechVentTypeSupply, HPXML::MechVentTypeExhaust
       return 0.35
-    elsif [HPXML::MechVentTypeBalanced].include? vent_fan.fan_type
+    when HPXML::MechVentTypeBalanced
       return 0.70
-    elsif [HPXML::MechVentTypeERV, HPXML::MechVentTypeHRV].include? vent_fan.fan_type
+    when HPXML::MechVentTypeERV, HPXML::MechVentTypeHRV
       return 1.00
     else
-      fail "Unexpected fan_type: '#{fan_type}'."
+      fail "Unexpected fan_type: '#{vent_fan.fan_type}'."
     end
   end
 
@@ -4746,7 +5285,7 @@ module Defaults
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param ncfl_ag [Double] Number of conditioned floors above grade
   # @param year_built [Integer] Year the dwelling unit is built
-  # @param avg_ceiling_height [Double] Average floor to ceiling height within conditioned space (ft2)
+  # @param avg_ceiling_height [Double] Average floor to ceiling height within conditioned space (ft)
   # @param infil_volume [Double] Volume of space most impacted by the blower door test (ft3)
   # @param iecc_cz [String] IECC climate zone
   # @param fnd_type_fracs [Hash] Map of foundation type => area fraction
@@ -4788,27 +5327,28 @@ module Defaults
 
     # Climate zone
     c_iecc = nil
-    if (iecc_cz == '1A') || (iecc_cz == '2A')
+    case iecc_cz
+    when '1A', '2A'
       c_iecc = 0.4727
-    elsif iecc_cz == '3A'
+    when '3A'
       c_iecc = 0.2529
-    elsif iecc_cz == '4A'
+    when '4A'
       c_iecc = 0.3261
-    elsif iecc_cz == '5A'
+    when '5A'
       c_iecc = 0.1118
-    elsif (iecc_cz == '6A') || (iecc_cz == '7')
+    when '6A', '7'
       c_iecc = 0.0
-    elsif (iecc_cz == '2B') || (iecc_cz == '3B')
+    when '2B', '3B'
       c_iecc = -0.03755
-    elsif (iecc_cz == '4B') || (iecc_cz == '5B')
+    when '4B', '5B'
       c_iecc = -0.008774
-    elsif iecc_cz == '6B'
+    when '6B'
       c_iecc = 0.01944
-    elsif iecc_cz == '3C'
+    when '3C'
       c_iecc = 0.04827
-    elsif iecc_cz == '4C'
+    when '4C'
       c_iecc = 0.2584
-    elsif iecc_cz == '8'
+    when '8'
       c_iecc = -0.5119
     else
       fail "Unexpected IECC climate zone: #{c_iecc}"
@@ -4852,7 +5392,9 @@ module Defaults
     # Specific Leakage Area
     sla = nl / (1000.0 * ncfl_ag**0.3)
 
-    ach50 = Airflow.get_infiltration_ACH50_from_SLA(sla, 0.65, cfa, infil_volume)
+    # ACH50
+    infil_avg_ceil_height = infil_volume / cfa
+    ach50 = Airflow.get_infiltration_ACH50_from_SLA(sla, infil_avg_ceil_height)
 
     return ach50
   end
@@ -4869,7 +5411,7 @@ module Defaults
   # @param f_rect [Double] The fraction of duct length that is rectangular (not round)
   # @return [Double] Duct effective R-value (hr-ft2-F/Btu)
   def self.get_duct_effective_r_value(r_nominal, side, buried_level, f_rect)
-    # This methodology has been proposed by NREL for ANSI 301-2025.
+    # This methodology has been proposed by NREL for ANSI/RESNET/ICC 301-2025.
     if buried_level == HPXML::DuctBuriedInsulationNone
       if r_nominal <= 0
         # Uninsulated ducts are set to R-1.7 based on ASHRAE HOF and the above paper.
@@ -4898,21 +5440,23 @@ module Defaults
       if side == HPXML::DuctTypeSupply
         # Equations derived from Table 13 in https://www.nrel.gov/docs/fy13osti/55876.pdf
         # assuming 6-in supply diameter
-        if buried_level == HPXML::DuctBuriedInsulationPartial
+        case buried_level
+        when HPXML::DuctBuriedInsulationPartial
           return (4.28 + 0.65 * r_nominal).round(2)
-        elsif buried_level == HPXML::DuctBuriedInsulationFull
+        when HPXML::DuctBuriedInsulationFull
           return (6.22 + 0.89 * r_nominal).round(2)
-        elsif buried_level == HPXML::DuctBuriedInsulationDeep
+        when HPXML::DuctBuriedInsulationDeep
           return (13.41 + 0.63 * r_nominal).round(2)
         end
       elsif side == HPXML::DuctTypeReturn
         # Equations derived from Table 13 in https://www.nrel.gov/docs/fy13osti/55876.pdf
         # assuming 14-in return diameter
-        if buried_level == HPXML::DuctBuriedInsulationPartial
+        case buried_level
+        when HPXML::DuctBuriedInsulationPartial
           return (4.62 + 1.31 * r_nominal).round(2)
-        elsif buried_level == HPXML::DuctBuriedInsulationFull
+        when HPXML::DuctBuriedInsulationFull
           return (8.91 + 1.29 * r_nominal).round(2)
-        elsif buried_level == HPXML::DuctBuriedInsulationDeep
+        when HPXML::DuctBuriedInsulationDeep
           return (18.64 + 1.0 * r_nominal).round(2)
         end
       end
@@ -4926,14 +5470,19 @@ module Defaults
   # @return [String] Water heater location (HPXML::LocationXXX)
   def self.get_water_heater_location(hpxml_bldg, iecc_zone = nil)
     # ANSI/RESNET/ICC 301-2022C
-    if ['1A', '1B', '1C', '2A', '2B', '2C', '3A', '3B', '3C'].include? iecc_zone
+    case iecc_zone
+    when '1A', '1B', '1C', '2A', '2B', '2C', '3A', '3B', '3C'
       location_hierarchy = [HPXML::LocationGarage,
                             HPXML::LocationConditionedSpace]
-    elsif ['4A', '4B', '4C', '5A', '5B', '5C', '6A', '6B', '6C', '7', '8'].include? iecc_zone
+    when '4A', '4B', '4C', '5A', '5B', '5C', '6A', '6B', '6C', '7', '8'
       location_hierarchy = [HPXML::LocationBasementUnconditioned,
                             HPXML::LocationBasementConditioned,
                             HPXML::LocationConditionedSpace]
-    elsif iecc_zone.nil?
+    else
+      if not iecc_zone.nil?
+        fail "Unexpected IECC zone: #{iecc_zone}."
+      end
+
       location_hierarchy = [HPXML::LocationBasementConditioned,
                             HPXML::LocationBasementUnconditioned,
                             HPXML::LocationConditionedSpace]
@@ -4966,9 +5515,9 @@ module Defaults
   def self.get_water_heater_performance_adjustment(water_heating_system)
     return unless water_heating_system.water_heater_type == HPXML::WaterHeaterTypeTankless
     if not water_heating_system.energy_factor.nil?
-      return 0.92 # Applies to EF, ANSI 301-2019
+      return 0.92 # Applies to EF, ANSI/RESNET/ICC 301-2022
     elsif not water_heating_system.uniform_energy_factor.nil?
-      return 0.94 # Applies to UEF, ANSI 301-2019
+      return 0.94 # Applies to UEF, ANSI/RESNET/ICC 301-2022
     end
   end
 
@@ -5038,15 +5587,16 @@ module Defaults
     end
 
     if fuel != HPXML::FuelTypeElectricity # Non-electric tank WHs
-      if nbeds <= 2
+      case nbeds
+      when 0, 1, 2
         return 30.0
-      elsif nbeds == 3
+      when 3
         if nbaths <= 1.5
           return 30.0
         else
           return 40.0
         end
-      elsif nbeds == 4
+      when 4
         if nbaths <= 2.5
           return 40.0
         else
@@ -5056,27 +5606,28 @@ module Defaults
         return 50.0
       end
     else
-      if nbeds == 1
+      case nbeds
+      when 0, 1
         return 30.0
-      elsif nbeds == 2
+      when 2
         if nbaths <= 1.5
           return 30.0
         else
           return 40.0
         end
-      elsif nbeds == 3
+      when 3
         if nbaths <= 1.5
           return 40.0
         else
           return 50.0
         end
-      elsif nbeds == 4
+      when 4
         if nbaths <= 2.5
           return 50.0
         else
           return 66.0
         end
-      elsif nbeds == 5
+      when 5
         return 66.0
       else
         return 80.0
@@ -5195,37 +5746,34 @@ module Defaults
   def self.get_window_ufactor_shgc(window)
     type = window.is_a?(HPXML::Window) ? 'window' : 'skylight'
 
-    if window.glass_layers == HPXML::WindowLayersSinglePane
+    case window.glass_layers
+    when HPXML::WindowLayersSinglePane
       n_panes = 1
-    elsif window.glass_layers == HPXML::WindowLayersDoublePane
+    when HPXML::WindowLayersDoublePane
       n_panes = 2
-    elsif window.glass_layers == HPXML::WindowLayersTriplePane
+    when HPXML::WindowLayersTriplePane
       n_panes = 3
-    elsif window.glass_layers == HPXML::WindowLayersGlassBlock
+    when HPXML::WindowLayersGlassBlock
       return [0.6, 0.6] # From https://www.federalregister.gov/documents/2016/06/17/2016-13547/energy-conservation-standards-for-manufactured-housing
     end
 
-    if [HPXML::WindowFrameTypeAluminum,
-        HPXML::WindowFrameTypeMetal].include? window.frame_type
+    case window.frame_type
+    when HPXML::WindowFrameTypeAluminum, HPXML::WindowFrameTypeMetal
       is_metal_frame = true
-    elsif [HPXML::WindowFrameTypeWood,
-           HPXML::WindowFrameTypeVinyl,
-           HPXML::WindowFrameTypeFiberglass].include? window.frame_type
+    when HPXML::WindowFrameTypeWood, HPXML::WindowFrameTypeVinyl, HPXML::WindowFrameTypeFiberglass
       is_metal_frame = false
     else
       fail "Unexpected #{type.downcase} frame type."
     end
 
-    if [HPXML::WindowGlassTypeClear,
-        HPXML::WindowGlassTypeReflective].include? window.glass_type
+    case window.glass_type
+    when HPXML::WindowGlassTypeClear, HPXML::WindowGlassTypeReflective
       glass_type = 'clear'
-    elsif [HPXML::WindowGlassTypeTinted,
-           HPXML::WindowGlassTypeTintedReflective].include? window.glass_type
+    when HPXML::WindowGlassTypeTinted, HPXML::WindowGlassTypeTintedReflective
       glass_type = 'tinted'
-    elsif [HPXML::WindowGlassTypeLowE,
-           HPXML::WindowGlassTypeLowEHighSolarGain].include? window.glass_type
+    when HPXML::WindowGlassTypeLowE, HPXML::WindowGlassTypeLowEHighSolarGain
       glass_type = 'low_e_insulating'
-    elsif [HPXML::WindowGlassTypeLowELowSolarGain].include? window.glass_type
+    when HPXML::WindowGlassTypeLowELowSolarGain
       glass_type = 'low_e_solar_control'
     else
       fail "Unexpected #{type.downcase} glass type."
@@ -5233,16 +5781,19 @@ module Defaults
 
     if window.glass_layers == HPXML::WindowLayersSinglePane
       gas_fill = 'none'
-    elsif [HPXML::WindowGasAir].include? window.gas_fill
-      gas_fill = 'air'
-    elsif [HPXML::WindowGasArgon,
+    else
+      case window.gas_fill
+      when HPXML::WindowGasAir
+        gas_fill = 'air'
+      when HPXML::WindowGasArgon,
            HPXML::WindowGasKrypton,
            HPXML::WindowGasXenon,
            HPXML::WindowGasNitrogen,
-           HPXML::WindowGasOther].include? window.gas_fill
-      gas_fill = 'gas'
-    else
-      fail "Unexpected #{type.downcase} gas type."
+           HPXML::WindowGasOther
+        gas_fill = 'gas'
+      else
+        fail "Unexpected #{type.downcase} gas type."
+      end
     end
 
     # Lookup values
@@ -5297,25 +5848,13 @@ module Defaults
   # Gets the default compressor type for a HVAC system.
   #
   # @param hvac_type [String] The type of cooling system or heat pump (HPXML::HVACTypeXXX)
-  # @param seer [Double] Cooling efficiency
   # @return [String] Compressor type (HPXML::HVACCompressorTypeXXX)
-  def self.get_hvac_compressor_type(hvac_type, seer)
-    if [HPXML::HVACTypeCentralAirConditioner,
-        HPXML::HVACTypeHeatPumpAirToAir].include? hvac_type
-      if seer <= 15
-        return HPXML::HVACCompressorTypeSingleStage
-      elsif seer <= 21
-        return HPXML::HVACCompressorTypeTwoStage
-      elsif seer > 21
-        return HPXML::HVACCompressorTypeVariableSpeed
-      end
-    elsif [HPXML::HVACTypeMiniSplitAirConditioner,
-           HPXML::HVACTypeHeatPumpMiniSplit].include? hvac_type
-      return HPXML::HVACCompressorTypeVariableSpeed
-    elsif [HPXML::HVACTypePTAC,
-           HPXML::HVACTypeHeatPumpPTHP,
-           HPXML::HVACTypeHeatPumpRoom,
-           HPXML::HVACTypeRoomAirConditioner].include? hvac_type
+  def self.get_hvac_compressor_type(hvac_type)
+    case hvac_type
+    when HPXML::HVACTypePTAC,
+         HPXML::HVACTypeHeatPumpPTHP,
+         HPXML::HVACTypeHeatPumpRoom,
+         HPXML::HVACTypeRoomAirConditioner
       return HPXML::HVACCompressorTypeSingleStage
     end
     return
@@ -5323,18 +5862,20 @@ module Defaults
 
   # Gets the default fan power for a ceiling fan.
   #
+  # Source: ANSI/RESNET/ICC 301
+  #
   # @return [Double] Fan power (W)
   def self.get_ceiling_fan_power()
-    # Per ANSI/RESNET/ICC 301
     return 42.6
   end
 
   # Gets the default quantity of ceiling fans.
   #
+  # Source: ANSI/RESNET/ICC 301
+  #
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
   # @return [Integer] Number of ceiling fans
   def self.get_ceiling_fan_quantity(nbeds)
-    # Per ANSI/RESNET/ICC 301
     return nbeds + 1
   end
 
@@ -5367,38 +5908,59 @@ module Defaults
   # Gets the default supply/return surface areas for a duct.
   #
   # @param duct_type [String] Whether the duct is on the supply or return side (HPXML::DuctTypeXXX)
+  # @param duct_location [String] Location of the ducts (HPXML::LocationXXX)
+  # @param ncfl [Double] Number of conditioned floors in the dwelling unit
   # @param ncfl_ag [Double] Number of conditioned floors above grade in the dwelling unit
   # @param cfa_served [Double] Dwelling unit conditioned floor area served by this distribution system (ft^2)
   # @param n_returns [Integer] Number of return registers
   # @return [Array<Double, Double>] Primary/secondary duct surface areas (ft^2)
-  def self.get_duct_surface_area(duct_type, ncfl_ag, cfa_served, n_returns)
+  def self.get_duct_surface_area(duct_type, duct_location, ncfl, ncfl_ag, cfa_served, n_returns)
     # Equations based on ASHRAE 152
     # https://www.energy.gov/eere/buildings/downloads/ashrae-standard-152-spreadsheet
 
-    # Fraction of primary ducts (ducts outside conditioned space)
-    f_out = get_duct_outside_fraction(ncfl_ag)
+    # Fraction of ducts in primary location (ducts outside secondary location, i.e., conditioned space)
+    f_primary = get_duct_primary_fraction(duct_location, ncfl, ncfl_ag)
 
     if duct_type == HPXML::DuctTypeSupply
-      primary_duct_area = 0.27 * cfa_served * f_out
-      secondary_duct_area = 0.27 * cfa_served * (1.0 - f_out)
+      primary_duct_area = 0.27 * cfa_served * f_primary
+      secondary_duct_area = 0.27 * cfa_served * (1.0 - f_primary)
     elsif duct_type == HPXML::DuctTypeReturn
       b_r = (n_returns < 6) ? (0.05 * n_returns) : 0.25
-      primary_duct_area = b_r * cfa_served * f_out
-      secondary_duct_area = b_r * cfa_served * (1.0 - f_out)
+      primary_duct_area = b_r * cfa_served * f_primary
+      secondary_duct_area = b_r * cfa_served * (1.0 - f_primary)
     end
 
     return primary_duct_area, secondary_duct_area
   end
 
-  # Gets the default fraction of duct surface area outside conditioned space.
+  # Gets the default fraction of duct surface area in the primary location.
   #
+  # @param duct_location [String] Location of the ducts (HPXML::LocationXXX)
+  # @param ncfl [Double] Number of conditioned floors in the dwelling unit
   # @param ncfl_ag [Double] Number of conditioned floors above grade in the dwelling unit
-  # @return [Double] Fraction outside conditioned space
-  def self.get_duct_outside_fraction(ncfl_ag)
+  # @return [Double] Fraction in primary location
+  def self.get_duct_primary_fraction(duct_location, ncfl, ncfl_ag)
     # Equation based on ASHRAE 152
     # https://www.energy.gov/eere/buildings/downloads/ashrae-standard-152-spreadsheet
-    f_out = (ncfl_ag <= 1) ? 1.0 : 0.75
-    return f_out
+
+    # Example logic:
+    #
+    # =========================    ==============    =========
+    # Bldg Type                    Duct Location     f_primary
+    # =========================    ==============    =========
+    # 1-story, crawl, attic        crawl or attic    1.0
+    # 1-story, cond bsmt, attic    cond bsmt         1.0
+    # 1-story, cond bsmt, attic    attic             0.75 (some ducts must run from attic to cond bsmt)
+    # 2-story, crawl, attic	       crawl        	   0.75 (some ducts must run from crawl to 2nd story)
+    # 2-story, crawl, attic	       attic        	   0.75 (some ducts must run from attic to 1st story)
+    # =========================    ==============    =========
+
+    if [HPXML::LocationAtticUnvented, HPXML::LocationAtticVented].include? duct_location
+      f_primary = (ncfl <= 1) ? 1.0 : 0.75
+    else
+      f_primary = (ncfl_ag <= 1) ? 1.0 : 0.75
+    end
+    return f_primary
   end
 
   # Gets the default pump power for a closed loop ground-source heat pump.
@@ -5474,8 +6036,9 @@ module Defaults
     end
   end
 
-  # Gets the default interior/garage/exterior lighting fractions per ANSI/RESNET/ICC 301.
-  # Used by OS-ERI, OS-HEScore, etc.
+  # Gets the default interior/garage/exterior lighting fractions. Used by OS-ERI, OS-HEScore, etc.
+  #
+  # Source: ANSI/RESNET/ICC 301
   #
   # @return [Hash] Map of [HPXML::LocationXXX, HPXML::LightingTypeXXX] => lighting fraction
   def self.get_lighting_fractions()
@@ -5492,13 +6055,14 @@ module Defaults
     return ltg_fracs
   end
 
-  # Gets the default heating setpoints per ANSI/RESNET/ICC 301.
+  # Gets the default heating setpoints.
+  #
+  # Source: ANSI/RESNET/ICC 301
   #
   # @param control_type [String] Thermostat control type (HPXML::HVACControlTypeXXX)
   # @param eri_version [String] Version of the ANSI/RESNET/ICC 301 Standard to use for equations/assumptions
   # @return [Array<String, String>] 24 hourly comma-separated weekday and weekend setpoints
   def self.get_heating_setpoint(control_type, eri_version)
-    # Per ANSI/RESNET/ICC 301
     htg_wd_setpoints = '68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68'
     htg_we_setpoints = '68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68'
     if control_type == HPXML::HVACControlTypeProgrammable
@@ -5515,13 +6079,14 @@ module Defaults
     return htg_wd_setpoints, htg_we_setpoints
   end
 
-  # Gets the default cooling setpoints per ANSI/RESNET/ICC 301.
+  # Gets the default cooling setpoints.
+  #
+  # Source: ANSI/RESNET/ICC 301
   #
   # @param control_type [String] Thermostat control type (HPXML::HVACControlTypeXXX)
   # @param eri_version [String] Version of the ANSI/RESNET/ICC 301 Standard to use for equations/assumptions
   # @return [Array<String, String>] 24 hourly comma-separated weekday and weekend setpoints
   def self.get_cooling_setpoint(control_type, eri_version)
-    # Per ANSI/RESNET/ICC 301
     clg_wd_setpoints = '78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78'
     clg_we_setpoints = '78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78'
     if control_type == HPXML::HVACControlTypeProgrammable
@@ -5545,28 +6110,654 @@ module Defaults
   # @return [Array<Double, Double>] Temperature (F), heating capacity retention at the temperature (frac)
   def self.get_heating_capacity_retention(compressor_type, hspf = nil)
     retention_temp = 5.0
-    if [HPXML::HVACCompressorTypeSingleStage, HPXML::HVACCompressorTypeTwoStage].include? compressor_type
+    case compressor_type
+    when HPXML::HVACCompressorTypeSingleStage, HPXML::HVACCompressorTypeTwoStage
       retention_fraction = 0.425
-    elsif [HPXML::HVACCompressorTypeVariableSpeed].include? compressor_type
+    when HPXML::HVACCompressorTypeVariableSpeed
       # Default maximum capacity maintenance based on NEEP data for all var speed heat pump types, if not provided
       retention_fraction = (0.0461 * hspf + 0.1594).round(4)
     end
     return retention_temp, retention_fraction
   end
 
-  # Gets a 12-element array of 1s and 0s that reflects months for which the ceiling fan operates
-  # (i.e., when the average drybulb temperature is greater than 63F, per ANSI/RESNET/ICC 301).
+  # Gets the monthly ceiling fan operation schedule.
+  #
+  # Source: ANSI/RESNET/ICC 301
   #
   # @param weather [WeatherFile] Weather object containing EPW information
   # @return [Array<Integer>] monthly array of 1s and 0s
   def self.get_ceiling_fan_months(weather)
     months = [0] * 12
     weather.data.MonthlyAvgDrybulbs.each_with_index do |val, m|
-      next unless val > 63.0 # F
+      next unless val > 63.0 # Ceiling fan operates when average drybulb temperature is greater than 63F
 
       months[m] = 1
     end
     return months
+  end
+
+  # Returns the number of breaker spaces based on rated power and voltage.
+  #
+  # @param watts [Double] power rating (W)
+  # @param voltage [String] '120' or '240'
+  # @param max_amps [Double] maximum amperage (A)
+  # @return [Integer] the number of breaker spaces
+  def self.get_breaker_spaces_from_power_watts_voltage_amps(watts, voltage, max_amps)
+    return 0 if watts == 0
+
+    # Note that default_panels.csv has a Breaker Spaces column manually populated based on the following calculation.
+    # If max_amps were to change, for example, the value in Breaker Spaces may change.
+    required_amperage = watts / Float(voltage)
+    num_branches = (required_amperage / max_amps).ceil
+    num_breakers = num_branches * Integer(Float(voltage) / 120)
+    return num_breakers
+  end
+
+  # Gets the default voltage for a branch circuit based on attached component.
+  #
+  # @param branch_circuit [HPXML::BranchCircuit] Object that defines a single electric panel branch circuit
+  # @return [String] '120' or '240'
+  def self.get_branch_circuit_voltage_default_values(branch_circuit)
+    voltages = []
+    branch_circuit.components.each do |component|
+      if component.is_a?(HPXML::HeatingSystem)
+        if component.heating_system_fuel == HPXML::FuelTypeElectricity
+          voltages << HPXML::ElectricPanelVoltage240
+        end
+      elsif component.is_a?(HPXML::CoolingSystem)
+        if component.cooling_system_type != HPXML::HVACTypeRoomAirConditioner
+          voltages << HPXML::ElectricPanelVoltage240
+        end
+      elsif component.is_a?(HPXML::HeatPump)
+        if component.heat_pump_fuel == HPXML::FuelTypeElectricity
+          voltages << HPXML::ElectricPanelVoltage240
+        end
+      elsif component.is_a?(HPXML::PVSystem)
+        voltages << HPXML::ElectricPanelVoltage240
+      elsif component.is_a?(HPXML::WaterHeatingSystem) ||
+            component.is_a?(HPXML::ClothesDryer) ||
+            component.is_a?(HPXML::CookingRange)
+        if component.fuel_type == HPXML::FuelTypeElectricity
+          voltages << HPXML::ElectricPanelVoltage240
+        end
+      elsif component.is_a?(HPXML::PermanentSpa) ||
+            component.is_a?(HPXML::Pool)
+        if branch_circuit.component_idrefs.include?(component.pump_id)
+          voltages << HPXML::ElectricPanelVoltage240
+        elsif branch_circuit.component_idrefs.include?(component.heater_id)
+          if [HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(component.heater_type)
+            voltages << HPXML::ElectricPanelVoltage240
+          end
+        end
+      elsif component.is_a?(HPXML::PlugLoad)
+        if component.plug_load_type == HPXML::PlugLoadTypeWellPump
+          voltages << HPXML::ElectricPanelVoltage240
+        end
+      end
+    end
+    if voltages.include?(HPXML::ElectricPanelVoltage240)
+      return HPXML::ElectricPanelVoltage240
+    end
+
+    return HPXML::ElectricPanelVoltage120
+  end
+
+  # Gets the default max amps for a branch circuit based on voltage.
+  #
+  # @param branch_circuit [HPXML::BranchCircuit] Object that defines a single electric panel branch circuit
+  # @return [Double] maximum amperage
+  def self.get_branch_circuit_amps_default_values(branch_circuit)
+    if branch_circuit.voltage == HPXML::ElectricPanelVoltage120
+      return 15.0 # shared circuit
+    end
+
+    return 50.0
+  end
+
+  # Gets the default power rating capacity for each panel load.
+  #
+  # @return [Hash] { load_name => { voltage => power_rating, ... }, ... }
+  def self.get_panels_csv_data()
+    default_panels_csv = File.join(File.dirname(__FILE__), 'data', 'default_panels.csv')
+    if not File.exist?(default_panels_csv)
+      fail 'Could not find default_panels.csv'
+    end
+
+    require 'csv'
+    default_panels_csv_data = {}
+    CSV.foreach(default_panels_csv, headers: true) do |row|
+      load_name = row['Load Name']
+      voltage = row['Voltage']
+      power_rating = row['Power Rating']
+      breaker_spaces = row['Breaker Spaces']
+
+      power_rating = 0 if power_rating == 'auto'
+      breaker_spaces = 0 if breaker_spaces == 'auto'
+
+      default_panels_csv_data[load_name] = {} if !default_panels_csv_data.keys.include?(load_name)
+      default_panels_csv_data[load_name][voltage] = {}
+      default_panels_csv_data[load_name][voltage]['PowerRating'] = Float(power_rating)
+      default_panels_csv_data[load_name][voltage]['BreakerSpaces'] = Integer(breaker_spaces)
+    end
+
+    return default_panels_csv_data
+  end
+
+  # Get the Power Rating or Breaker Spaces from the default_panels.csv file.
+  # If Voltage does not exist in the table, then either:
+  #  - Power Rating: default per the other Voltage classification
+  #  - Breaker Spaces: recalculate using the specified Voltage classification
+  #
+  # @param runner [OpenStudio::Measure::OSRunner] Object typically used to display warnings
+  # @param default_panels_csv_data [Hash] { load_name => { voltage => power_rating, ... }, ... }
+  # @param load_name [String] load name specified in default_panels.csv
+  # @param column [String] 'PowerRating' or 'BreakerSpaces'
+  # @param voltage [String] '120' or '240'
+  # @param watts [Double or nil] power rating (W)
+  # @param max_current_rating [Double or nil] maximum amperage
+  # @return [Double or Integer] power rating or number of breaker spaces
+  def self.get_default_panels_value(runner, default_panels_csv_data, load_name, column, voltage, watts = nil, max_current_rating = nil)
+    if not default_panels_csv_data[load_name].keys.include?(voltage)
+      warning = "Voltage (#{voltage}) for '#{load_name}' is not specified in default_panels.csv; "
+      if column == 'PowerRating'
+        if voltage == HPXML::ElectricPanelVoltage120
+          new_voltage = HPXML::ElectricPanelVoltage240
+        elsif voltage == HPXML::ElectricPanelVoltage240
+          new_voltage = HPXML::ElectricPanelVoltage120
+        end
+        warning += "PowerRating will be assigned according to Voltage=#{new_voltage}."
+        value = default_panels_csv_data[load_name][new_voltage][column]
+      elsif column == 'BreakerSpaces'
+        warning += "BreakerSpaces will be recalculated using Voltage=#{voltage}."
+        value = get_breaker_spaces_from_power_watts_voltage_amps(watts, voltage, max_current_rating)
+      end
+      runner.registerWarning(warning)
+      return value
+    else
+      value = default_panels_csv_data[load_name][voltage][column]
+      value = 0 if watts == 0
+      return value
+    end
+  end
+
+  # Get or add a branch circuit based on whether one already exists for a given component.
+  # If add is true, and the component already has a branch circuit, we add another branch circuit (this is useful for adding air handler unit information).
+  #
+  # @param electric_panel [HPXML::ElectricPanel] Object that defines a single electric panel
+  # @param component [HPXML::XXX] a component
+  # @param add [Boolean] whether to add a branch circuit even if one already exists
+  # @return [HPXML::BranchCircuit] Object that defines a single electric panel branch circuit
+  def self.get_or_add_branch_circuit(electric_panel, component, unit_num, add = false)
+    branch_circuits = electric_panel.branch_circuits
+    if component.branch_circuits.empty? || add
+      branch_circuits.add(id: get_id('BranchCircuit', branch_circuits, unit_num),
+                          component_idrefs: [component.id])
+      branch_circuit = branch_circuits[-1]
+    else
+      branch_circuit = component.branch_circuits[0]
+    end
+
+    if branch_circuit.voltage.nil?
+      branch_circuit.voltage = get_branch_circuit_voltage_default_values(branch_circuit)
+      branch_circuit.voltage_isdefaulted = true
+    end
+    if branch_circuit.max_current_rating.nil?
+      branch_circuit.max_current_rating = get_branch_circuit_amps_default_values(branch_circuit)
+      branch_circuit.max_current_rating_isdefaulted = true
+    end
+
+    return branch_circuit
+  end
+
+  # Gets the default power rating for a service feeder based on load type, voltage, amps, and attached components.
+  #
+  # @param runner [OpenStudio::Measure::OSRunner] Object typically used to display warnings
+  # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
+  # @param service_feeder [HPXML::ServiceFeeder] Object that defines a single electric panel service feeder
+  # @param default_panels_csv_data [Hash] { load_name => { voltage => power_rating, ... }, ... }
+  # @param electric_panel [HPXML::ElectricPanel] Object that defines a single electric panel
+  # @return [Double] power rating (W)
+  def self.get_service_feeder_power_default_values(runner, hpxml_bldg, service_feeder, default_panels_csv_data, electric_panel, unit_num)
+    type = service_feeder.type
+    component_ids = service_feeder.component_idrefs
+    watts = 0
+
+    if type == HPXML::ElectricPanelLoadTypeHeating
+      hpxml_bldg.heating_systems.each do |heating_system|
+        next if !component_ids.include?(heating_system.id)
+        next if heating_system.is_shared_system
+        next if heating_system.fraction_heat_load_served == 0
+
+        branch_circuit = get_or_add_branch_circuit(electric_panel, heating_system, unit_num)
+
+        if heating_system.heating_system_fuel == HPXML::FuelTypeElectricity
+          watts += UnitConversions.convert(HVAC.get_heating_input_capacity(heating_system.heating_capacity, heating_system.heating_efficiency_afue, heating_system.heating_efficiency_percent), 'btu/hr', 'w')
+        end
+
+        watts += HVAC.get_blower_fan_power_watts(heating_system.fan_watts_per_cfm, heating_system.heating_airflow_cfm)
+        watts += HVAC.get_pump_power_watts(heating_system.electric_auxiliary_energy)
+
+        if branch_circuit.occupied_spaces.nil?
+          branch_circuit.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(watts, branch_circuit.voltage, branch_circuit.max_current_rating)
+          branch_circuit.occupied_spaces_isdefaulted = true
+        end
+      end
+
+      hpxml_bldg.heat_pumps.each do |heat_pump|
+        next if !component_ids.include?(heat_pump.id)
+        next if heat_pump.fraction_heat_load_served == 0
+
+        branch_circuit_odu = get_or_add_branch_circuit(electric_panel, heat_pump, unit_num)
+        branch_circuit_ahu = get_or_add_branch_circuit(electric_panel, heat_pump, unit_num, true)
+
+        watts_ahu = HVAC.get_blower_fan_power_watts(heat_pump.fan_watts_per_cfm, heat_pump.heating_airflow_cfm)
+        watts_odu = HVAC.get_dx_coil_power_watts_from_capacity(UnitConversions.convert(heat_pump.heating_capacity, 'btu/hr', 'kbtu/hr'), branch_circuit_odu.voltage)
+
+        if heat_pump.backup_type == HPXML::HeatPumpBackupTypeIntegrated
+
+          if heat_pump.overlapping_compressor_and_backup_operation # sum; backup > compressor
+
+            if heat_pump.backup_heating_fuel == HPXML::FuelTypeElectricity
+              watts_ahu += UnitConversions.convert(HVAC.get_heating_input_capacity(heat_pump.backup_heating_capacity, heat_pump.backup_heating_efficiency_afue, heat_pump.backup_heating_efficiency_percent), 'btu/hr', 'w')
+            end
+
+          else # max; switchover (only be used for a heat pump with fossil fuel backup)
+
+            branch_circuit_ahu.voltage = HPXML::ElectricPanelVoltage120
+            branch_circuit_ahu.max_current_rating = get_branch_circuit_amps_default_values(branch_circuit_ahu)
+
+          end
+        end
+
+        if branch_circuit_ahu.occupied_spaces.nil?
+          if ((heat_pump.backup_type.nil? || (heat_pump.backup_type == HPXML::HeatPumpBackupTypeSeparate)) &&
+             (heat_pump.heat_pump_type == HPXML::HVACTypeHeatPumpMiniSplit))
+            branch_circuit_ahu.occupied_spaces = 0
+          else
+            branch_circuit_ahu.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(watts_ahu, branch_circuit_ahu.voltage, branch_circuit_ahu.max_current_rating)
+          end
+          branch_circuit_ahu.occupied_spaces_isdefaulted = true
+        end
+
+        if branch_circuit_odu.occupied_spaces.nil?
+          branch_circuit_odu.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(watts_odu, branch_circuit_odu.voltage, branch_circuit_odu.max_current_rating)
+          branch_circuit_odu.occupied_spaces_isdefaulted = true
+        end
+
+        watts += watts_ahu + watts_odu
+      end
+
+    elsif type == HPXML::ElectricPanelLoadTypeCooling
+      hpxml_bldg.cooling_systems.each do |cooling_system|
+        next if !component_ids.include?(cooling_system.id)
+        next if cooling_system.is_shared_system
+        next if cooling_system.fraction_cool_load_served == 0
+
+        branch_circuit_odu = get_or_add_branch_circuit(electric_panel, cooling_system, unit_num)
+        branch_circuit_ahu = get_or_add_branch_circuit(electric_panel, cooling_system, unit_num, true)
+
+        watts_ahu = HVAC.get_blower_fan_power_watts(cooling_system.fan_watts_per_cfm, cooling_system.cooling_airflow_cfm)
+        watts_odu = HVAC.get_dx_coil_power_watts_from_capacity(UnitConversions.convert(cooling_system.cooling_capacity, 'btu/hr', 'kbtu/hr'), branch_circuit_odu.voltage)
+
+        if branch_circuit_ahu.occupied_spaces.nil?
+          if (not cooling_system.distribution_system.nil?) && (cooling_system.attached_heating_system.nil? || cooling_system.attached_heating_system.distribution_system.nil?)
+            branch_circuit_ahu.voltage = HPXML::ElectricPanelVoltage120
+            branch_circuit_ahu.max_current_rating = get_branch_circuit_amps_default_values(branch_circuit_ahu)
+            branch_circuit_ahu.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(watts_ahu, branch_circuit_ahu.voltage, branch_circuit_ahu.max_current_rating)
+          else
+            branch_circuit_ahu.occupied_spaces = 0
+          end
+          branch_circuit_ahu.occupied_spaces_isdefaulted = true
+        end
+
+        if branch_circuit_odu.occupied_spaces.nil?
+          if (cooling_system.cooling_system_type != HPXML::HVACTypeRoomAirConditioner) || (branch_circuit_odu.voltage == HPXML::ElectricPanelVoltage240)
+            branch_circuit_odu.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(watts_odu, branch_circuit_odu.voltage, branch_circuit_odu.max_current_rating)
+          else
+            branch_circuit_odu.occupied_spaces = 0
+          end
+          branch_circuit_odu.occupied_spaces_isdefaulted = true
+        end
+
+        watts += watts_ahu + watts_odu
+      end
+
+      hpxml_bldg.heat_pumps.each do |heat_pump|
+        next if !component_ids.include?(heat_pump.id)
+        next if heat_pump.fraction_cool_load_served == 0
+
+        watts_ahu = HVAC.get_blower_fan_power_watts(heat_pump.fan_watts_per_cfm, heat_pump.cooling_airflow_cfm)
+        watts_odu = HVAC.get_dx_coil_power_watts_from_capacity(UnitConversions.convert(heat_pump.cooling_capacity, 'btu/hr', 'kbtu/hr'), HPXML::ElectricPanelVoltage240)
+
+        if heat_pump.fraction_heat_load_served == 0
+          branch_circuit_odu = get_or_add_branch_circuit(electric_panel, heat_pump, unit_num)
+          branch_circuit_ahu = get_or_add_branch_circuit(electric_panel, heat_pump, unit_num, true)
+
+          if branch_circuit_ahu.occupied_spaces.nil?
+            branch_circuit_ahu.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(watts_ahu, branch_circuit_ahu.voltage, branch_circuit_ahu.max_current_rating)
+            branch_circuit_ahu.occupied_spaces_isdefaulted = true
+          end
+
+          if branch_circuit_odu.occupied_spaces.nil?
+            branch_circuit_odu.occupied_spaces = get_breaker_spaces_from_power_watts_voltage_amps(watts_odu, branch_circuit_odu.voltage, branch_circuit_odu.max_current_rating)
+            branch_circuit_odu.occupied_spaces_isdefaulted = true
+          end
+        end
+
+        watts += watts_ahu + watts_odu
+      end
+
+    elsif type == HPXML::ElectricPanelLoadTypeWaterHeater
+      hpxml_bldg.water_heating_systems.each do |water_heating_system|
+        next if !component_ids.include?(water_heating_system.id)
+        next if water_heating_system.fuel_type != HPXML::FuelTypeElectricity
+        next if water_heating_system.is_shared_system
+
+        if water_heating_system.water_heater_type == HPXML::WaterHeaterTypeStorage
+          watts += UnitConversions.convert(water_heating_system.heating_capacity, 'btu/hr', 'w')
+        elsif water_heating_system.water_heater_type == HPXML::WaterHeaterTypeHeatPump
+          watts += [UnitConversions.convert(Waterheater.get_heating_input_capacity(water_heating_system.heating_capacity, water_heating_system.additional_properties.cop), 'btu/hr', 'w'),
+                    UnitConversions.convert(water_heating_system.backup_heating_capacity, 'btu/hr', 'w')].max
+        elsif water_heating_system.water_heater_type == HPXML::WaterHeaterTypeTankless
+          if hpxml_bldg.building_construction.number_of_bathrooms == 1
+            load_name = 'wh_tankless1'
+          elsif hpxml_bldg.building_construction.number_of_bathrooms == 2
+            load_name = 'wh_tankless2'
+          else # 3+
+            load_name = 'wh_tankless3'
+          end
+          water_heating_system.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, load_name, 'PowerRating', branch_circuit.voltage)
+          end
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypeClothesDryer
+      hpxml_bldg.clothes_dryers.each do |clothes_dryer|
+        next if !component_ids.include?(clothes_dryer.id)
+        next if clothes_dryer.fuel_type != HPXML::FuelTypeElectricity
+
+        if clothes_dryer.is_vented
+          clothes_dryer.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'dryer', 'PowerRating', branch_circuit.voltage)
+          end
+        else # HP
+          clothes_dryer.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'dryer_hp', 'PowerRating', branch_circuit.voltage)
+          end
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypeDishwasher
+      hpxml_bldg.dishwashers.each do |dishwasher|
+        next if !component_ids.include?(dishwasher.id)
+
+        dishwasher.branch_circuits.each do |branch_circuit|
+          watts += get_default_panels_value(runner, default_panels_csv_data, 'dishwasher', 'PowerRating', branch_circuit.voltage)
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypeRangeOven
+      hpxml_bldg.cooking_ranges.each do |cooking_range|
+        next if !component_ids.include?(cooking_range.id)
+        next if cooking_range.fuel_type != HPXML::FuelTypeElectricity
+
+        if cooking_range.is_induction
+          cooking_range.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'rangeoven_induction', 'PowerRating', branch_circuit.voltage)
+          end
+        else # resistance
+          cooking_range.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'rangeoven', 'PowerRating', branch_circuit.voltage)
+          end
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypeMechVent
+      hpxml_bldg.ventilation_fans.each do |ventilation_fan|
+        next if !component_ids.include?(ventilation_fan.id)
+        next if ventilation_fan.is_shared_system
+
+        if [HPXML::LocationKitchen, HPXML::LocationBath].include?(ventilation_fan.fan_location)
+          watts += ventilation_fan.count * ventilation_fan.fan_power
+        elsif not ventilation_fan.fan_power.nil?
+          watts += ventilation_fan.fan_power
+        else
+          ventilation_fan.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'mechvent', 'PowerRating', branch_circuit.voltage) # base-mechvent-cfis-no-additional-runtime.xml, e.g., has no FanPower defaulted
+          end
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypePermanentSpaHeater
+      hpxml_bldg.permanent_spas.each do |permanent_spa|
+        next if !component_ids.include?(permanent_spa.heater_id)
+        next if ![HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(permanent_spa.heater_type)
+
+        if permanent_spa.heater_type == HPXML::HeaterTypeElectricResistance
+          permanent_spa.heater_branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'spaheater', 'PowerRating', branch_circuit.voltage)
+          end
+        elsif permanent_spa.heater_type == HPXML::HeaterTypeHeatPump
+          permanent_spa.heater_branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'spaheater_hp', 'PowerRating', branch_circuit.voltage)
+          end
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypePermanentSpaPump
+      hpxml_bldg.permanent_spas.each do |permanent_spa|
+        next if !component_ids.include?(permanent_spa.pump_id)
+
+        permanent_spa.pump_branch_circuits.each do |branch_circuit|
+          watts += get_default_panels_value(runner, default_panels_csv_data, 'spapump', 'PowerRating', branch_circuit.voltage)
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypePoolHeater
+      hpxml_bldg.pools.each do |pool|
+        next if !component_ids.include?(pool.heater_id)
+        next if ![HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(pool.heater_type)
+
+        if pool.heater_type == HPXML::HeaterTypeElectricResistance
+          pool.heater_branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'poolheater', 'PowerRating', branch_circuit.voltage)
+          end
+        elsif pool.heater_type == HPXML::HeaterTypeHeatPump
+          pool.heater_branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'poolheater_hp', 'PowerRating', branch_circuit.voltage)
+          end
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypePoolPump
+      hpxml_bldg.pools.each do |pool|
+        next if !component_ids.include?(pool.pump_id)
+
+        pool.pump_branch_circuits.each do |branch_circuit|
+          watts += get_default_panels_value(runner, default_panels_csv_data, 'poolpump', 'PowerRating', branch_circuit.voltage)
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypeWellPump
+      hpxml_bldg.plug_loads.each do |plug_load|
+        next if plug_load.plug_load_type != HPXML::PlugLoadTypeWellPump
+        next if !component_ids.include?(plug_load.id)
+
+        if hpxml_bldg.building_construction.number_of_bedrooms <= 3
+          plug_load.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'wellpump_small', 'PowerRating', branch_circuit.voltage)
+          end
+        else
+          plug_load.branch_circuits.each do |branch_circuit|
+            watts += get_default_panels_value(runner, default_panels_csv_data, 'wellpump_large', 'PowerRating', branch_circuit.voltage)
+          end
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypeElectricVehicleCharging
+      hpxml_bldg.plug_loads.each do |plug_load|
+        next if plug_load.plug_load_type != HPXML::PlugLoadTypeElectricVehicleCharging
+        next if !component_ids.include?(plug_load.id)
+
+        plug_load.branch_circuits.each do |branch_circuit|
+          watts += get_default_panels_value(runner, default_panels_csv_data, 'ev_level', 'PowerRating', branch_circuit.voltage)
+        end
+      end
+
+      hpxml_bldg.ev_chargers.each do |ev_charger|
+        next if !component_ids.include?(ev_charger.id)
+
+        ev_charger.branch_circuits.each do |branch_circuit|
+          watts += get_default_panels_value(runner, default_panels_csv_data, 'ev_level', 'PowerRating', branch_circuit.voltage)
+        end
+      end
+    elsif type == HPXML::ElectricPanelLoadTypeLighting
+      watts += get_default_panels_value(runner, default_panels_csv_data, 'lighting', 'PowerRating', HPXML::ElectricPanelVoltage120) * hpxml_bldg.building_construction.conditioned_floor_area
+    elsif type == HPXML::ElectricPanelLoadTypeKitchen
+      watts += get_default_panels_value(runner, default_panels_csv_data, 'kitchen', 'PowerRating', HPXML::ElectricPanelVoltage120)
+    elsif type == HPXML::ElectricPanelLoadTypeLaundry
+      watts += get_default_panels_value(runner, default_panels_csv_data, 'laundry', 'PowerRating', HPXML::ElectricPanelVoltage120)
+    elsif type == HPXML::ElectricPanelLoadTypeOther
+      if hpxml_bldg.has_location(HPXML::LocationGarage)
+        watts += get_default_panels_value(runner, default_panels_csv_data, 'other', 'PowerRating', HPXML::ElectricPanelVoltage120) # Garage door opener
+      end
+    end
+
+    return watts.round(1)
+  end
+
+  # Gets the default breaker spaces for a branch circuit based on power rating, voltage, amps, and attached components.
+  #
+  # @param runner [OpenStudio::Measure::OSRunner] Object typically used to display warnings
+  # @param hpxml_bldg [HPXML::Building] HPXML Building object representing an individual dwelling unit
+  # @param branch_circuit [HPXML::BranchCircuit] Object that defines a single electric panel branch circuit
+  # @param default_panels_csv_data [Hash] { load_name => { voltage => power_rating, ... }, ... }
+  # @return [Integer] number of breaker spaces
+  def self.get_branch_circuit_occupied_spaces_default_values(runner, hpxml_bldg, branch_circuit, default_panels_csv_data)
+    voltage = branch_circuit.voltage
+    max_current_rating = branch_circuit.max_current_rating
+    component_ids = branch_circuit.component_idrefs
+    breaker_spaces = 0
+
+    hpxml_bldg.water_heating_systems.each do |water_heating_system|
+      next if !component_ids.include?(water_heating_system.id)
+      next if water_heating_system.fuel_type != HPXML::FuelTypeElectricity
+      next if water_heating_system.is_shared_system
+
+      watts = water_heating_system.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeWaterHeater }.map { |sf| sf.power }.sum(0.0)
+      if water_heating_system.water_heater_type == HPXML::WaterHeaterTypeStorage
+        breaker_spaces += get_breaker_spaces_from_power_watts_voltage_amps(watts, voltage, max_current_rating)
+      elsif water_heating_system.water_heater_type == HPXML::WaterHeaterTypeHeatPump
+        breaker_spaces += get_breaker_spaces_from_power_watts_voltage_amps(watts, voltage, max_current_rating)
+      elsif water_heating_system.water_heater_type == HPXML::WaterHeaterTypeTankless
+        if hpxml_bldg.building_construction.number_of_bathrooms == 1
+          load_name = 'wh_tankless1'
+        elsif hpxml_bldg.building_construction.number_of_bathrooms == 2
+          load_name = 'wh_tankless2'
+        else # 3+
+          load_name = 'wh_tankless3'
+        end
+        breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, load_name, 'BreakerSpaces', voltage, watts, max_current_rating)
+      end
+    end
+
+    hpxml_bldg.clothes_dryers.each do |clothes_dryer|
+      next if !component_ids.include?(clothes_dryer.id)
+      next if clothes_dryer.fuel_type != HPXML::FuelTypeElectricity
+
+      if clothes_dryer.is_vented
+        load_name = 'dryer'
+      else # HP
+        load_name = 'dryer_hp'
+      end
+      watts = clothes_dryer.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeClothesDryer }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, load_name, 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    hpxml_bldg.dishwashers.each do |dishwasher|
+      next if !component_ids.include?(dishwasher.id)
+
+      watts = dishwasher.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeDishwasher }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'dishwasher', 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    hpxml_bldg.cooking_ranges.each do |cooking_range|
+      next if !component_ids.include?(cooking_range.id)
+      next if cooking_range.fuel_type != HPXML::FuelTypeElectricity
+
+      if cooking_range.is_induction
+        load_name = 'rangeoven_induction'
+      else # resistance
+        load_name = 'rangeoven'
+      end
+      watts = cooking_range.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeRangeOven }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, load_name, 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    hpxml_bldg.ventilation_fans.each do |ventilation_fan|
+      next if !component_ids.include?(ventilation_fan.id)
+
+      watts = ventilation_fan.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeMechVent }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'mechvent', 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    hpxml_bldg.permanent_spas.each do |permanent_spa|
+      next if !component_ids.include?(permanent_spa.heater_id)
+      next if ![HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(permanent_spa.heater_type)
+
+      watts = permanent_spa.heater_service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypePermanentSpaHeater }.map { |sf| sf.power }.sum(0.0)
+      if permanent_spa.heater_type == HPXML::HeaterTypeElectricResistance
+        breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'spaheater', 'BreakerSpaces', voltage, watts, max_current_rating)
+      elsif permanent_spa.heater_type == HPXML::HeaterTypeHeatPump
+        breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'spaheater_hp', 'BreakerSpaces', voltage, watts, max_current_rating)
+      end
+    end
+
+    hpxml_bldg.permanent_spas.each do |permanent_spa|
+      next if !component_ids.include?(permanent_spa.pump_id)
+
+      watts = permanent_spa.pump_service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypePermanentSpaPump }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'spapump', 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    hpxml_bldg.pools.each do |pool|
+      next if !component_ids.include?(pool.heater_id)
+      next if ![HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include?(pool.heater_type)
+
+      watts = pool.heater_service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypePoolHeater }.map { |sf| sf.power }.sum(0.0)
+      if pool.heater_type == HPXML::HeaterTypeElectricResistance
+        breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'poolheater', 'BreakerSpaces', voltage, watts, max_current_rating)
+      elsif pool.heater_type == HPXML::HeaterTypeHeatPump
+        breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'poolheater_hp', 'BreakerSpaces', voltage, watts, max_current_rating)
+      end
+    end
+
+    hpxml_bldg.pools.each do |pool|
+      next if !component_ids.include?(pool.pump_id)
+
+      watts = pool.pump_service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypePoolPump }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'poolpump', 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    hpxml_bldg.plug_loads.each do |plug_load|
+      next if plug_load.plug_load_type != HPXML::PlugLoadTypeWellPump
+      next if !component_ids.include?(plug_load.id)
+
+      watts = plug_load.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeWellPump }.map { |sf| sf.power }.sum(0.0)
+      if hpxml_bldg.building_construction.number_of_bedrooms <= 3
+        breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'wellpump_small', 'BreakerSpaces', voltage, watts, max_current_rating)
+      else
+        breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'wellpump_large', 'BreakerSpaces', voltage, watts, max_current_rating)
+      end
+    end
+
+    hpxml_bldg.plug_loads.each do |plug_load|
+      next if plug_load.plug_load_type != HPXML::PlugLoadTypeElectricVehicleCharging
+      next if !component_ids.include?(plug_load.id)
+
+      watts = plug_load.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeElectricVehicleCharging }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'ev_level', 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    hpxml_bldg.ev_chargers.each do |ev_charger|
+      next if !component_ids.include?(ev_charger.id)
+
+      watts = ev_charger.service_feeders.select { |sf| sf.type == HPXML::ElectricPanelLoadTypeElectricVehicleCharging }.map { |sf| sf.power }.sum(0.0)
+      breaker_spaces += get_default_panels_value(runner, default_panels_csv_data, 'ev_level', 'BreakerSpaces', voltage, watts, max_current_rating)
+    end
+
+    return breaker_spaces
   end
 
   # Get default location, lifetime model, nominal capacity/voltage, round trip efficiency, and usable fraction for a battery.
@@ -5585,6 +6776,23 @@ module Defaults
              nominal_voltage: 50.0,
              round_trip_efficiency: 0.925, # Based on Tesla Powerwall round trip efficiency (new)
              usable_fraction: 0.9 } # Fraction of usable capacity to nominal capacity
+  end
+
+  # Get default lifetime model, miles/year, hours/week, nominal capacity/voltage, round trip efficiency, fraction charged at home,
+  # and usable fraction for an electric vehicle and its battery.
+  #
+  # @return [Hash] map of EV properties to default values
+  def self.get_electric_vehicle_values()
+    return { battery_type: HPXML::BatteryTypeLithiumIon,
+             lifetime_model: HPXML::BatteryLifetimeModelNone,
+             miles_per_year: 10900,
+             hours_per_week: 8.88,
+             nominal_capacity_kwh: 63,
+             nominal_voltage: 50.0,
+             fuel_economy_combined: 0.22,
+             fuel_economy_units: HPXML::UnitsKwhPerMile,
+             fraction_charged_home: 0.8,
+             usable_fraction: 0.8 } # Fraction of usable capacity to nominal capacity
   end
 
   # Gets the default values for a dehumidifier
@@ -5628,21 +6836,21 @@ module Defaults
   # and sensible/latent fractions.
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
-  # @param num_occ [Double] Number of occupants in the dwelling unit
-  # @param unit_type [String] HPXML::ResidentialTypeXXX type of dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Array<Double, Double, Double>] Plug loads annual use (kWh), sensible/latent fractions
-  def self.get_residual_mels_values(cfa, num_occ = nil, unit_type = nil)
-    if num_occ.nil? # Asset calculation
+  def self.get_residual_mels_values(cfa, n_occ = nil, unit_type = nil)
+    if n_occ.nil? # Asset calculation
       # ANSI/RESNET/ICC 301
       annual_kwh = 0.91 * cfa
     else # Operational calculation
       # RECS 2020
       if unit_type == HPXML::ResidentialTypeSFD
-        annual_kwh = 786.9 + 241.8 * num_occ + 0.33 * cfa
+        annual_kwh = 786.9 + 241.8 * n_occ + 0.33 * cfa
       elsif unit_type == HPXML::ResidentialTypeSFA
-        annual_kwh = 654.9 + 206.5 * num_occ + 0.21 * cfa
+        annual_kwh = 654.9 + 206.5 * n_occ + 0.21 * cfa
       elsif unit_type == HPXML::ResidentialTypeApartment
-        annual_kwh = 706.6 + 149.3 * num_occ + 0.10 * cfa
+        annual_kwh = 706.6 + 149.3 * n_occ + 0.10 * cfa
       elsif unit_type == HPXML::ResidentialTypeManufactured
         annual_kwh = 1795.1 # No good relationship found in RECS, so just using a constant value
       end
@@ -5657,11 +6865,11 @@ module Defaults
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
-  # @param num_occ [Double] Number of occupants in the dwelling unit
-  # @param unit_type [String] HPXML::ResidentialTypeXXX type of dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Array<Double, Double, Double>] Television annual use (kWh), sensible/latent fractions
-  def self.get_televisions_values(cfa, nbeds, num_occ = nil, unit_type = nil)
-    if num_occ.nil? # Asset calculation
+  def self.get_televisions_values(cfa, nbeds, n_occ = nil, unit_type = nil)
+    if n_occ.nil? # Asset calculation
       # ANSI/RESNET/ICC 301
       annual_kwh = 413.0 + 69.0 * nbeds
     else # Operational calculation
@@ -5671,14 +6879,15 @@ module Defaults
       # - SFA: 13.3 + 251.3 * num_tv
       # - MF:  11.4 + 250.7 * num_tv
       # - MH:  12.6 + 287.5 * num_tv
-      if unit_type == HPXML::ResidentialTypeSFD
-        annual_kwh = 334.0 + 92.2 * num_occ + 0.06 * cfa
-      elsif unit_type == HPXML::ResidentialTypeSFA
-        annual_kwh = 283.9 + 80.1 * num_occ + 0.07 * cfa
-      elsif unit_type == HPXML::ResidentialTypeApartment
-        annual_kwh = 190.3 + 81.0 * num_occ + 0.11 * cfa
-      elsif unit_type == HPXML::ResidentialTypeManufactured
-        annual_kwh = 99.9 + 129.6 * num_occ + 0.21 * cfa
+      case unit_type
+      when HPXML::ResidentialTypeSFD
+        annual_kwh = 334.0 + 92.2 * n_occ + 0.06 * cfa
+      when HPXML::ResidentialTypeSFA
+        annual_kwh = 283.9 + 80.1 * n_occ + 0.07 * cfa
+      when HPXML::ResidentialTypeApartment
+        annual_kwh = 190.3 + 81.0 * n_occ + 0.11 * cfa
+      when HPXML::ResidentialTypeManufactured
+        annual_kwh = 99.9 + 129.6 * n_occ + 0.21 * cfa
       end
     end
     frac_lost = 0.0
@@ -5691,29 +6900,37 @@ module Defaults
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Double] Annual energy use (kWh/yr)
-  def self.get_pool_pump_annual_energy(cfa, nbeds)
-    return 158.6 / 0.070 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0)
+  def self.get_pool_pump_annual_energy(cfa, nbeds, n_occ, unit_type)
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
+    return 158.6 / 0.070 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0)
   end
 
   # Gets the default pool heater annual energy use.
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @param type [String] Type of heater (HPXML::HeaterTypeXXX)
   # @return [Array<String, Double>] Energy units (HPXML::UnitsXXX), annual energy use (kWh/yr or therm/yr)
-  def self.get_pool_heater_annual_energy(cfa, nbeds, type)
+  def self.get_pool_heater_annual_energy(cfa, nbeds, n_occ, unit_type, type)
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
     load_units = nil
     load_value = nil
     if [HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include? type
       load_units = HPXML::UnitsKwhPerYear
-      load_value = 8.3 / 0.004 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0) # kWh/yr
+      load_value = 8.3 / 0.004 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0) # kWh/yr
       if type == HPXML::HeaterTypeHeatPump
         load_value /= 5.0 # Assume seasonal COP of 5.0 per https://www.energy.gov/energysaver/heat-pump-swimming-pool-heaters
       end
     elsif type == HPXML::HeaterTypeGas
       load_units = HPXML::UnitsThermPerYear
-      load_value = 3.0 / 0.014 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0) # therm/yr
+      load_value = 3.0 / 0.014 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0) # therm/yr
     end
     return load_units, load_value
   end
@@ -5722,29 +6939,37 @@ module Defaults
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Double] Annual energy use (kWh/yr)
-  def self.get_permanent_spa_pump_annual_energy(cfa, nbeds)
-    return 59.5 / 0.059 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0) # kWh/yr
+  def self.get_permanent_spa_pump_annual_energy(cfa, nbeds, n_occ, unit_type)
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
+    return 59.5 / 0.059 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0) # kWh/yr
   end
 
   # Gets the default permanent spa heater annual energy use.
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @param type [String] Type of heater (HPXML::HeaterTypeXXX)
   # @return [Array<String, Double>] Energy units (HPXML::UnitsXXX), annual energy use (kWh/yr or therm/yr)
-  def self.get_permanent_spa_heater_annual_energy(cfa, nbeds, type)
+  def self.get_permanent_spa_heater_annual_energy(cfa, nbeds, n_occ, unit_type, type)
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
     load_units = nil
     load_value = nil
     if [HPXML::HeaterTypeElectricResistance, HPXML::HeaterTypeHeatPump].include? type
       load_units = HPXML::UnitsKwhPerYear
-      load_value = 49.0 / 0.048 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0) # kWh/yr
+      load_value = 49.0 / 0.048 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0) # kWh/yr
       if type == HPXML::HeaterTypeHeatPump
         load_value /= 5.0 # Assume seasonal COP of 5.0 per https://www.energy.gov/energysaver/heat-pump-swimming-pool-heaters
       end
     elsif type == HPXML::HeaterTypeGas
       load_units = HPXML::UnitsThermPerYear
-      load_value = 0.87 / 0.011 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0) # therm/yr
+      load_value = 0.87 / 0.011 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0) # therm/yr
     end
     return load_units, load_value
   end
@@ -5755,53 +6980,101 @@ module Defaults
   def self.get_electric_vehicle_charging_annual_energy()
     ev_charger_efficiency = 0.9
     ev_battery_efficiency = 0.9
-    vehicle_annual_miles_driven = 4500.0
-    vehicle_kWh_per_mile = 0.3
-    return vehicle_annual_miles_driven * vehicle_kWh_per_mile / (ev_charger_efficiency * ev_battery_efficiency)
+
+    # Use detailed vehicle model defaults
+    vehicle_defaults = get_electric_vehicle_values
+    kwh_per_year = vehicle_defaults[:miles_per_year] * vehicle_defaults[:fuel_economy_combined] * vehicle_defaults[:fraction_charged_home] / (ev_charger_efficiency * ev_battery_efficiency)
+
+    return kwh_per_year.round(1)
   end
 
   # Gets the default well pump annual energy use.
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Double] Annual energy use (kWh/yr)
-  def self.get_detault_well_pump_annual_energy(cfa, nbeds)
-    return 50.8 / 0.127 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0)
+  def self.get_detault_well_pump_annual_energy(cfa, nbeds, n_occ, unit_type)
+    if n_occ == 0
+      # Operational calculation w/ zero occupants, zero out energy use
+      return 0.0
+    end
+
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
+    return 50.8 / 0.127 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0)
   end
 
   # Gets the default gas grill annual energy use.
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Double] Annual energy use (therm/yr)
-  def self.get_gas_grill_annual_energy(cfa, nbeds)
-    return 0.87 / 0.029 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0)
+  def self.get_gas_grill_annual_energy(cfa, nbeds, n_occ, unit_type)
+    if n_occ == 0
+      # Operational calculation w/ zero occupants, zero out energy use
+      return 0.0
+    end
+
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
+    return 0.87 / 0.029 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0)
   end
 
   # Gets the default gas lighting annual energy use.
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Double] Annual energy use (therm/yr)
-  def self.get_detault_gas_lighting_annual_energy(cfa, nbeds)
-    return 0.22 / 0.012 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0)
+  def self.get_detault_gas_lighting_annual_energy(cfa, nbeds, n_occ, unit_type)
+    if n_occ == 0
+      # Operational calculation w/ zero occupants, zero out energy use
+      return 0.0
+    end
+
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
+    return 0.22 / 0.012 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0)
   end
 
   # Gets the default gas fireplace annual energy use.
   #
   # @param cfa [Double] Conditioned floor area in the dwelling unit (ft2)
   # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @return [Double] Annual energy use (therm/yr)
-  def self.get_gas_fireplace_annual_energy(cfa, nbeds)
-    return 1.95 / 0.032 * (0.5 + 0.25 * nbeds / 3.0 + 0.25 * cfa / 1920.0)
+  def self.get_gas_fireplace_annual_energy(cfa, nbeds, n_occ, unit_type)
+    if n_occ == 0
+      # Operational calculation w/ zero occupants, zero out energy use
+      return 0.0
+    end
+
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
+    return 1.95 / 0.032 * (0.5 + 0.25 * nbeds_eq / 3.0 + 0.25 * cfa / 1920.0)
   end
 
   # Gets the default values associated with general water use internal gains.
   #
-  # @param nbeds_eq [Integer] Number of bedrooms (or equivalent bedrooms, as adjusted by the number of occupants) in the dwelling unit
+  # @param nbeds [Integer] Number of bedrooms in the dwelling unit
+  # @param n_occ [Double] Number of occupants in the dwelling unit
+  # @param unit_type [String] Type of dwelling unit (HXPML::ResidentialTypeXXX)
   # @param general_water_use_usage_multiplier [Double] Usage multiplier on internal gains
   # @return [Array<Double, Double>] Sensible/latent internal gains (Btu/yr)
-  def self.get_water_use_internal_gains(nbeds_eq, general_water_use_usage_multiplier = 1.0)
+  def self.get_water_use_internal_gains(nbeds, n_occ, unit_type, general_water_use_usage_multiplier = 1.0)
+    if n_occ == 0
+      # Operational calculation w/ zero occupants, zero out internal gains
+      return 0.0, 0.0
+    end
+
+    nbeds_eq = Defaults.get_equivalent_nbeds(nbeds, n_occ, unit_type)
+
     # ANSI/RESNET/ICC 301 - Table 4.2.2(3). Internal Gains for Reference Homes
     sens_gains = (-1227.0 - 409.0 * nbeds_eq) * general_water_use_usage_multiplier # Btu/day
     lat_gains = (1245.0 + 415.0 * nbeds_eq) * general_water_use_usage_multiplier # Btu/day
