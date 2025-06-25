@@ -27,7 +27,7 @@ gem 'openstudio-extension', '0.9.1'
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #  gem 'urbanopt-core', path: '../../urbanopt-core-gem'
 # elsif allow_local
-# gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'os39'
+gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'faraday'
 # end
 
 # if allow_local && File.exist?('../openstudio-common-measures-gem')
