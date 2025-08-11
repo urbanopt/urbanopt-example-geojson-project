@@ -1,3 +1,8 @@
+# *********************************************************************************
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
+# *********************************************************************************
+
 # frozen_string_literal: true
 
 # Downselect jsons found at https://gdr.openei.org/files/1325/g-function_library_1.0.zip.

@@ -1,3 +1,8 @@
+# *********************************************************************************
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
+# *********************************************************************************
+
 # frozen_string_literal: true
 
 # Collection of methods related to airflow modeling (e.g., infiltration, natural ventilation,
