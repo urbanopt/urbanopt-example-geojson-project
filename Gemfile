@@ -1,7 +1,8 @@
 source 'http://rubygems.org'
 
 ruby '3.2.2'
-gem 'rspec', '~> 3.13', require: false, group: :test
+gem 'rake', '~> 13.0', require: false, group: :test
+gem 'rspec', '~> 3.9', require: false, group: :test
 gem 'rubocop', '~> 1.50', require: false, group: :test
 gem 'simplecov', '~> 0.22.0', require: false, group: :test
 gem 'simplecov-lcov', '~> 0.8.0', require: false, group: :test
@@ -24,55 +25,55 @@ allow_local = false
 # elsif allow_local
 # gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'bundler-hack'
 # else
-gem 'openstudio-extension', '~> 0.9.1'
-# end
-
-# if allow_local && File.exist?('../openstudio-geb-gem')
-#   gem 'openstudio-geb', path: '../openstudio-geb-gem'
-# elsif allow_local
-gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'faraday'
-# else
-# gem 'openstudio-geb', '~> 0.6.0'
+gem 'openstudio-extension', '~> 0.9.3'
 # end
 
 # if allow_local && File.exist?('../openstudio-common-measures-gem')
 #   gem 'openstudio-common-measures', path: '../openstudio-common-measures-gem'
 # elsif allow_local
-  gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'faraday'
+  # gem 'openstudio-common-measures', github: 'NREL/openstudio-common-measures-gem', branch: 'faraday'
 # else
-#   gem 'openstudio-common-measures', '~> 0.11.0'
+  gem 'openstudio-common-measures', '~> 0.12.3'
 # end
 
 # if allow_local && File.exist?('../openstudio-model-articulation-gem')
 #   gem 'openstudio-model-articulation', path: '../openstudio-model-articulation-gem'
 # elsif allow_local
-  gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'faraday'
+  # gem 'openstudio-model-articulation', github: 'NREL/openstudio-model-articulation-gem', branch: 'faraday'
 # else
-#   gem 'openstudio-model-articulation', '~> 0.11.0'
+  gem 'openstudio-model-articulation', '~> 0.12.2'
 # end
 
 # if allow_local && File.exist?('../openstudio-load-flexibility-measures-gem')
 #   gem 'openstudio-load-flexibility-measures', path: '../openstudio-load-flexibility-measures-gem'
 # elsif allow_local
-  gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'faraday'
+  # gem 'openstudio-load-flexibility-measures', github: 'NREL/openstudio-load-flexibility-measures-gem', branch: 'faraday'
 # else
-#   gem 'openstudio-load-flexibility-measures', '~> 0.10.0'
+  gem 'openstudio-load-flexibility-measures', '~> 0.11.1'
 # end
 
 # if allow_local && File.exist?('../openstudio-ee-gem')
 #   gem 'openstudio-ee', path: '../opesntudio-ee-gem'
 # elsif allow_local
-  gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'faraday'
+  # gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'faraday'
 # else
-#   gem 'openstudio-ee', '~> 0.11.0'
+  gem 'openstudio-ee', '~> 0.12.3'
 # end
 
 # if allow_local && File.exist?('../openstudio-calibration-gem')
 #   gem 'openstudio-calibration', path: '../openstudio-calibration-gem'
 # elsif allow_local
-  gem 'openstudio-calibration', github: 'NREL/openstudio-calibration-gem', branch: 'faraday'
+  # gem 'openstudio-calibration', github: 'NREL/openstudio-calibration-gem', branch: 'faraday'
 # else
-#   gem 'openstudio-calibration', '~> 0.11.0'
+  gem 'openstudio-calibration', '~> 0.12.2'
+# end
+
+# if allow_local && File.exist?('../openstudio-geb-gem')
+#   gem 'openstudio-geb', path: '../openstudio-geb-gem'
+# elsif allow_local
+# gem 'openstudio-geb', github: 'LBNL-ETA/openstudio-geb-gem', branch: 'faraday'
+# else
+gem 'openstudio-geb', '~> 0.7.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-core-gem')
