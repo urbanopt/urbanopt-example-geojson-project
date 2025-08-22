@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # FUTURE: Delete this file and move code into model.rb and constants.rb
@@ -30,6 +25,10 @@ module EPlus
   EMSActuatorScheduleFileValue = 'Schedule:File', 'Schedule Value'
   EMSActuatorZoneInfiltrationFlowRate = 'Zone Infiltration', 'Air Exchange Flow Rate'
   EMSActuatorZoneMixingFlowRate = 'ZoneMixing', 'Air Exchange Flow Rate'
+  EMSActuatorFrostHeatingCapacityMultiplierSingleSpeedDX = 'Coil:Heating:DX:SingleSpeed', 'Frost Heating Capacity Multiplier'
+  EMSActuatorFrostHeatingCapacityMultiplierMultiSpeedDX = 'Coil:Heating:DX:MultiSpeed', 'Frost Heating Capacity Multiplier'
+  EMSActuatorFrostHeatingInputPowerMultiplierSingleSpeedDX = 'Coil:Heating:DX:SingleSpeed', 'Frost Heating Input Power Multiplier'
+  EMSActuatorFrostHeatingInputPowerMultiplierMultiSpeedDX = 'Coil:Heating:DX:MultiSpeed', 'Frost Heating Input Power Multiplier'
   EMSIntVarFanMFR = 'Fan Maximum Mass Flow Rate'
   EMSIntVarPumpMFR = 'Pump Maximum Mass Flow Rate'
   FluidPropyleneGlycol = 'PropyleneGlycol'

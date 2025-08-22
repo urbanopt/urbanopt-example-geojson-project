@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 require_relative '../resources/minitest_helper'
@@ -11,6 +6,7 @@ require 'openstudio/measure/ShowRunnerOutput'
 require 'fileutils'
 require_relative '../measure.rb'
 require_relative '../resources/util.rb'
+require_relative 'util.rb'
 
 class HPXMLtoOpenStudioMiscLoadsTest < Minitest::Test
   def setup
@@ -21,9 +17,7 @@ class HPXMLtoOpenStudioMiscLoadsTest < Minitest::Test
 
   def teardown
     File.delete(@tmp_hpxml_path) if File.exist? @tmp_hpxml_path
-    File.delete(File.join(File.dirname(__FILE__), 'in.schedules.csv')) if File.exist? File.join(File.dirname(__FILE__), 'in.schedules.csv')
-    File.delete(File.join(File.dirname(__FILE__), 'results_annual.csv')) if File.exist? File.join(File.dirname(__FILE__), 'results_annual.csv')
-    File.delete(File.join(File.dirname(__FILE__), 'results_design_load_details.csv')) if File.exist? File.join(File.dirname(__FILE__), 'results_design_load_details.csv')
+    cleanup_results_files
   end
 
   def get_kwh_therm_per_year(model, name)
@@ -371,7 +365,7 @@ class HPXMLtoOpenStudioMiscLoadsTest < Minitest::Test
 
     # Check vehicle
     kwh_yr, therm_yr = get_kwh_therm_per_year(model, Constants::ObjectTypeMiscElectricVehicleCharging)
-    assert_in_delta(2368, kwh_yr, 1.0)
+    assert_in_delta(2389, kwh_yr, 1.0)
     assert_equal(0, therm_yr)
 
     # Check well pump
@@ -432,7 +426,7 @@ class HPXMLtoOpenStudioMiscLoadsTest < Minitest::Test
 
     # Check vehicle
     kwh_yr, therm_yr = get_kwh_therm_per_year(model, Constants::ObjectTypeMiscElectricVehicleCharging)
-    assert_in_delta(2368, kwh_yr, 1.0)
+    assert_in_delta(2389, kwh_yr, 1.0)
     assert_equal(0, therm_yr)
 
     # Check well pump
@@ -507,7 +501,7 @@ class HPXMLtoOpenStudioMiscLoadsTest < Minitest::Test
     # assert that it ran correctly
     assert_equal('Success', result.value.valueName)
 
-    hpxml = HPXML.new(hpxml_path: args_hash['hpxml_path'])
+    hpxml = HPXML.new(hpxml_path: File.join(File.dirname(__FILE__), 'in.xml'))
 
     File.delete(File.join(File.dirname(__FILE__), 'in.xml'))
 

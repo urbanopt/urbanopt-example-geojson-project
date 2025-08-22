@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 require_relative '../../HPXMLtoOpenStudio/resources/minitest_helper'
@@ -341,7 +336,7 @@ class BuildResidentialScheduleFileTest < Minitest::Test
                            year: @year,
                            output_path: @tmp_schedule_file_path)
     assert_in_epsilon(5762, sf.annual_equivalent_full_load_hrs(col_name: SchedulesFile::Columns[:ElectricVehicleCharging].name, schedules: sf.tmp_schedules), @tol)
-    assert_in_epsilon(729.9, sf.annual_equivalent_full_load_hrs(col_name: SchedulesFile::Columns[:ElectricVehicleDischarging].name, schedules: sf.tmp_schedules), @tol)
+    assert_in_epsilon(500.6, sf.annual_equivalent_full_load_hrs(col_name: SchedulesFile::Columns[:ElectricVehicleDischarging].name, schedules: sf.tmp_schedules), @tol)
   end
 
   def test_multiple_buildings

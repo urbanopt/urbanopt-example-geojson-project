@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # Collection of methods related to getting units by fuel type, EIA average and marginal rates by state, and household consumptions by state.

@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # Require all gems upfront; this is much faster than multiple resource
@@ -391,7 +386,7 @@ class HPXMLtoOpenStudio < OpenStudio::Measure::ModelMeasure
     Airflow.apply(runner, model, weather, spaces, hpxml_bldg, hpxml.header, schedules_file, airloop_map)
 
     # Other
-    PV.apply(model, hpxml_bldg)
+    PV.apply(runner, model, hpxml_bldg)
     Generator.apply(model, hpxml_bldg)
     Battery.apply(runner, model, spaces, hpxml_bldg, schedules_file)
     Vehicle.apply(runner, model, spaces, hpxml_bldg, hpxml.header, schedules_file)
@@ -426,9 +421,6 @@ class HPXMLtoOpenStudio < OpenStudio::Measure::ModelMeasure
 
     if hpxml_header.eri_calculation_versions.empty?
       hpxml_header.eri_calculation_versions = ['latest']
-    end
-    if hpxml_header.eri_calculation_versions == ['latest']
-      hpxml_header.eri_calculation_versions = [Constants::ERIVersions[-1]]
     end
 
     # Hidden feature: Whether to override certain assumptions to better match the ASHRAE 140 specification

@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # see the URL below for information on how to write OpenStudio measures
@@ -10,6 +5,7 @@
 
 require 'msgpack'
 require 'time'
+require_relative '../HPXMLtoOpenStudio/resources/calendar.rb'
 require_relative '../HPXMLtoOpenStudio/resources/constants.rb'
 require_relative '../HPXMLtoOpenStudio/resources/energyplus.rb'
 require_relative '../HPXMLtoOpenStudio/resources/hpxml.rb'
@@ -1944,7 +1940,7 @@ class ReportSimulationOutput < OpenStudio::Measure::ReportingMeasure
 
         # Apply daylight savings
         if args[:timeseries_frequency] == EPlus::TimeseriesFrequencyTimestep || args[:timeseries_frequency] == EPlus::TimeseriesFrequencyHourly
-          if @hpxml_bldgs[0].dst_enabled
+          if @hpxml_bldgs[0].dst_observed
             dst_start_ix, dst_end_ix = get_dst_start_end_indexes()
             if !dst_start_ix.nil? && !dst_end_ix.nil?
               dst_end_ix.downto(dst_start_ix + 1) do |i|
@@ -1964,8 +1960,8 @@ class ReportSimulationOutput < OpenStudio::Measure::ReportingMeasure
       # Assemble data
       h = {}
       h['Time'] = data[2..-1]
-      h['TimeDST'] = timestamps2[2..-1] if @timestamps_dst
-      h['TimeUTC'] = timestamps3[2..-1] if @timestamps_utc
+      h['TimeDST'] = timestamps2[0][2..-1] unless @timestamps_dst.nil?
+      h['TimeUTC'] = timestamps3[0][2..-1] unless @timestamps_utc.nil?
 
       [total_energy_data, fuel_data, end_use_data, system_use_data, emissions_data, emission_fuel_data,
        emission_end_use_data, hot_water_use_data, total_loads_data, comp_loads_data, unmet_hours_data,
@@ -2102,11 +2098,29 @@ class ReportSimulationOutput < OpenStudio::Measure::ReportingMeasure
     rows = timeseries_data['Rows']
     indexes = cols.each_index.select { |i| meter_names.include? cols[i]['Variable'] }
     vals = [0.0] * rows.size
+
+    # Calculate whether we need to shift values once up front
+    shift_values = {}
+    indexes.each_with_index do |_i, idx|
+      shift_values[idx] = false
+      if apply_ems_shift(timeseries_frequency)
+        if meter_names[idx].include? Constants::ObjectTypeWaterHeaterAdjustment
+          # Shift energy use adjustment to align with hot water energy use
+          shift_values[idx] = true
+        elsif meter_names[idx].include? Constants::ObjectTypePanHeater
+          # Shift energy use adjustment to align with HVAC operation and weather
+          shift_values[idx] = true
+        elsif meter_names[idx].include? Constants::ObjectTypeHPDefrostSupplHeat
+          # Shift energy use adjustment to align with HVAC operation and weather
+          shift_values[idx] = true
+        end
+      end
+    end
+
     rows.each_with_index do |row, row_idx|
       row = row[row.keys[0]]
       indexes.each_with_index do |i, idx|
-        if meter_names[idx].include?(Constants::ObjectTypeWaterHeaterAdjustment) && apply_ems_shift(timeseries_frequency)
-          # Shift energy use adjustment to allow with hot water energy use
+        if shift_values[idx]
           vals[row_idx - 1] += row[i] * unit_conv + unit_adder
         else
           vals[row_idx] += row[i] * unit_conv + unit_adder
@@ -2957,7 +2971,15 @@ class ReportSimulationOutput < OpenStudio::Measure::ReportingMeasure
       # End uses
 
       if object.to_CoilHeatingDXSingleSpeed.is_initialized || object.to_CoilHeatingDXMultiSpeed.is_initialized
-        return { [FT::Elec, EUT::Heating] => ["Heating Coil #{EPlus::FuelTypeElectricity} Energy", "Heating Coil Crankcase Heater #{EPlus::FuelTypeElectricity} Energy", "Heating Coil Defrost #{EPlus::FuelTypeElectricity} Energy"] }
+        vars = { [FT::Elec, EUT::Heating] => ["Heating Coil #{EPlus::FuelTypeElectricity} Energy", "Heating Coil Defrost #{EPlus::FuelTypeElectricity} Energy"] }
+        if object.additionalProperties.getFeatureAsDouble('FractionHeatLoadServed').is_initialized && object.additionalProperties.getFeatureAsDouble('FractionHeatLoadServed').get <= 0
+          # HP only provides cooling, allocate crankcase to cooling end use
+          vars[[FT::Elec, EUT::Cooling]] = ["Heating Coil Crankcase Heater #{EPlus::FuelTypeElectricity} Energy"]
+        else
+          # Allocate crankcase to heating end use
+          vars[[FT::Elec, EUT::Heating]] << "Heating Coil Crankcase Heater #{EPlus::FuelTypeElectricity} Energy"
+        end
+        return vars
 
       elsif object.to_CoilHeatingElectric.is_initialized || object.to_CoilHeatingElectricMultiStage.is_initialized
         if object.additionalProperties.getFeatureAsBoolean('IsHeatPumpBackup').is_initialized && object.additionalProperties.getFeatureAsBoolean('IsHeatPumpBackup').get
@@ -3133,7 +3155,8 @@ class ReportSimulationOutput < OpenStudio::Measure::ReportingMeasure
           Constants::ObjectTypeMiscPermanentSpaHeater => EUT::PermanentSpaHeater,
           Constants::ObjectTypeMechanicalVentilationPreheating => EUT::MechVentPreheat,
           Constants::ObjectTypeMechanicalVentilationPrecooling => EUT::MechVentPrecool,
-          Constants::ObjectTypeBackupSuppHeat => EUT::HeatingHeatPumpBackup,
+          Constants::ObjectTypeHPDefrostSupplHeat => EUT::HeatingHeatPumpBackup,
+          Constants::ObjectTypePanHeater => EUT::Heating,
           Constants::ObjectTypeWaterHeaterAdjustment => EUT::HotWater,
           Constants::ObjectTypeBatteryLossesAdjustment => EUT::Battery }.each do |obj_name, eut|
           next unless subcategory.start_with? obj_name

@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # Collection of methods to get, add, assign, create, etc. geometry-related OpenStudio objects.
@@ -1850,9 +1845,9 @@ module Geometry
     tilt_str = tilt_str.downcase
     if tilt_str.start_with? 'roofpitch'
       roof_angle = Math.atan(roof_pitch / 12.0) * 180.0 / Math::PI
-      return Float(eval(tilt_str.gsub('roofpitch', roof_angle.to_s)))
+      return Float(eval(tilt_str.gsub('roofpitch', roof_angle.to_s))).round(2)
     elsif tilt_str.start_with? 'latitude'
-      return Float(eval(tilt_str.gsub('latitude', latitude.to_s)))
+      return Float(eval(tilt_str.gsub('latitude', latitude.to_s))).round(2)
     else
       return Float(tilt_str)
     end

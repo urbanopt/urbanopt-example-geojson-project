@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # Collection of methods related to surface constructions.
@@ -1590,7 +1585,10 @@ module Constructions
     # then the user should input twice the area when defining the Internal Mass object.
     imdef = OpenStudio::Model::InternalMassDefinition.new(model)
     imdef.setName(object_name)
-    imdef.setSurfaceArea(UnitConversions.convert(area, 'ft^2', 'm^2'))
+    # FIXME: Workaround for https://github.com/NREL/OpenStudio/issues/5465
+    # Round the surface area because space.floorArea can loop through surfaces in non-deterministic order.
+    # Remove the round if the above issue is addressed
+    imdef.setSurfaceArea(UnitConversions.convert(area, 'ft^2', 'm^2').round(5))
 
     im = OpenStudio::Model::InternalMass.new(imdef)
     im.setName(object_name)

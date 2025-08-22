@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # Collection of methods related to internal gains.
@@ -123,7 +118,7 @@ module InternalGains
         end_use: Constants::ObjectTypeGeneralWaterUseSensible,
         space: spaces[HPXML::LocationConditionedSpace],
         design_level: water_design_level_sens,
-        frac_radiant: 0.6, # FIXME: This should probably be zero
+        frac_radiant: 0.6,
         frac_latent: 0,
         frac_lost: 0,
         schedule: water_schedule,

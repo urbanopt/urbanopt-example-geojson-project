@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # Collection of helper methods related to calendar dates/time.
@@ -12,6 +7,7 @@ module Calendar
   # @param year [Integer] the calendar year
   # @return [Array<Double>] number of days in each month
   def self.num_days_in_months(year)
+    require 'date'
     n_days_in_months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     n_days_in_months[1] += 1 if Date.leap?(year)
     return n_days_in_months

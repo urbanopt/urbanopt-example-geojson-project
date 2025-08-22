@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 require_relative '../resources/minitest_helper'
@@ -11,6 +6,8 @@ require 'openstudio/measure/ShowRunnerOutput'
 require 'fileutils'
 require_relative '../measure.rb'
 require_relative '../resources/util.rb'
+require_relative 'util.rb'
+
 class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
   def setup
     @root_path = File.absolute_path(File.join(File.dirname(__FILE__), '..', '..'))
@@ -27,13 +24,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
   def teardown
     File.delete(@tmp_hpxml_path) if File.exist? @tmp_hpxml_path
     File.delete(@tmp_schedule_file_path) if File.exist? @tmp_schedule_file_path
-    File.delete(File.join(File.dirname(__FILE__), 'in.schedules.csv')) if File.exist? File.join(File.dirname(__FILE__), 'in.schedules.csv')
-    File.delete(File.join(File.dirname(__FILE__), 'results_annual.csv')) if File.exist? File.join(File.dirname(__FILE__), 'results_annual.csv')
-    File.delete(File.join(File.dirname(__FILE__), 'results_design_load_details.csv')) if File.exist? File.join(File.dirname(__FILE__), 'results_design_load_details.csv')
-  end
-
-  def sample_files_dir
-    return File.join(File.dirname(__FILE__), '..', '..', 'workflow', 'sample_files')
+    cleanup_results_files
   end
 
   def get_annual_equivalent_full_load_hrs(model, name)
@@ -57,11 +48,11 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_default_schedules
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base.xml'))
     model, _hpxml, _hpxml_bldg = _test_measure(args_hash)
 
-    schedule_constants = 12
-    schedule_rulesets = 17
+    schedule_constants = 13
+    schedule_rulesets = 16
     schedule_fixed_intervals = 1
     schedule_files = 0
 
@@ -87,11 +78,11 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_simple_schedules
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-simple.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-simple.xml'))
     model, _hpxml, _hpxml_bldg = _test_measure(args_hash)
 
-    schedule_constants = 11
-    schedule_rulesets = 21
+    schedule_constants = 12
+    schedule_rulesets = 20
     schedule_fixed_intervals = 1
     schedule_files = 0
 
@@ -121,7 +112,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_simple_vacancy_schedules
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-simple-vacancy.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-simple-vacancy.xml'))
     model, _hpxml, _hpxml_bldg = _test_measure(args_hash)
 
     unavailable_month_hrs = { 0 => 31.0 * 24.0, 11 => 31.0 * 24.0 }
@@ -144,7 +135,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_simple_vacancy_year_round_schedules
     args_hash = {}
-    hpxml_path = File.absolute_path(File.join(sample_files_dir, 'base-schedules-simple-vacancy.xml'))
+    hpxml_path = File.absolute_path(File.join(@sample_files_path, 'base-schedules-simple-vacancy.xml'))
     hpxml = HPXML.new(hpxml_path: hpxml_path)
     hpxml.header.unavailable_periods[0].begin_month = 1
     hpxml.header.unavailable_periods[0].begin_day = 1
@@ -172,7 +163,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_simple_power_outage_schedules
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-simple-power-outage.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-simple-power-outage.xml'))
     model, _hpxml, _hpxml_bldg = _test_measure(args_hash)
 
     unavailable_month_hrs = { 6 => 31.0 * 24.0 - 15.0 }
@@ -195,7 +186,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_simple_power_outage_schedules_overnight
     args_hash = {}
-    hpxml_path = File.absolute_path(File.join(sample_files_dir, 'base-schedules-simple-power-outage.xml'))
+    hpxml_path = File.absolute_path(File.join(@sample_files_path, 'base-schedules-simple-power-outage.xml'))
     hpxml = HPXML.new(hpxml_path: hpxml_path)
     hpxml.header.unavailable_periods[0].begin_month = 12
     hpxml.header.unavailable_periods[0].begin_day = 14
@@ -227,7 +218,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_stochastic_schedules
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-detailed-occupancy-stochastic.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic.xml'))
     model, hpxml, hpxml_bldg = _test_measure(args_hash)
 
     schedule_file_names = []
@@ -290,7 +281,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_stochastic_vacancy_schedules
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-detailed-occupancy-stochastic-vacancy.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic-vacancy.xml'))
     model, hpxml, hpxml_bldg = _test_measure(args_hash)
 
     schedules_paths = hpxml_bldg.header.schedules_filepaths.collect { |sfp|
@@ -328,7 +319,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_stochastic_vacancy_schedules2
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-detailed-occupancy-stochastic-vacancy.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic-vacancy.xml'))
     _model, hpxml, _hpxml_bldg = _test_measure(args_hash)
 
     column_name = hpxml.header.unavailable_periods[0].column_name
@@ -384,7 +375,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_stochastic_vacancy_year_round_schedules
     args_hash = {}
-    hpxml_path = File.absolute_path(File.join(sample_files_dir, 'base-schedules-detailed-occupancy-stochastic-vacancy.xml'))
+    hpxml_path = File.absolute_path(File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic-vacancy.xml'))
     hpxml = HPXML.new(hpxml_path: hpxml_path)
     hpxml.header.unavailable_periods[0].begin_month = 1
     hpxml.header.unavailable_periods[0].begin_day = 1
@@ -426,7 +417,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_stochastic_power_outage_schedules
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-detailed-occupancy-stochastic-power-outage.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic-power-outage.xml'))
     model, hpxml, hpxml_bldg = _test_measure(args_hash)
 
     schedules_paths = hpxml_bldg.header.schedules_filepaths.collect { |sfp|
@@ -464,7 +455,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_stochastic_power_outage_schedules2
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-schedules-detailed-occupancy-stochastic-power-outage.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-schedules-detailed-occupancy-stochastic-power-outage.xml'))
     _model, hpxml, _hpxml_bldg = _test_measure(args_hash)
 
     column_name = hpxml.header.unavailable_periods[0].column_name
@@ -522,7 +513,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_set_unavailable_periods_lighting
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base.xml'))
 
     begin_month = 1
     begin_day = 1
@@ -664,7 +655,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_set_unavailable_periods_natvent
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base.xml'))
 
     # normal availability
     begin_month = 1
@@ -731,7 +722,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
 
   def test_set_unavailable_periods_leap_year
     args_hash = {}
-    args_hash['hpxml_path'] = File.absolute_path(File.join(sample_files_dir, 'base-location-AMY-2012.xml'))
+    args_hash['hpxml_path'] = File.absolute_path(File.join(@sample_files_path, 'base-location-AMY-2012.xml'))
 
     begin_month = 1
     begin_day = 1
@@ -825,7 +816,7 @@ class HPXMLtoOpenStudioSchedulesTest < Minitest::Test
     # assert that it ran correctly
     assert_equal('Success', result.value.valueName)
 
-    hpxml = HPXML.new(hpxml_path: args_hash['hpxml_path'])
+    hpxml = HPXML.new(hpxml_path: File.join(File.dirname(__FILE__), 'in.xml'))
 
     File.delete(File.join(File.dirname(__FILE__), 'in.xml'))
 

@@ -1,8 +1,3 @@
-# *********************************************************************************
-# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
-# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
-# *********************************************************************************
-
 # frozen_string_literal: true
 
 # see the URL below for information on how to write OpenStudio measures
@@ -45,6 +40,9 @@ class ResStockArguments < OpenStudio::Measure::ModelMeasure
 
       # Following are arguments with the same name but different options
       next if arg.name == 'geometry_unit_cfa'
+      next if arg.name == 'heat_pump_backup_type'
+      next if arg.name == 'heat_pump_backup_fuel'
+      next if arg.name == 'heat_pump_backup_heating_efficiency'
 
       # Convert optional arguments to string arguments that allow Constants::Auto for defaulting
       if !arg.required
@@ -120,8 +118,8 @@ class ResStockArguments < OpenStudio::Measure::ModelMeasure
     # Adds a geometry_unit_cfa argument similar to the BuildResidentialHPXML measure, but as a string with "auto" allowed
     arg = OpenStudio::Measure::OSArgument::makeStringArgument('geometry_unit_cfa', true)
     arg.setDisplayName('Geometry: Unit Conditioned Floor Area')
-    arg.setDescription("E.g., '2000' or '#{Constants::Auto}'.")
-    arg.setUnits('sqft')
+    arg.setDescription("The total floor area of the unit's conditioned space (including any conditioned basement floor area). E.g., '2000' or '#{Constants::Auto}'.")
+    arg.setUnits('ft^2')
     arg.setDefaultValue('2000')
     args << arg
 
@@ -399,9 +397,43 @@ class ResStockArguments < OpenStudio::Measure::ModelMeasure
     arg.setUnits('Frac')
     args << arg
 
+    # Adds a heat_pump_backup_type argument similar to the BuildResidentialHPXML measure, but with "auto" allowed
+    arg = @build_residential_hpxml_measure_arguments.find { |arg| arg.name == 'heat_pump_backup_type' }
+    heat_pump_backup_type_choices = arg.choiceValues.map(&:to_s)
+    heat_pump_backup_type_choices.unshift(Constants::Auto)
+
+    arg = OpenStudio::Measure::OSArgument::makeChoiceArgument('heat_pump_backup_type', heat_pump_backup_type_choices, true)
+    arg.setDisplayName('Heat Pump: Backup Type')
+    arg.setDescription("The backup type of the heat pump. If '#{HPXML::HeatPumpBackupTypeIntegrated}', represents e.g. built-in electric strip heat or dual-fuel integrated furnace. If '#{HPXML::HeatPumpBackupTypeSeparate}', represents e.g. electric baseboard or boiler based on the Heating System 2 specified below. Use '#{Constants::None}' if there is no backup heating. E.g., '#{HPXML::HeatPumpBackupTypeIntegrated}' or '#{Constants::Auto}'. Use '#{Constants::Auto}' when Backup Use Existing System is true.")
+    arg.setDefaultValue(HPXML::HeatPumpBackupTypeIntegrated)
+    args << arg
+
+    # Adds a heat_pump_backup_fuel argument similar to the BuildResidentialHPXML measure, but with "auto" allowed
+    arg = @build_residential_hpxml_measure_arguments.find { |arg| arg.name == 'heat_pump_backup_fuel' }
+    heat_pump_backup_fuel_choices = arg.choiceValues.map(&:to_s)
+    heat_pump_backup_fuel_choices.unshift(Constants::Auto)
+
+    arg = OpenStudio::Measure::OSArgument::makeChoiceArgument('heat_pump_backup_fuel', heat_pump_backup_fuel_choices, true)
+    arg.setDisplayName('Heat Pump: Backup Fuel Type')
+    arg.setDescription("The backup fuel type of the heat pump. Only applies if Backup Type is '#{HPXML::HeatPumpBackupTypeIntegrated}'. E.g., '#{HPXML::FuelTypeElectricity}' or '#{Constants::Auto}'. Use '#{Constants::Auto}' when Backup Use Existing System is true.")
+    arg.setDefaultValue(HPXML::FuelTypeElectricity)
+    args << arg
+
+    # Adds a heat_pump_backup_heating_efficiency argument similar to the BuildResidentialHPXML measure, but as a string with "auto" allowed
+    arg = OpenStudio::Measure::OSArgument::makeStringArgument('heat_pump_backup_heating_efficiency', true)
+    arg.setDisplayName('Heat Pump: Backup Rated Efficiency')
+    arg.setDescription("The backup rated efficiency value of the heat pump. Percent for electricity fuel type. AFUE otherwise. Only applies if Backup Type is '#{HPXML::HeatPumpBackupTypeIntegrated}'. E.g., '1' or '#{Constants::Auto}'. Use '#{Constants::Auto}' when Backup Use Existing System is true.")
+    arg.setDefaultValue('1')
+    args << arg
+
     arg = OpenStudio::Measure::OSArgument::makeBoolArgument('heat_pump_backup_use_existing_system', false)
     arg.setDisplayName('Heat Pump: Backup Use Existing System')
-    arg.setDescription('Whether the heat pump uses the existing system as backup.')
+    arg.setDescription("Whether the heat pump uses the existing heating system as backup. If true and backup type of the heat pump is '#{HPXML::HeatPumpBackupTypeIntegrated}', heat_pump_backup_xxx arguments are assigned values based on the existing heating system. If true and backup type of the heat pump is '#{HPXML::HeatPumpBackupTypeSeparate}', heating_system_2_xxx arguments are assigned values based on the existing heating system. This argument is only applicable for heat pump upgrades.")
+    args << arg
+
+    arg = OpenStudio::Measure::OSArgument::makeBoolArgument('heat_pump_sizing_is_duct_limited', false)
+    arg.setDisplayName('Heat Pump: Sizing Is Duct Limited')
+    arg.setDescription('Whether the (ducted) heat pump has an upper limit for autosized heating/cooling capacity and an adjusted blower fan efficiency (W/CFM) value. This argument is only applicable for heat pump upgrades.')
     args << arg
 
     arg = OpenStudio::Measure::OSArgument::makeDoubleArgument('ev_average_mph', false)
@@ -541,7 +573,7 @@ class ResStockArguments < OpenStudio::Measure::ModelMeasure
     [Constants::Heating, Constants::Cooling].each do |htg_or_clg|
       use_auto_season = "use_auto_#{htg_or_clg}_season".to_sym
       hvac_control_season_period = "hvac_control_#{htg_or_clg}_season_period".to_sym
-      if use_auto_season && hvac_control_season_period
+      if args[use_auto_season] && (args[hvac_control_season_period] == Constants::Auto)
         args[hvac_control_season_period] = Constants::BuildingAmerica
       end
     end
@@ -797,12 +829,10 @@ class ResStockArguments < OpenStudio::Measure::ModelMeasure
       args[:geometry_unit_num_floors_above_grade] = args[:geometry_num_floors_above_grade]
     end
 
-    # Adiabatic Floor/Ceiling
-    if not args[:geometry_unit_level].nil?
+    # Adiabatic Floor/Ceiling (for MF buildings w/ more than 1 story)
+    if (not args[:geometry_unit_level].nil?) && (args[:geometry_num_floors_above_grade] > 1)
       if args[:geometry_unit_level] == 'Bottom'
-        if args[:geometry_num_floors_above_grade] > 1 # this could be "bottom" of a 1-story building
-          args[:geometry_attic_type] = HPXML::AtticTypeBelowApartment
-        end
+        args[:geometry_attic_type] = HPXML::AtticTypeBelowApartment
       elsif args[:geometry_unit_level] == 'Middle'
         args[:geometry_foundation_type] = HPXML::FoundationTypeAboveApartment
         args[:geometry_attic_type] = HPXML::AtticTypeBelowApartment
@@ -916,7 +946,7 @@ class ResStockArguments < OpenStudio::Measure::ModelMeasure
       end
     end
 
-    if args[:geometry_garage_width] == 0 && args[:geometry_garage_depth] == 0
+    if args[:geometry_garage_width] == 0 || args[:geometry_garage_depth] == 0
       garage_door_power = 0
     else
       # Assume one automatic door opener if has garage, regardless of no. garages
@@ -949,7 +979,7 @@ class ResStockArguments < OpenStudio::Measure::ModelMeasure
   def get_heating_and_cooling_seasons(args, weather)
     latitude = args[:site_latitude]
     latitude = nil if latitude == Constants::Auto
-    latitude = Defaults.get_latitude(latitude, weather)
+    latitude = Defaults.get_latitude(latitude, weather, nil)
 
     heating_months, cooling_months = HVAC.get_building_america_hvac_seasons(weather, latitude)
     sim_calendar_year = Location.get_sim_calendar_year(nil, weather)
