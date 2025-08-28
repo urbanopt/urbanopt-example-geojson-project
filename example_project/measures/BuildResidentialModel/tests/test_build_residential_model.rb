@@ -412,7 +412,7 @@ class BuildResidentialModelTest < Minitest::Test
 
           @building_type = 'Multifamily'
           @args[:geometry_building_num_units] = 16
-          @floor_area = 800 * @args[:geometry_building_num_units]
+          @floor_area = 700 * @args[:geometry_building_num_units]
           @number_of_stories_above_ground = feature_number_of_stories_above_ground
           @year_built = feature_year_built
           @number_of_bedrooms = feature_number_of_bedrooms
