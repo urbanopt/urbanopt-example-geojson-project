@@ -450,8 +450,8 @@
         "number_of_bedrooms": 4,
         "foundation_type": "basement - unconditioned",
         "attic_type": "attic - vented",
-        "system_type": "Residential - boiler and room air conditioner",
-        "year_built": 1986,
+        "system_type": "Residential - furnace and central air conditioner",
+        "year_built": 1976,
         "characterize_residential_buildings_from_buildstock_csv": true,
         "uo_buildstock_mapping_csv_path": "resources/uo_buildstock_mapping.csv",
         "resstock_buildstock_csv_path": "resources/residential-measures/test/base_results/baseline/annual/buildstock.csv"
@@ -482,9 +482,9 @@
         "number_of_stories": 3,
         "number_of_bedrooms": 5,
         "foundation_type": "basement - conditioned",
-        "attic_type": "attic - conditioned",
-        "system_type": "Residential - electric resistance and no cooling",
-        "heating_system_fuel_type": "electricity",
+        "attic_type": "attic - vented",
+        "system_type": "Residential - furnace and room air conditioner",
+        "heating_system_fuel_type": "natural gas",
         "template": "Residential IECC 2015 - Customizable Template Sep 2020",
         "occupancy_calculation_type": "operational",
         "number_of_occupants": 2
