@@ -1,12 +1,13 @@
 source 'http://rubygems.org'
 
 ruby '3.2.2'
-gem 'rake', '~> 13.0', require: false, group: :test
-gem 'rspec', '~> 3.9', require: false, group: :test
+gem 'rake', '~> 13.0' #, require: false, group: :test
+gem 'rspec', '~> 3.9' #, require: false, group: :test
 gem 'rubocop', '~> 1.50', require: false, group: :test
 gem 'simplecov', '~> 0.22.0', require: false, group: :test
 gem 'simplecov-lcov', '~> 0.8.0', require: false, group: :test
-gem 'oga' # Required to be unversioned to match OpenStudio so residential will work :(
+# can we comment this out?
+# gem 'oga' # Required to be unversioned to match OpenStudio so residential will work :(
 
 # Local gems are useful when developing and integrating the various dependencies.
 # To favor the use of local gems, set the following environment variable:
@@ -57,7 +58,7 @@ gem 'openstudio-extension', '~> 0.9.4'
 # elsif allow_local
   # gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'faraday'
 # else
-  gem 'openstudio-ee', '~> 0.12.3'
+  gem 'openstudio-ee', '~> 0.12.5'
 # end
 
 # if allow_local && File.exist?('../openstudio-calibration-gem')
