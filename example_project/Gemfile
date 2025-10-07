@@ -11,8 +11,8 @@ ruby '3.2.2'
 # allow_local = ENV['FAVOR_LOCAL_GEMS']
 allow_local = false
 
-gem 'rake', '~> 13.0', require: false, group: :test
-gem 'rspec', '~> 3.9', require: false, group: :test
+gem 'rake', '~> 13.0'# , require: false, group: :test
+gem 'rspec', '~> 3.9' #, require: false, group: :test
 gem 'rubocop', '~> 1.50', require: false, group: :test
 
 # Uncomment the extension, core gems if you need to test local development versions. Otherwise
@@ -23,13 +23,13 @@ gem 'rubocop', '~> 1.50', require: false, group: :test
 # elsif allow_local
   # gem 'openstudio-extension', github: 'NREL/openstudio-extension-gem', branch: 'faraday'
 # else
-gem 'openstudio-extension', '0.9.3'
+gem 'openstudio-extension', '0.9.4'
 # end
 
 # if allow_local && File.exist?('../urbanopt-core-gem')
 #  gem 'urbanopt-core', path: '../../urbanopt-core-gem'
 # elsif allow_local
-gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'faraday'
+# gem 'urbanopt-core', github: 'URBANopt/urbanopt-core-gem', branch: 'faraday'
 # end
 
 # if allow_local && File.exist?('../openstudio-common-measures-gem')
@@ -83,9 +83,9 @@ gem 'openstudio-geb', '~> 0.7.0'
 # if allow_local && File.exist?('../urbanopt-geojson-gem')
 #  gem 'urbanopt-geojson', path: '../urbanopt-geojson-gem'
 # elsif allow_local
-gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'faraday'
+#gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'faraday'
 # else
-#  gem 'urbanopt-geojson', '~> 1.0.0'
+gem 'urbanopt-geojson', '~> 1.1.0'
 # end
 
 # NEVER put SCENARIO-GEM in this file...it will make all simulations fail due to the sqlite dependency
@@ -94,15 +94,15 @@ gem 'urbanopt-geojson', github: 'URBANopt/urbanopt-geojson-gem', branch: 'farada
 # if allow_local && File.exist?('../urbanopt-reporting-gem')
 #   gem 'urbanopt-reporting', path: '../urbanopt-reporting-gem'
 # elsif allow_local
-gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'faraday'
+#gem 'urbanopt-reporting', github: 'URBANopt/urbanopt-reporting-gem', branch: 'faraday'
 # else
-  # gem 'urbanopt-reporting', '~> 1.0.0'
+  gem 'urbanopt-reporting', '~> 1.1.0'
 # end
 
 # if allow_local && File.exist?('../urbanopt-rnm-us')
 #   gem 'urbanopt-rnm-us', path: '../urbanopt/urbanopt-rnm-us-gem'
 # elsif allow_local
-gem 'urbanopt-rnm-us', github: 'URBANopt/urbanopt-rnm-us-gem', branch: 'faraday'
+#gem 'urbanopt-rnm-us', github: 'URBANopt/urbanopt-rnm-us-gem', branch: 'faraday'
 # else
-  # gem 'urbanopt-rnm-us', '~> 1.0.0'
+  gem 'urbanopt-rnm-us', '~> 1.1.0'
 # end
