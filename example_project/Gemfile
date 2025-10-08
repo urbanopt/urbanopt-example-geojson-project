@@ -61,7 +61,7 @@ gem 'openstudio-extension', '0.9.4'
 # elsif allow_local
   # gem 'openstudio-ee', github: 'NREL/openstudio-ee-gem', branch: 'faraday'
 # else
-  gem 'openstudio-ee', '~> 0.12.3'
+  gem 'openstudio-ee', '~> 0.12.5'
 # end
 
 # if allow_local && File.exist?('../openstudio-calibration-gem')
