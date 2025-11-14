@@ -1,11 +1,14 @@
-name: weekly_build
+name: Example-project CI
 
 on:
   # push:
   schedule:
     # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule
     # 5 am UTC (11pm MDT the day before) every weekday night in MDT
-    - cron: '* 5 * * 0'
+    - cron: "* 5 * * 0"
+  pull_request:
+    types: [review_requested]
+  workflow_dispatch:
 
 env:
   # This env var should enforce develop branch of all dependencies
@@ -14,34 +17,45 @@ env:
 
 jobs:
   simulate-and-post-process:
-    # ubuntu-latest works since https://github.com/rbenv/ruby-build/releases/tag/v20220710 (July 10, 2022)
-    # https://github.com/rbenv/ruby-build/discussions/1940
     strategy:
+      fail-fast: false # Keep running other tests even if one fails
       matrix:
-        scenario: [baseline, chilled_water_storage, flexible_hot_water, high_efficiency, mixed,
-          peak_hours_mels_shedding, peak_hours_thermostat_adjust, reopt, thermal_storage]
+        scenario:
+          [
+            baseline,
+            chilled_water_storage,
+            flexible_hot_water,
+            high_efficiency,
+            mixed,
+            peak_hours_mels_shedding,
+            peak_hours_thermostat_adjust,
+            reopt,
+            thermal_storage,
+          ]
     runs-on: ubuntu-latest
     container:
-      image: docker://nrel/openstudio:3.6.1
+      image: docker://nrel/openstudio:3.10.0
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Update gems
         run: |
+          bundle install
           bundle update
-          bundle exec certified-update
+      - name: Test residential measure variations
+        # We only need to run the residential measure_tests once, not for every iteration
+        if: matrix.scenario == 'baseline'
+        run: bundle exec rake residential:measure_tests
       - name: Simulate
-        # Continue to upload step even if a test fails, so we can troubleshoot
-        # continue-on-error: true
-        run: bundle exec rake run_${{ matrix.scenario }}
+        run: |
+          bundle install
+          bundle exec rake run_${{ matrix.scenario }}
       - name: Post process
-        # continue-on-error: true
         run: bundle exec rake post_process_${{ matrix.scenario }}
       - name: Upload artifacts
-      # Save results for examination - useful for debugging
-        uses: actions/upload-artifact@v3
-        # Only upload if rspec fails
+        uses: actions/upload-artifact@v4
+        # Only upload if something fails
         if: failure()
         with:
-          name: rspec_results
-          path: example_project/run/*scenario/
-          retention-days: 7 # save for 1 week before deleting
+          name: rspec_results_${{ matrix.scenario }}
+          path: example_project/run/${{ matrix.scenario }}_scenario/
+          retention-days: 7 # save for 1 week before deleting - useful for debugging

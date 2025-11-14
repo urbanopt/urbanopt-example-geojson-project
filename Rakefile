@@ -1,31 +1,6 @@
 # *********************************************************************************
-# URBANopt™, Copyright (c) 2019-2022, Alliance for Sustainable Energy, LLC, and other
-# contributors. All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without modification,
-# are permitted provided that the following conditions are met:
-#
-# Redistributions of source code must retain the above copyright notice, this list
-# of conditions and the following disclaimer.
-#
-# Redistributions in binary form must reproduce the above copyright notice, this
-# list of conditions and the following disclaimer in the documentation and/or other
-# materials provided with the distribution.
-#
-# Neither the name of the copyright holder nor the names of its contributors may be
-# used to endorse or promote products derived from this software without specific
-# prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-# IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
-# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-# OF THE POSSIBILITY OF SUCH DAMAGE.
+# URBANopt (tm), Copyright (c) Alliance for Sustainable Energy, LLC.
+# See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
 # *********************************************************************************
 
 require 'openstudio/extension'
@@ -222,7 +197,8 @@ def visualize_scenarios
     elsif File.exist?(File.join(scenario_folder, 'default_scenario_report.csv'))
       scenario_folders << File.join(scenario_folder, 'default_scenario_report.csv')
       scenario_report_exists = true
-    else puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
+    else
+      puts "\nERROR: Default reports not created for #{scenario_folder}. Please use 'process --default' to create default post processing reports for all scenarios first. Visualization not generated for #{scenario_folder}.\n"
     end
   end
   if scenario_report_exists == true
@@ -253,7 +229,8 @@ def visualize_features(scenario_file)
     elsif File.exist?(File.join(run_dir, feature, 'feature_reports/default_feature_report.csv'))
       feature_report_exists = true
       feature_folders << File.join(run_dir, feature, 'feature_reports/default_feature_report.csv')
-    else puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
+    else
+      puts "\nERROR: Default reports not created for #{feature}. Please use 'process --default' to create default post processing reports for all features first. Visualization not generated for #{feature}.\n"
     end
   end
   if feature_report_exists == true
@@ -274,7 +251,7 @@ rake_task.set_extension_class(URBANopt::ExampleGeoJSONProject::ExampleGeoJSONPro
 
 desc 'Clear Baseline Scenario'
 task :clear_baseline, [:json, :csv] do |t, args|
-  puts 'Clearing Baseline Scenario...'
+  puts "\nClearing Baseline Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -286,7 +263,7 @@ end
 
 desc 'Run Baseline Scenario'
 task :run_baseline, [:json, :csv] do |t, args|
-  puts 'Running Baseline Scenario...'
+  puts "\nRunning Baseline Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -301,7 +278,7 @@ end
 
 desc 'Post Process Baseline Scenario'
 task :post_process_baseline, [:json, :csv] do |t, args|
-  puts 'Post Processing Baseline Scenario...'
+  puts "\nPost Processing Baseline Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -321,7 +298,7 @@ end
 
 desc 'Clear High Efficiency Scenario'
 task :clear_high_efficiency, [:json, :csv] do |t, args|
-  puts 'Clearing High Efficiency Scenario...'
+  puts "\nClearing High Efficiency Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -333,7 +310,7 @@ end
 
 desc 'Run High Efficiency Scenario'
 task :run_high_efficiency, [:json, :csv] do |t, args|
-  puts 'Running High Efficiency Scenario...'
+  puts "\nRunning High Efficiency Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -348,7 +325,7 @@ end
 
 desc 'Post Process High Efficiency Scenario'
 task :post_process_high_efficiency, [:json, :csv] do |t, args|
-  puts 'Post Processing High Efficiency Scenario...'
+  puts "\nPost Processing High Efficiency Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -368,7 +345,7 @@ end
 
 desc 'Clear Chilled Water Storage Scenario'
 task :clear_chilled_water_storage, [:json, :csv] do |t, args|
-  puts 'Clearing Chilled Water Storage Scenario...'
+  puts "\nClearing Chilled Water Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -380,7 +357,7 @@ end
 
 desc 'Run Chilled Water Storage Scenario'
 task :run_chilled_water_storage, [:json, :csv] do |t, args|
-  puts 'Running Chilled Water Storage Scenario...'
+  puts "\nRunning Chilled Water Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -395,7 +372,7 @@ end
 
 desc 'Post Process Chilled Water Storage Scenario'
 task :post_process_chilled_water_storage, [:json, :csv] do |t, args|
-  puts 'Post Processing Chilled Water Storage Scenario...'
+  puts "\nPost Processing Chilled Water Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -415,7 +392,7 @@ end
 
 desc 'Clear Peak Hours MELs Shedding Scenario'
 task :clear_peak_hours_mels_shedding, [:json, :csv] do |t, args|
-  puts 'Clearing Peak Hours MELs Shedding Scenario...'
+  puts "\nClearing Peak Hours MELs Shedding Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -427,7 +404,7 @@ end
 
 desc 'Run Peak Hours MELs Shedding Scenario'
 task :run_peak_hours_mels_shedding, [:json, :csv] do |t, args|
-  puts 'Running Peak Hours MELs Shedding Scenario...'
+  puts "\nRunning Peak Hours MELs Shedding Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -442,7 +419,7 @@ end
 
 desc 'Post Process Peak Hours MELs Shedding Scenario'
 task :post_process_peak_hours_mels_shedding, [:json, :csv] do |t, args|
-  puts 'Post Processing Peak Hours MELs Shedding Scenario...'
+  puts "\nPost Processing Peak Hours MELs Shedding Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -462,7 +439,7 @@ end
 
 desc 'Clear Peak Hours Thermostat Adjust Scenario'
 task :clear_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
-  puts 'Clearing Peak Hours Thermostat Adjust Scenario...'
+  puts "\nClearing Peak Hours Thermostat Adjust Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -474,7 +451,7 @@ end
 
 desc 'Run Peak Hours Thermostat Adjust Scenario'
 task :run_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
-  puts 'Running Peak Hours Thermostat Adjust Scenario...'
+  puts "\nRunning Peak Hours Thermostat Adjust Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -489,7 +466,7 @@ end
 
 desc 'Post Process Peak Hours Thermostat Adjust Scenario'
 task :post_process_peak_hours_thermostat_adjust, [:json, :csv] do |t, args|
-  puts 'Post Processing Peak Hours Thermostat Adjust Scenario...'
+  puts "\nPost Processing Peak Hours Thermostat Adjust Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -509,7 +486,7 @@ end
 
 desc 'Clear Thermal Storage Scenario'
 task :clear_thermal_storage, [:json, :csv] do |t, args|
-  puts 'Clearing Thermal Storage Scenario...'
+  puts "\nClearing Thermal Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -521,7 +498,7 @@ end
 
 desc 'Run Thermal Storage Scenario'
 task :run_thermal_storage, [:json, :csv] do |t, args|
-  puts 'Running Thermal Storage Scenario...'
+  puts "\nRunning Thermal Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -536,7 +513,7 @@ end
 
 desc 'Post Process Thermal Storage Scenario'
 task :post_process_thermal_storage, [:json, :csv] do |t, args|
-  puts 'Post Processing Thermal Storage Scenario...'
+  puts "\nPost Processing Thermal Storage Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -556,7 +533,7 @@ end
 
 desc 'Clear Flexible Hot Water Scenario'
 task :clear_flexible_hot_water, [:json, :csv] do |t, args|
-  puts 'Clearing Flexible Hot Water Scenario...'
+  puts "\nClearing Flexible Hot Water Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -568,7 +545,7 @@ end
 
 desc 'Run Flexible Hot Water Scenario'
 task :run_flexible_hot_water, [:json, :csv] do |t, args|
-  puts 'Running Flexible Hot Water Scenario...'
+  puts "\nRunning Flexible Hot Water Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -583,7 +560,7 @@ end
 
 desc 'Post Process Flexible Hot Water Scenario'
 task :post_process_flexible_hot_water, [:json, :csv] do |t, args|
-  puts 'Post Processing Flexible Hot Water Scenario...'
+  puts "\nPost Processing Flexible Hot Water Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -603,7 +580,7 @@ end
 
 desc 'Clear REopt Scenario'
 task :clear_reopt, [:json, :csv] do |t, args|
-  puts 'Clearing REopt Scenario...'
+  puts "\nClearing REopt Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -615,7 +592,7 @@ end
 
 desc 'Run REopt Scenario'
 task :run_reopt, [:json, :csv] do |t, args|
-  puts 'Running REopt Scenario...'
+  puts "\nRunning REopt Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -630,7 +607,7 @@ end
 
 desc 'Post Process REopt Scenario'
 task :post_process_reopt, [:json, :csv] do |t, args|
-  puts 'Post Processing REopt Scenario...'
+  puts "\nPost Processing REopt Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -664,18 +641,18 @@ task :post_process_reopt, [:json, :csv] do |t, args|
   end
 
   # Run Aggregate Scenario
-  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report: scenario_report, save_name: 'scenario_report_reopt_global_optimization', run_resilience: true, community_photovoltaic: community_photovoltaic)
+  scenario_report_scenario = reopt_post_processor.run_scenario_report(scenario_report:, save_name: 'scenario_report_reopt_global_optimization', run_resilience: false, community_photovoltaic:)
 
   # Run features individually - this is an alternative approach to the previous step, in your analysis depending on project ojectives you maye only need to run one
-  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report: scenario_report, save_names_feature_reports: ['feature_report_reopt'] * scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: true,
-                                                                               keep_existing_output: false, groundmount_photovoltaic: groundmount_photovoltaic)
+  scenario_report_features = reopt_post_processor.run_scenario_report_features(scenario_report:, save_names_feature_reports: ['feature_report_reopt'] * scenario_report.feature_reports.length, save_name_scenario_report: 'scenario_report_reopt_local_optimization', run_resilience: false,
+                                                                               keep_existing_output: false, groundmount_photovoltaic:)
 end
 
 ### Mixed
 
 desc 'Clear Mixed Scenario'
 task :clear_mixed, [:json, :csv] do |t, args|
-  puts 'Clearing Mixed Scenario...'
+  puts "\nClearing Mixed Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -687,7 +664,7 @@ end
 
 desc 'Run Mixed Scenario'
 task :run_mixed, [:json, :csv] do |t, args|
-  puts 'Running Mixed Scenario...'
+  puts "\nRunning Mixed Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -702,7 +679,7 @@ end
 
 desc 'Post Process Mixed Scenario'
 task :post_process_mixed, [:json, :csv] do |t, args|
-  puts 'Post Processing Mixed Scenario...'
+  puts "\nPost Processing Mixed Scenario..."
 
   json = args[:json]
   csv = args[:csv]
@@ -722,7 +699,7 @@ end
 
 desc 'Visualize and compare results for all Scenarios'
 task :visualize_scenarios do
-  puts 'Visualizing results for all Scenarios...'
+  puts "\nVisualizing results for all Scenarios..."
   visualize_scenarios
 end
 
@@ -730,7 +707,7 @@ end
 
 desc 'Visualize and compare results for all Features in a Scenario'
 task :visualize_features, [:csv] do |t, args|
-  puts 'Visualizing results for all Features in the Scenario...'
+  puts "\nVisualizing results for all Features in the Scenario..."
 
   csv = args[:csv]
   csv = 'baseline_scenario.csv' if args[:csv].nil?
@@ -741,17 +718,17 @@ end
 ### All
 
 desc 'Clear all scenarios'
-task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed] do
+task clear_all: [:clear_baseline, :clear_high_efficiency, :clear_chilled_water_storage, :clear_thermal_storage, :clear_flexible_hot_water, :clear_reopt, :clear_mixed, :clear_peak_hours_mels_shedding, :clear_peak_hours_thermostat_adjust] do
   # clear all the scenarios
 end
 
 desc 'Run all scenarios'
-task run_all: [:run_baseline, :run_high_efficiency, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed] do
+task run_all: [:run_baseline, :run_high_efficiency, :run_chilled_water_storage, :run_thermal_storage, :run_flexible_hot_water, :run_reopt, :run_mixed, :run_peak_hours_mels_shedding, :run_peak_hours_thermostat_adjust] do
   # run all the scenarios
 end
 
 desc 'Post process all scenarios'
-task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed] do
+task post_process_all: [:post_process_baseline, :post_process_high_efficiency, :post_process_chilled_water_storage, :post_process_thermal_storage, :post_process_flexible_hot_water, :post_process_reopt, :post_process_mixed, :post_process_peak_hours_mels_shedding, :post_process_peak_hours_thermostat_adjust] do
   # post_process all the scenarios
 end
 
@@ -769,12 +746,58 @@ task :visualize_all do
   Rake::Task['visualize_features'].invoke('reopt_scenario.csv')
   Rake::Task['visualize_features'].reenable
   Rake::Task['visualize_features'].invoke('mixed_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('chilled_water_storage_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('peak_hours_mels_shedding_scenario.csv')
+  Rake::Task['visualize_features'].reenable
+  Rake::Task['visualize_features'].invoke('peak_hours_thermostat_adjust_scenario.csv')
   Rake::Task['visualize_scenarios'].invoke
 end
 
 desc 'Run and post process all scenarios'
 task update_all: [:run_all, :post_process_all, :visualize_all] do
   # run and post_process all the scenarios
+end
+
+desc 'Run residential tasks'
+namespace :residential do
+  desc 'Update residential resources'
+  task :update_resources do
+    prefix = 'example_project/resources/residential-measures'
+    repository = 'https://github.com/NREL/resstock.git'
+    branch_or_tag = 'v3.4.0-331b7ab' # update this when pulling in updated ResStock
+
+    FileUtils.rm_rf(prefix)
+    system("git clone --depth 1 --branch #{branch_or_tag} #{repository} #{prefix}")
+
+    folders_to_remove = [
+      '.git',
+      '.github',
+      '.gitignore',
+      'docs',
+      'postprocessing',
+      'project_testing',
+      'resources/data',
+      'test/base_results/baseline/timeseries',
+      'test/base_results/upgrades',
+      'test/SetSpaceInfiltrationPerExteriorArea',
+      'test/tests_buildstock_csvs',
+      'test/tests_housing_characteristics',
+      'test/tests_yml_files'
+    ]
+
+    folders_to_remove.each do |f|
+      FileUtils.rm_rf(File.join(prefix, f))
+    end
+  end
+
+  desc 'Run residential measure tests'
+  Rake::TestTask.new('measure_tests') do |t|
+    t.test_files = Dir['example_project/measures/*/tests/*.rb']
+    t.warning = false
+    t.verbose = true
+  end
 end
 
 task default: :update_all

@@ -1,6 +1,7 @@
 # URBANopt Example GeoJSON Project
 
 [![Coverage Status](https://coveralls.io/repos/github/urbanopt/urbanopt-example-geojson-project/badge.svg?branch=develop)](https://coveralls.io/github/urbanopt/urbanopt-example-geojson-project?branch=develop)
+[![Example-project CI](https://github.com/urbanopt/urbanopt-example-geojson-project/actions/workflows/weekly_build.yml/badge.svg)](https://github.com/urbanopt/urbanopt-example-geojson-project/actions/workflows/weekly_build.yml)
 
 ## Overview
 
@@ -66,8 +67,8 @@ bundle exec rake run_high_efficiency[json,csv]
 bundle exec rake run_mixed[json,csv]
 ```
 
-Where, `json` is the name of the FeatureFile  `csv` is the name of the
-scenario file corresponding to that feature file. For example, to  run the `createbar` project for
+Where `json` is the name of the FeatureFile and `csv` is the name of the
+scenario file corresponding to that feature file. For example, to run the `createbar` project for
 baseline scenario, use
 the `example_project.json` as json and `createbar_scenario.csv` as csv.
 
@@ -77,8 +78,8 @@ the `example_project.json` as json and `createbar_scenario.csv` as csv.
 bundle exec rake run_thermal_storage[json,csv]
 ```
 
-Where, `json` is the `example_project.json` FeatureFile and `csv` is the name of the
-baseline, high efficiency or mixed csv for this feature file.
+Where `json` is the FeatureFile (such as `example_project.json`) and `csv` is the name of the
+baseline, high efficiency or mixed scenario csv for this feature file (for example `thermal_storage_scenario.csv`).
 
 **Post-processing the projects**
 
@@ -100,14 +101,14 @@ bundle exec rake post_process_high_efficiency[json,csv]
 bundle exec rake post_process_mixed[json,csv]
 ```
 
-Where, `json` is the is the name of the FeatureFile and  `csv` is the name of the scenario file
-corresponding to the feature file, that you would like to post-process.
+Where `json` is the is the name of the FeatureFile and  `csv` is the name of the scenario file
+corresponding to the feature file that you would like to post-process.
 
 ```ruby
 bundle exec rake post_process_thermal_storage[json,csv]
 ```
 
-Where, `json` is the `example_project.json` FeatureFile and `csv` is the name of a scenario file for this feature file.
+Where `json` is the `example_project.json` FeatureFile and `csv` is the name of a scenario file for this feature file.
 
 **Visualizing post-processing results**
 
@@ -151,8 +152,8 @@ bundle exec rake clear_high_efficiency[json,csv]
 bundle exec rake clear_mixed[json,csv]
 ```
 
-Where, `json` is the is the name of the FeatureFile and  `csv` is the name of the scenario file
-corresponding to the feature file, that you would like to clear.
+Where `json` is the is the name of the FeatureFile and  `csv` is the name of the scenario file
+corresponding to the feature file that you would like to clear.
 
 ```ruby
 bundle exec rake clear_thermal_storage[json,csv]
