@@ -3,7 +3,7 @@
 # See also https://github.com/urbanopt/urbanopt-example-geojson-project/blob/develop/LICENSE.md
 # *********************************************************************************
 
-def residential_template(args, template, climate_zone)
+def residential_template(args, template, climate_zone, logger = Logger.new($stdout, progname: 'URBANopt::BaselineMapper'))
   '''Assign arguments from tsv files.'''
 
   # IECC / EnergyStar / Other
@@ -18,25 +18,27 @@ def residential_template(args, template, climate_zone)
 
     enclosure_filepath = File.join(File.dirname(__FILE__), 'iecc/enclosure.tsv')
     enclosure = get_lookup_tsv(args, enclosure_filepath)
-    row = get_lookup_row(args, enclosure, template_vals)
+    row = get_lookup_row(args, enclosure, template_vals, enclosure_filepath, logger)
 
-    # Determine which surfaces to place insulation on
-    if args[:geometry_foundation_type].include? 'Basement'
-      row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
-      row[:floor_over_foundation_assembly_r] = 2.1
-      row[:floor_over_garage_assembly_r] = 2.1
-    elsif args[:geometry_foundation_type].include? 'Crawlspace'
-      row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
-      row[:floor_over_foundation_assembly_r] = 2.1
-      row[:floor_over_garage_assembly_r] = 2.1
+    unless row.nil?
+      # Determine which surfaces to place insulation on
+      if args[:geometry_foundation_type].include? 'Basement'
+        row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_basement]
+        row[:floor_over_foundation_assembly_r] = 2.1
+        row[:floor_over_garage_assembly_r] = 2.1
+      elsif args[:geometry_foundation_type].include? 'Crawlspace'
+        row[:foundation_wall_assembly_r] = row[:foundation_wall_assembly_r_crawlspace]
+        row[:floor_over_foundation_assembly_r] = 2.1
+        row[:floor_over_garage_assembly_r] = 2.1
+      end
+      row.delete(:foundation_wall_assembly_r_basement)
+      row.delete(:foundation_wall_assembly_r_crawlspace)
+      if ['ConditionedAttic'].include?(args[:geometry_attic_type])
+        row[:roof_assembly_r] = row[:ceiling_assembly_r]
+        row[:ceiling_assembly_r] = 2.1
+      end
+      args.update(row)
     end
-    row.delete(:foundation_wall_assembly_r_basement)
-    row.delete(:foundation_wall_assembly_r_crawlspace)
-    if ['ConditionedAttic'].include?(args[:geometry_attic_type])
-      row[:roof_assembly_r] = row[:ceiling_assembly_r]
-      row[:ceiling_assembly_r] = 2.1
-    end
-    args.update(row) unless row.nil?
 
     # HVAC
 
@@ -47,7 +49,7 @@ def residential_template(args, template, climate_zone)
       if type != 'none'
         filepath = File.join(File.dirname(__FILE__), path)
         lookup_tsv = get_lookup_tsv(args, filepath)
-        row = get_lookup_row(args, lookup_tsv, template_vals)
+        row = get_lookup_row(args, lookup_tsv, template_vals, filepath, logger)
         args.update(row) unless row.nil?
       end
     end
@@ -57,7 +59,7 @@ def residential_template(args, template, climate_zone)
     ['refrigerator', 'clothes_washer', 'dishwasher', 'clothes_dryer', 'mechanical_ventilation', 'water_heater'].each do |appliance|
       filepath = File.join(File.dirname(__FILE__), "iecc/#{appliance}.tsv")
       lookup_tsv = get_lookup_tsv(args, filepath)
-      row = get_lookup_row(args, lookup_tsv, template_vals)
+      row = get_lookup_row(args, lookup_tsv, template_vals, filepath, logger)
       args.update(row) unless row.nil?
     end
   end
@@ -72,10 +74,9 @@ def get_lookup_tsv(args, filepath)
       row.each do |header|
         next if header == 'Source'
 
-        if args.key?(header.gsub('Dependency=', '').to_sym)
-          header = header.gsub('Dependency=', '')
-        end
-        unless header.include?('Dependency=')
+        # Keep 'Dependency=' columns as strings so they are only used for matching;
+        # all other columns are symbols to be assigned to args.
+        unless header.start_with?('Dependency=')
           header = header.to_sym
         end
         headers << header
@@ -95,7 +96,9 @@ def get_lookup_tsv(args, filepath)
   return rows
 end
 
-def get_lookup_row(args, rows, template_vals)
+def get_lookup_row(args, rows, template_vals, filepath = nil, logger = Logger.new($stdout, progname: 'URBANopt::BaselineMapper'))
+  dependency_args = rows.empty? ? [] : rows.first.keys.select { |k| k.is_a?(String) && k.start_with?('Dependency=') }
+
   rows.each do |row|
     if row.key?('Dependency=Climate Zone') && (row['Dependency=Climate Zone'] != template_vals[:climate_zone])
       next
@@ -121,17 +124,24 @@ def get_lookup_row(args, rows, template_vals)
       row.delete(k)
     end
 
-    intersection = args.keys & row.keys
-    return row if intersection.empty? # found the correct row
-
-    skip = false
-    intersection.each do |k|
-      if args[k] != row[k]
-        skip = true
-      end
+    # Only 'Dependency=' columns are matched against args; other columns are assigned.
+    dependencies = row.keys.select { |k| k.is_a?(String) && k.start_with?('Dependency=') }
+    skip = dependencies.any? do |k|
+      arg = k.sub('Dependency=', '').to_sym
+      args.key?(arg) && (args[arg] != row[k])
     end
+    next if skip
 
-    return row unless skip
+    dependencies.each { |k| row.delete(k) }
+    return row
   end
+
+  template_keys = { 'Dependency=Climate Zone' => :climate_zone, 'Dependency=IECC Year' => :iecc_year,
+                    'Dependency=Template Month' => :t_month, 'Dependency=Template Year' => :t_year }
+  criteria = dependency_args.map do |k|
+    value = template_keys.key?(k) ? template_vals[template_keys[k]] : args[k.sub('Dependency=', '').to_sym]
+    "#{k.sub('Dependency=', '')}='#{value}'"
+  end
+  logger.warn("No matching row found in '#{File.basename(filepath.to_s)}' for #{criteria.join(', ')}; arguments from this lookup were not applied.")
   return nil
 end

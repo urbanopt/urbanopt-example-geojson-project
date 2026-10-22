@@ -20,6 +20,7 @@ module URBANopt
     class BaselineMapper < SimulationMapperBase
       # class level variables
       @@logger = Logger.new($stdout)
+      @@logger.progname = 'URBANopt::BaselineMapper'
       @@instance_lock = Mutex.new
       @@osw = nil
       @@geometry = nil
@@ -564,7 +565,7 @@ module URBANopt
 
             if !template.nil?
               require File.join(File.dirname(__FILE__), 'residential/template/util')
-              residential_template(args, template, climate_zone)
+              residential_template(args, template, climate_zone, @@logger)
             end
 
             # Then onto optional "samples" mapping
