@@ -72,10 +72,9 @@ def get_lookup_tsv(args, filepath)
       row.each do |header|
         next if header == 'Source'
 
-        if args.key?(header.gsub('Dependency=', '').to_sym)
-          header = header.gsub('Dependency=', '')
-        end
-        unless header.include?('Dependency=')
+        # Keep 'Dependency=' columns as strings so they are only used for matching;
+        # all other columns are symbols to be assigned to args.
+        unless header.start_with?('Dependency=')
           header = header.to_sym
         end
         headers << header
@@ -121,17 +120,16 @@ def get_lookup_row(args, rows, template_vals)
       row.delete(k)
     end
 
-    intersection = args.keys & row.keys
-    return row if intersection.empty? # found the correct row
-
-    skip = false
-    intersection.each do |k|
-      if args[k] != row[k]
-        skip = true
-      end
+    # Only 'Dependency=' columns are matched against args; other columns are assigned.
+    dependencies = row.keys.select { |k| k.is_a?(String) && k.start_with?('Dependency=') }
+    skip = dependencies.any? do |k|
+      arg = k.sub('Dependency=', '').to_sym
+      args.key?(arg) && (args[arg] != row[k])
     end
+    next if skip
 
-    return row unless skip
+    dependencies.each { |k| row.delete(k) }
+    return row
   end
   return nil
 end
